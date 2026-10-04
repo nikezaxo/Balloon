@@ -7,8 +7,9 @@ rope and climb as high as you can.
 - index.html: page, menu, HUD, cards and game canvas
 - style.css: chunky arcade styling for desktop and mobile
 - sound.js: procedural music and sound effects (no audio files)
+- icons.js: hand-drawn cartoon SVG icons (buttons, stage badges, medals, power-ups)
 - stages.js: the six stages — backdrops, launch grounds, ledges, creatures and drawing helpers
-- skins.js: balloon skins sold in the store
+- skins.js: balloon skins sold in the store, with their animations, effects and trails
 - game.js: game loop, input, physics, power-ups, store, revives and saving
 
 ## Run locally
@@ -16,17 +17,19 @@ Open index.html in a modern browser, or run `python -m http.server 8000` in the
 folder and open http://localhost:8000.
 
 ## Deploy
-Upload all six files together to any static host, with index.html at the root.
+Upload all seven files together to any static host, with index.html at the root.
 There is no build step, backend, API key or database. The Lilita One and Nunito
 fonts load from Google Fonts, with system fallbacks.
 
 ## Main menu
-- ▶ PLAY opens the stage picker. Choosing a stage starts it in full screen where
-  the browser allows (iPhone Safari does not; the game still fills the window).
-- 🛒 STORE sells balloon skins and extra lives.
-- ⚡ BOOSTS explains the power-ups.
+- Pick a stage right in the menu with the arrows, the dots, a swipe on the stage
+  card or the Left/Right keys; the selected stage plays live behind the menu.
+- Press PLAY, or cut the balloon's rope, to launch. The menu flies away, an iris
+  in the stage colours opens from the balloon and the stage badge spins in.
+  The game goes full screen where the browser allows (not iPhone Safari).
+- STORE sells balloon skins and extra lives; BOOSTS explains the power-ups.
 Your coins and lives are shown at the top. On wide screens the action stays in a
-centred column framed by side walls.
+centred column framed by side walls. All icons are cartoon SVGs in icons.js.
 
 ## Stages
 Every stage is endless, with its own best altitude and medals
@@ -35,7 +38,7 @@ Every stage is endless, with its own best altitude and medals
   that fly in from the side (a red arrow warns you first).
 - 🌴 Jungle Island: beach start, giant waterfall, vines, parrots, tree-branch
   ledges and monkeys swinging on vines.
-- 🦇 Crystal Cave: dark cave lit around your balloon, glowing crystals and torches,
+- 🦇 Crystal Cave: dim cave with extra light around your balloon, glowing crystals and torches,
   cave walls you must not touch, rocky ledges, roots, bats and monkeys.
 - 🏭 Robo Factory: brick walls, turning gears, conveyor belts, girders with
   spinning saw blades, hydraulic pistons and patrol drones.
@@ -57,13 +60,19 @@ Shift fires the boost engine; P or Escape pauses.
   power with a cinematic intro — the action freezes, rays spin and the balloon
   zooms in with sunglasses — then a rocket engine smashes through everything for
   3.5 seconds.
-- Rare power-ups (about every 11 gaps): coin magnet, bubble shield and nitro.
+- Rare power-ups (about every 11 gaps): coin magnet, bubble shield and turbo.
+  Turbo plays a quick mini intro in slow motion, then rockets you up.
 - Smashing ledges or drones, or bonking creatures while boosted, earns a coin.
 
 ## Store
 - Skins: Classic (free), Gumball, Funny Clown, Toy Robot, Watermelon, Monster,
   Ninja, Galaxy and Golden King. Each has its own colours, decorations that turn
-  with the balloon, and some have their own face and accessories.
+  with the balloon, and some have their own face and accessories. In the store
+  every skin moves in its own style with its own effect (bouncing gumball with
+  bubbles, wobbling clown with confetti, jerky robot with sparks, spinning
+  melon with juice, growling monster with slime, dashing ninja with smoke,
+  galaxy with orbiting stars, gleaming gold with glitter), and choosing one
+  plays a burst. Each skin also leaves its own trail while flying.
 - Extra lives: after a pop, tap REVIVE to re-inflate where you were and keep
   climbing. You can hold up to 9 lives; you start with 1.
 Coins, skins, lives and bests are saved in the browser (localStorage).
@@ -72,6 +81,8 @@ Coins, skins, lives and bests are saved in the browser (localStorage).
 - Starting climb speed: 130 m/s (game-world units), scaled slightly per stage.
 - Speed increases without a cap: (130 + 1.4 × √altitude) × stage speed.
 - Hitting a ledge, cave wall or creature pops the balloon unless shielded or boosted.
+- Each creature group gets its own widened gap: monkeys hang above a ledge on its
+  own side, away from the flight path, and flocks and drones cross mid-gap.
 - Off-screen objects are discarded, keeping memory bounded.
 - Small physics steps help prevent missed collisions as speed increases.
 
