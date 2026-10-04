@@ -1,9 +1,9 @@
 'use strict';
-// Stage bosses. Every BOSS_EVERY metres the ledges retract, creatures flee, a versus screen plays and
+// Stage bosses. Every BOSS_INTERVAL seconds of flying the ledges retract, creatures flee, a versus screen plays and
 // the stage's boss attacks with its own weapons. Attacks and time drain its stamina; once it is tired
 // the player finishes it with the equipped skin's fatality.
-const BOSS_EVERY=2000,FATALITY_TIME=2.8;
-let boss=null,nextBoss=BOSS_EVERY,bossBuf=null;
+const BOSS_INTERVAL=300,FATALITY_TIME=2.8;
+let boss=null,nextBossTime=BOSS_INTERVAL,bossBuf=null,rewardCoins=[],rewardSound=0;
 const easeIn=k=>k*k,easeOut=k=>1-(1-k)*(1-k);
 
 // ---------- Boss art (drawn around 0,0, roughly ±120 wide) ----------
@@ -84,41 +84,41 @@ function later(b,delay,fn){b.timers.push({at:b.clock+delay,fn})}
 const mouth=b=>({x:b.x,y:b.y+44*b.scale});
 function aimed(b,speed,o={}){const m=mouth(b),a=Math.atan2(balloonY()-m.y,x*W-m.x)+(o.spread||0),v=speed*b.sp;bossShot(b,{x:m.x,y:m.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:8,life:6,...o})}
 function fan(b,n,a0,a1,speed,o){const m=mouth(b),v=speed*b.sp;for(let i=0;i<n;i++){const a=a0+(a1-a0)*i/(n-1);bossShot(b,{x:m.x,y:m.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:8,life:6,...o})}}
-// Pick drop lanes across the width but always leave two lanes free.
-function lanes(n){const all=[0,1,2,3,4,5,6].sort(()=>Math.random()-.5).slice(0,Math.min(n,5));return all.map(k=>(k+.5)/7*W)}
-const ringShot=(b,style)=>bossShot(b,{kind:'ring',style,cx:b.x,cy:b.y+16*b.scale,speed:160*b.sp,thick:16,gap:Math.PI/2+rand(-.9,.9),gapW:.55,max:Math.hypot(W,H)});
+// Pick drop lanes across the width but always leave at least three lanes free.
+function lanes(n){const all=[0,1,2,3,4,5,6].sort(()=>Math.random()-.5).slice(0,Math.min(n,4));return all.map(k=>(k+.5)/7*W)}
+const ringShot=(b,style)=>bossShot(b,{kind:'ring',style,cx:b.x,cy:b.y+16*b.scale,speed:135*b.sp,thick:14,gap:Math.PI/2+rand(-.8,.8),gapW:.85,max:Math.hypot(W,H)});
 const ATTACKS={
- lightning(b){for(let i=0;i<3;i++)later(b,i*.45,()=>{bossShot(b,{kind:'strike',style:'bolt',x:i<2?x*W:rand(.15,.85)*W,w:48,warn:.75,dur:.3});gameSound.effect('zap')});return 14},
- hail(b){for(let w=0;w<2;w++)later(b,w*.55,()=>fan(b,7,Math.PI*.3+(w?.07:0),Math.PI*.7+(w?.07:0),170,{style:'hail',r:9}));gameSound.effect('pew');return 13},
- gust(b){b.wind={dir:x>.5?1:-1,time:2.6};popup(W/2,H*.45,'GUST!','#bff4ff',34);for(let i=0;i<3;i++)later(b,.5+i*.55,()=>aimed(b,190,{style:'hail',r:9}));return 12},
- darts(b){for(let i=0;i<5;i++)later(b,i*.18,()=>{aimed(b,260,{style:'dart',r:7});gameSound.effect('pew')});return 13},
- coconuts(b){lanes(5).forEach((fx,i)=>later(b,i*.12,()=>bossShot(b,{kind:'faller',style:'coconut',x:fx,y:-30,vy:290*b.sp,r:13,warn:.8})));return 14},
- firering(b){ringShot(b,'fire');gameSound.effect('roar');return 13},
- sonic(b){ringShot(b,'sonic');later(b,.75,()=>ringShot(b,'sonic'));gameSound.effect('zap');return 13},
- stalactites(b){lanes(5).forEach((fx,i)=>later(b,i*.1,()=>bossShot(b,{kind:'faller',style:'spike',x:fx,y:-30,vy:330*b.sp,r:12,warn:.85})));return 14},
- swarm(b){for(let i=0;i<4;i++)later(b,i*.25,()=>aimed(b,165,{style:'bat',r:11,home:1.1,turn:2.4}));return 13},
- laser(b){for(const s of [-1,1])later(b,s>0?.4:0,()=>{const ox=b.x+s*40*b.scale,oy=b.y+80*b.scale;bossShot(b,{kind:'beam',style:'laser',x:ox,y:oy,ang:Math.atan2(balloonY()-oy,x*W-ox),len:Math.hypot(W,H)*1.3,w:16,warn:.85,dur:.35})});gameSound.effect('zap');return 14},
- missiles(b){for(let i=0;i<3;i++)later(b,i*.3,()=>{aimed(b,150,{style:'missile',r:9,home:2.4,turn:1.6,life:4.5,spread:(i-1)*.6});gameSound.effect('pew')});return 14},
- saws(b){for(const s of [-1,1])bossShot(b,{style:'saw',x:b.x+s*50*b.scale,y:b.y+40*b.scale,vx:s*170*b.sp,vy:150*b.sp,r:15,bounce:true,life:4.2});return 13},
- plasma(b){for(let w=0;w<2;w++)later(b,w*.6,()=>{fan(b,9,Math.PI*.22+(w?.06:0),Math.PI*.78+(w?.06:0),165,{style:'plasma',r:9});gameSound.effect('pew')});return 13},
- tractor(b){const fromLeft=x>.5;bossShot(b,{kind:'sweep',style:'tractor',x0:fromLeft?W*.06:W*.94,x1:fromLeft?W*.58:W*.42,w:76,warn:.85,dur:2.2});return 14},
- burst(b){for(let i=0;i<3;i++)later(b,i*.5,()=>{for(const d of [-.2,0,.2])aimed(b,200,{style:'plasma',r:8,spread:d});gameSound.effect('pew')});return 12},
- spiral(b){for(let i=0;i<16;i++)later(b,i*.11,()=>{const a=Math.PI*(.18+.64*(.5+.5*Math.sin(i*.6)));fan(b,2,a,Math.PI-a,150,{style:'star',r:8})});return 14},
- blackhole(b){bossShot(b,{kind:'hole',style:'hole',x:rand(.25,.75)*W,y:H*.42,r:24,warn:.6,dur:3.2,pull:.9});for(let i=0;i<4;i++)later(b,.8+i*.55,()=>bossShot(b,{kind:'faller',style:'meteor',x:lanes(1)[0],y:-30,vy:280*b.sp,r:12,warn:.7}));gameSound.effect('zap');return 15},
- ring(b){ringShot(b,'cosmic');later(b,.8,()=>ringShot(b,'cosmic'));return 14}};
+ lightning(b){for(let i=0;i<2;i++)later(b,i*.7,()=>{bossShot(b,{kind:'strike',style:'bolt',x:i<1?x*W:rand(.15,.85)*W,w:40,warn:1,dur:.28});gameSound.effect('zap')});return 15},
+ hail(b){for(let w=0;w<2;w++)later(b,w*.8,()=>fan(b,4,Math.PI*.3+(w?.1:0),Math.PI*.7+(w?.1:0),140,{style:'hail',r:8}));gameSound.effect('pew');return 15},
+ gust(b){b.wind={dir:x>.5?1:-1,time:2.2};popup(W/2,H*.45,'GUST!','#bff4ff',34);for(let i=0;i<2;i++)later(b,.6+i*.8,()=>aimed(b,155,{style:'hail',r:8}));return 14},
+ darts(b){for(let i=0;i<3;i++)later(b,i*.32,()=>{aimed(b,210,{style:'dart',r:6});gameSound.effect('pew')});return 15},
+ coconuts(b){lanes(4).forEach((fx,i)=>later(b,i*.15,()=>bossShot(b,{kind:'faller',style:'coconut',x:fx,y:-30,vy:240*b.sp,r:12,warn:1})));return 15},
+ firering(b){ringShot(b,'fire');gameSound.effect('roar');return 15},
+ sonic(b){ringShot(b,'sonic');later(b,1.2,()=>ringShot(b,'sonic'));gameSound.effect('zap');return 15},
+ stalactites(b){lanes(4).forEach((fx,i)=>later(b,i*.12,()=>bossShot(b,{kind:'faller',style:'spike',x:fx,y:-30,vy:270*b.sp,r:11,warn:1})));return 15},
+ swarm(b){for(let i=0;i<3;i++)later(b,i*.35,()=>aimed(b,135,{style:'bat',r:10,home:.9,turn:2}));return 15},
+ laser(b){for(const s of [-1,1])later(b,s>0?.7:0,()=>{const ox=b.x+s*40*b.scale,oy=b.y+80*b.scale;bossShot(b,{kind:'beam',style:'laser',x:ox,y:oy,ang:Math.atan2(balloonY()-oy,x*W-ox),len:Math.hypot(W,H)*1.3,w:12,warn:1,dur:.3})});gameSound.effect('zap');return 15},
+ missiles(b){for(let i=0;i<2;i++)later(b,i*.45,()=>{aimed(b,120,{style:'missile',r:8,home:1.1,turn:.9,life:4,spread:(i?.5:-.5)});gameSound.effect('pew')});return 15},
+ saws(b){for(const s of [-1,1])bossShot(b,{style:'saw',x:b.x+s*50*b.scale,y:b.y+40*b.scale,vx:s*125*b.sp,vy:115*b.sp,r:14,bounce:true,life:3.2});return 15},
+ plasma(b){for(let w=0;w<2;w++)later(b,w*.9,()=>{fan(b,5,Math.PI*.25+(w?.1:0),Math.PI*.75+(w?.1:0),135,{style:'plasma',r:8});gameSound.effect('pew')});return 15},
+ tractor(b){const fromLeft=x>.5;bossShot(b,{kind:'sweep',style:'tractor',x0:fromLeft?W*.06:W*.94,x1:fromLeft?W*.5:W*.5,w:64,warn:1.1,dur:2.6});return 15},
+ burst(b){for(let i=0;i<2;i++)later(b,i*.7,()=>{for(const d of [-.22,0,.22])aimed(b,165,{style:'plasma',r:7,spread:d});gameSound.effect('pew')});return 14},
+ spiral(b){for(let i=0;i<8;i++)later(b,i*.2,()=>{const a=Math.PI*(.2+.6*(.5+.5*Math.sin(i*.7)));fan(b,2,a,Math.PI-a,120,{style:'star',r:7})});return 15},
+ blackhole(b){bossShot(b,{kind:'hole',style:'hole',x:rand(.25,.75)*W,y:H*.42,r:22,warn:.9,dur:2.8,pull:.5});for(let i=0;i<3;i++)later(b,1+i*.7,()=>bossShot(b,{kind:'faller',style:'meteor',x:lanes(1)[0],y:-30,vy:230*b.sp,r:11,warn:.9}));gameSound.effect('zap');return 16},
+ ring(b){ringShot(b,'cosmic');later(b,1.2,()=>ringShot(b,'cosmic'));return 15}};
 
 // ---------- Fight flow ----------
 function startBoss(){const def=BOSSES[stage.id]||BOSSES.sky,level=save.bossWins&&save.bossWins[stage.id]?Math.min(3,save.bossWins[stage.id]):0;
- boss={def,phase:'clear',age:0,animT:0,clock:0,x:W/2,y:-220,scale:Math.min(1,W/430),stamina:100,shots:[],timers:[],cool:1.2,last:-1,attack:0,level,sp:1+.1*level,pace:1,wind:null,fatal:null,hidden:false,freeze:false};
+ boss={def,phase:'clear',age:0,animT:0,clock:0,x:W/2,y:-220,scale:Math.min(1,W/430),stamina:100,shots:[],timers:[],cool:1.2,last:-1,attack:0,level,sp:.85+.07*level,pace:1,wind:null,fatal:null,hidden:false,freeze:false};
  for(const o of obstacles)if(o.leaving===undefined)o.leaving=0;for(const h of critters){if(h.dormant)h.gone=true;else knock(h,critterPos(h))}critters=critters.filter(h=>!h.gone);
- announce('WARNING!','BOSS INCOMING','power','skull');gameSound.effect('siren');shake=Math.max(shake,6)}
+ closeCoinRow();announce('WARNING!','BOSS INCOMING','power','skull');gameSound.effect('siren');shake=Math.max(shake,6)}
 function setPhase(p){boss.phase=p;boss.age=0}
 function showVersus(){const v=$('#versus');$('#vs-boss-name').textContent=boss.def.name;$('#vs-boss-title').textContent=boss.def.title;$('#vs-hero-name').textContent=(SKINS[save.skin]||SKINS.classic).name.toUpperCase();v.hidden=false;v.classList.remove('play');void v.offsetWidth;v.classList.add('play');gameSound.effect('vs');setTimeout(()=>gameSound.effect('roar'),700)}
 function renderVersus(){const main=ctx,s=performance.now()/1000;
  const hc=$('#vs-hero').getContext('2d');hc.setTransform(1,0,0,1,0,0);hc.clearRect(0,0,240,240);hc.setTransform(2.8,0,0,2.8,120,128);ctx=hc;ctx.rotate(Math.sin(s*3)*.08);drawBalloonBody(SKINS[save.skin]||SKINS.classic,s,'cool',0);
  const bc=$('#vs-boss').getContext('2d');bc.setTransform(1,0,0,1,0,0);bc.clearRect(0,0,320,260);bc.setTransform(1.05,0,0,1.05,160,138+Math.sin(s*2)*4);ctx=bc;boss.def.art({t:s,tired:false,attack:.5+.5*Math.sin(s*4),lookX:-.7,lookY:.6});ctx=main}
 function bossPace(){return boss?boss.pace:1}
-function updateBoss(dt,real){if(!boss||state==='dead')return;const b=boss;b.animT+=real;b.attack=Math.max(0,b.attack-real*1.4);if(b.wind&&(b.wind.time-=dt)<=0)b.wind=null;
+function updateBoss(dt,real){caveWallScale+=((boss&&boss.phase!=='done'?.15:1)-caveWallScale)*Math.min(1,real*1.5);if(!boss||state==='dead')return;const b=boss;b.animT+=real;b.attack=Math.max(0,b.attack-real*1.4);if(b.wind&&(b.wind.time-=dt)<=0)b.wind=null;
  const target=b.phase==='clear'||b.phase==='done'?1:.35;b.pace+=(target-b.pace)*Math.min(1,real*2);
  for(const o of obstacles)if(o.leaving!==undefined)o.leaving+=real;obstacles=obstacles.filter(o=>o.leaving===undefined||o.leaving<.6);
  b.freeze=b.phase==='versus'||b.phase==='fatality';
@@ -128,13 +128,13 @@ function updateBoss(dt,real){if(!boss||state==='dead')return;const b=boss;b.anim
  if(b.phase==='enter'){b.age+=dt;b.clock+=dt;const k=Math.min(1,b.age/1.1);b.x=homeX;b.y=-220+(homeY+220)*easeOut(k);if(k>=1){setPhase('fight');announce('FIGHT!','','go');gameSound.effect('roar');shake=Math.max(shake,14)}return}
  if(b.phase==='fight'){b.clock+=dt;b.x+=(homeX-b.x)*Math.min(1,dt*3);b.y+=(homeY-b.y)*Math.min(1,dt*3);
   for(const tm of b.timers)if(b.clock>=tm.at){tm.done=true;tm.fn()}b.timers=b.timers.filter(tm=>!tm.done);
-  b.stamina-=dt*1.1;if((b.cool-=dt)<=0&&b.stamina>0){let k;do k=Math.floor(Math.random()*b.def.attacks.length);while(k===b.last&&b.def.attacks.length>1);b.last=k;b.stamina-=ATTACKS[b.def.attacks[k]](b);b.attack=1;b.cool=rand(2.3,2.9)/b.sp}
+  b.stamina-=dt*2.2;if((b.cool-=dt)<=0&&b.stamina>0){let k;do k=Math.floor(Math.random()*b.def.attacks.length);while(k===b.last&&b.def.attacks.length>1);b.last=k;b.stamina-=ATTACKS[b.def.attacks[k]](b);b.attack=1;b.cool=rand(3,3.6)/b.sp}
   if(b.stamina<=0&&!b.timers.length){b.stamina=0;setPhase('tired');for(const s of b.shots)burst(s.x||s.cx||x*W,s.y||s.cy||0,4,{type:'puff',colors:['#ffffff'],speed:[20,60],size:[5,9],life:[.3,.5]});b.shots=[];b.wind=null;announce('TIRED!','TAP FATALITY!','fatal','skull');gameSound.effect('charged')}}
  if(b.phase==='tired'){b.clock+=dt*.3;b.x+=(W/2-b.x)*Math.min(1,dt*2);b.y+=(Math.max(H*.31,200*b.scale+70)+Math.sin(b.animT*2)*6-b.y)*Math.min(1,dt*2)}
  if(b.phase==='fatality'){b.age+=real;const f=b.fatal;f.p=Math.min(1,b.age/FATALITY_TIME);f.pose={};f.balloon=null;f.def.pose(f.p,b,f);if(f.p>=1)bossDefeated()}
- if(b.phase==='done'&&(b.age+=real)>1.4){endBoss();return}
+ if(b.phase==='done'&&(b.age+=real)>3.2){endBoss();return}
  updateShots(b,dt)}
-function updateShots(b,dt){const bx=x*W,by=balloonY()-5,br=22;
+function updateShots(b,dt){const bx=x*W,by=balloonY()-5,br=14;
  for(const s of b.shots){s.age+=dt;
   if(s.kind==='orb'){if(s.home&&s.age<s.home){const want=Math.atan2(by-s.y,bx-s.x),cur=Math.atan2(s.vy,s.vx),sp=Math.hypot(s.vx,s.vy);let d=want-cur;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;const na=cur+clamp(d,-s.turn*dt,s.turn*dt);s.vx=Math.cos(na)*sp;s.vy=Math.sin(na)*sp}
    s.x+=s.vx*dt;s.y+=s.vy*dt;if(s.bounce){if(s.x<s.r||s.x>W-s.r){s.vx*=-1;s.x=clamp(s.x,s.r,W-s.r)}if(s.y<H*.1||s.y>H-30){s.vy*=-1;s.y=clamp(s.y,H*.1,H-30)}}
@@ -151,10 +151,17 @@ function updateShots(b,dt){const bx=x*W,by=balloonY()-5,br=22;
 function bossHit(s){if(smashing()){if(s.kind==='orb'||s.kind==='faller'){s.dead=true;burst(s.x,s.y,8,{colors:['#fff','#ffd23f'],speed:[80,220],life:[.2,.4]})}else s.hit=true;return}
  if(shield>0){breakShield();if(s.kind==='orb'||s.kind==='faller')s.dead=true;else s.hit=true;return}finish()}
 function startFatality(){if(!boss||boss.phase!=='tired'||state!=='flying')return;const def=FATALITIES[save.skin]||FATALITIES.classic;setPhase('fatality');boss.fatal={def,p:0,pose:{},balloon:null,fired:new Set(),at(th,fn){if(this.p>=th&&!this.fired.has(th)){this.fired.add(th);fn()}}};announce(def.name,'FATALITY!','fatal','skull');gameSound.effect('fatality');shake=Math.max(shake,8)}
-function bossDefeated(){const b=boss,reward=50+25*b.level+(save.skin==='gold'?25:0);coinCount+=reward;const per=Math.floor(reward/10);for(let i=0;i<10;i++)flyers.push({x:b.x+rand(-50,50),y:Math.max(40,b.y)+rand(-30,30),age:-i*.06,value:i<9?per:reward-per*9});
+function bossDefeated(){const b=boss,reward=500+100*b.level+(save.skin==='gold'?100:0);spawnRewardCoins(b,reward);
  save.bossWins=save.bossWins||{};save.bossWins[stage.id]=(save.bossWins[stage.id]||0)+1;persist();
  announce('BOSS DEFEATED!',`+${reward} COINS`,'record','trophy');confetti(50);gameSound.effect('record');b.hidden=true;b.shots=[];setPhase('done')}
-function endBoss(){boss=null;nextBoss=alt+BOSS_EVERY;nextObstacle=alt+H/worldScale*.95}
+function endBoss(){boss=null;nextBossTime=flightTime+BOSS_INTERVAL;nextObstacle=alt+H/worldScale*.95;prevLedge={a:nextObstacle-300,c:.5};coinCursor=Math.max(coinCursor,nextObstacle-260)}
+// Boss reward: coins burst out across the screen, hang for a moment, then all fly into the balloon.
+function spawnRewardCoins(b,n){const cx=b.x,cy=Math.max(60,b.y);for(let i=0;i<n;i++){const a=rand(0,TAU),sp=rand(60,560);rewardCoins.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,age:0,hold:rand(.7,1.3),phase:rand(0,TAU)})}}
+function updateRewardCoins(real){if(!rewardCoins.length)return;const bx=x*W,by=balloonY()-5;let got=0;
+ for(const c of rewardCoins){c.age+=real;if(c.age<c.hold){const d=Math.exp(-2.6*real);c.vx*=d;c.vy*=d;c.vy+=30*real;c.x=clamp(c.x+c.vx*real,8,W-8);c.y=clamp(c.y+c.vy*real,30,H-30)}
+  else{const dx=bx-c.x,dy=by-c.y,dist=Math.hypot(dx,dy)||1,step=Math.min(dist,(260+(c.age-c.hold)*1500)*real);c.x+=dx/dist*step;c.y+=dy/dist*step;if(dist<18){c.done=true;got++}}}
+ if(!got)return;rewardCoins=rewardCoins.filter(c=>!c.done);coinCount+=got;shownCoins+=got;squashV+=Math.min(4,got*.3);if(performance.now()-rewardSound>55){rewardSound=performance.now();gameSound.effect('coin',1+Math.floor(Math.random()*12))}if(Math.random()<.3)burst(bx,by,3,{type:'star',colors:['#ffd23f','#fff'],speed:[60,160],size:[3,5],life:[.3,.5]});bump($('#coin-pill'));if(!rewardCoins.length){popup(bx,by-80,'JACKPOT!','#ffd23f',40);gameSound.effect('record')}}
+function drawRewardCoins(){if(!rewardCoins.length)return;ctx.save();ctx.beginPath();for(const c of rewardCoins){const w=Math.max(.25,Math.abs(Math.cos(c.age*8+c.phase)))*7;ctx.moveTo(c.x+w,c.y);ctx.ellipse(c.x,c.y,w,7,0,0,TAU)}ctx.fillStyle='#ffcf2e';ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=1.6;ctx.stroke();ctx.beginPath();for(const c of rewardCoins){ctx.moveTo(c.x-1,c.y-2);ctx.arc(c.x-2,c.y-2,1.8,0,TAU)}ctx.fillStyle='#fff6c2';ctx.fill();ctx.restore()}
 
 // ---------- Drawing ----------
 function drawBossBody(b){const F=(b.fatal&&b.fatal.pose)||{};if(b.hidden||F.alpha===0)return;const o={t:b.animT,tired:b.phase==='tired'||b.phase==='fatality',attack:b.attack,lookX:clamp((x*W-b.x)/150,-1,1),lookY:clamp((balloonY()-b.y)/250,-1,1)},sc=b.scale*(F.scale===undefined?1:F.scale);
