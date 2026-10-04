@@ -52,15 +52,17 @@ Every stage is endless, with its own best altitude and medals
   that turn, then shrink into the distance after you pass them.
 
 ## Boss fights
-Every 2,000 m (BOSS_EVERY in bosses.js) the stage boss arrives:
-1. WARNING: an alarm sounds, ledges retract into the walls and creatures flee.
+Every 5 minutes of flying (BOSS_INTERVAL in bosses.js; a BOSS timer counts down in the HUD) the stage boss arrives:
+1. WARNING: an alarm sounds, ledges retract into the walls (cave walls thin out
+   and only bounce you during the fight) and creatures flee.
 2. A versus screen slams in: your balloon against the boss.
 3. The boss drops in and attacks. Dodge its weapons; each attack and the passing
    time drain its stamina bar. Boosts and shields protect you as usual.
 4. At zero stamina the boss is TIRED (dizzy and sweating). Tap FATALITY (or press
    F, Space or Enter) to finish it with your skin's fatality.
-5. Defeat pays 50 coins (+25 per earlier win against that boss, +25 with the
-   Golden King skin), and the course resumes. Repeat wins make the boss faster.
+5. Defeat bursts 500 coins across the screen (+100 per earlier win against that
+   boss, +100 with the Golden King skin); they all fly into your balloon, then the
+   course resumes. Repeat wins make the boss slightly faster.
 
 Bosses and weapons:
 - Thunder King (Sunny Sky): lightning strikes, hail fans, wind gusts.
@@ -69,8 +71,9 @@ Bosses and weapons:
 - Mecha Crusher (Robo Factory): aimed lasers, homing missiles, bouncing saws.
 - UFO Overlord (Outer Space): plasma fans, tractor-beam sweep, triple bursts.
 - Star Devourer (Deep Universe): star spirals, black hole pull with meteors, cosmic rings.
-Rings always leave a gap, falling objects leave free lanes, and lasers, strikes
-and sweeps are telegraphed before they fire.
+Attacks are tuned to be escapable: shots are slow and few, rings leave a wide gap,
+falling objects leave at least three free lanes, lasers, strikes and sweeps flash
+a one-second warning, homing only lasts about a second, and fights are short.
 
 Fatalities (one per skin): Classic – Balloon Slam, Gumball – Bubble Trap,
 Funny Clown – Pie Party, Toy Robot – Laser Eyes, Watermelon – Seed Storm,
@@ -84,13 +87,16 @@ Shift fires the boost engine; F, Space or Enter performs a fatality on a tired
 boss; P or Escape pauses.
 
 ## Coins, power-ups and boost
-- Coins come in small trails between ledges. Chain them for combos. Coins you
-  collect are added to your wallet for the store.
-- Energy cells (every third gap): collect 5, then tap ⚡ BOOST. This is the only
+- Coins come in rows of 10 that follow the safe path between ledges. Collect
+  every coin in 3 rows in a row to raise the coin multiplier to x1.1, then x1.2
+  after the next 3, and so on; each coin is worth the multiplier. Missing a single
+  coin resets it to x1.0. The multiplier and row progress show under the coin
+  counter. Coins you collect are added to your wallet for the store.
+- Energy cells (in every second break between coin rows): collect 5, then tap ⚡ BOOST. This is the only
   power with a cinematic intro — the action freezes, rays spin and the balloon
   zooms in with sunglasses — then a rocket engine smashes through everything for
   3.5 seconds.
-- Rare power-ups (about every 11 gaps): coin magnet, bubble shield and turbo.
+- Rare power-ups (in every sixth break between coin rows): coin magnet, bubble shield and turbo.
   Turbo plays a quick mini intro in slow motion, then rockets you up.
 - Smashing ledges or drones, or bonking creatures while boosted, earns a coin.
 

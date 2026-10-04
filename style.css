@@ -262,3 +262,13 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 @keyframes vsCrack{0%,14%{opacity:0}18%,80%{opacity:1}86%,100%{opacity:0}}
 @keyframes vsBadge{0%,15%{opacity:0;transform:scale(4) rotate(-40deg)}24%{opacity:1;transform:scale(.9) rotate(6deg)}30%,78%{opacity:1;transform:scale(1) rotate(-4deg)}84%,100%{opacity:0;transform:scale(2.4) rotate(20deg)}}
 .announce.fatal{top:43%;animation-duration:2.7s}.announce.fatal strong{font-size:48px;color:var(--yellow)}.announce.fatal small{background:#c8102e;font-size:18px}
+/* Coin multiplier and boss timer */
+.mult-pill{display:flex;align-items:center;gap:6px;padding:2px 9px 3px;font-family:var(--title);font-size:17px;text-shadow:var(--stroke)}
+.mult-pill b{font-weight:400}
+.mult-pill.hot{background:linear-gradient(#ff9a3c,#e05a00);animation:pulse .5s ease-in-out infinite alternate}
+.row-pips{display:flex;gap:3px}
+.row-pips i{width:9px;height:9px;border-radius:50%;background:#1b124099;border:2px solid var(--ink)}
+.row-pips i.on{background:#ffd23f;box-shadow:0 0 6px #ffd23f}
+.boss-timer{padding:1px 8px 2px;background:#c8102ecc;border:2px solid var(--ink);border-radius:8px}
+.boss-timer:empty{display:none}
+.flight-info{flex-wrap:wrap;row-gap:4px;max-width:72%}.flight-info span{white-space:nowrap}

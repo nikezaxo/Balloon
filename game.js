@@ -24,12 +24,14 @@ let shake=0,flash=0,flashColor='#fff',timeScale=1,slowTimer=0,deathTimer=0,popup
 // Power state. The showcase is the freeze-frame celebration when the boost engine fires.
 let energy=0,boost=null,speedMult=1,shield=0,magnet=0,invuln=0,showcase=null,powerCount=0;
 let panelKind=null,storeTab='skins',previews=[],skinPop={},transition=null,swapFx=0,wantFullscreen=false;
+// Coin rows: 10 coins per row along the safe path; every 3 perfect rows in a row add +0.1 to the coin multiplier.
+const ROW_SIZE=10,COIN_STEP=42;let coinCursor=330,prevLedge={a:0,c:.5},rowId=0,rowCount=0,rowBreaks=0,rows=new Map(),rowStreak=0,coinMult=1,bestMult=1;
 const keys=new Set(),radius=29,worldScale=.65,hudCache={};
 // The canvas fills the screen; gameplay happens in a centred column at most 0.6× the screen height wide.
 function resize(){const r=canvas.getBoundingClientRect();SW=r.width;H=r.height;W=Math.round(Math.min(SW,Math.max(360,H*.6)));OX=(SW-W)/2;dpr=Math.min(devicePixelRatio||1,2);canvas.width=SW*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);shell.style.setProperty('--pw',W+'px')}
 new ResizeObserver(resize).observe(canvas);
 const stageBest=()=>save.best[stage.id]||0;
-function reset(mode='ready'){state=mode;alt=0;x=.5;vx=0;target=null;pointer=null;obstacles=[];coins=[];critters=[];particles=[];leaves=[];flightTime=0;spin=0;wind=0;weatherNow=null;leafClock=0;coinCount=0;shownCoins=0;banked=0;nextObstacle=450;spawnIndex=0;keys.clear();boss=null;nextBoss=BOSS_EVERY;$('#versus').hidden=true;$('#boss-bar').hidden=true;$('#fatality').hidden=true;
+function reset(mode='ready'){state=mode;alt=0;x=.5;vx=0;target=null;pointer=null;obstacles=[];coins=[];critters=[];particles=[];leaves=[];flightTime=0;spin=0;wind=0;weatherNow=null;leafClock=0;coinCount=0;shownCoins=0;banked=0;nextObstacle=450;spawnIndex=0;keys.clear();boss=null;caveWallScale=1;nextBossTime=BOSS_INTERVAL;rewardCoins=[];coinCursor=330;prevLedge={a:0,c:.5};rowId=0;rowCount=0;rowBreaks=0;rows=new Map();rowStreak=0;coinMult=1;bestMult=1;$('#versus').hidden=true;$('#boss-bar').hidden=true;$('#fatality').hidden=true;
  shake=0;flash=0;timeScale=1;slowTimer=0;deathTimer=0;popups=[];rings=[];flyers=[];streaks=[];combo=0;comboTimer=0;bestCombo=0;nearMisses=0;smashes=0;squash=0;squashV=0;mood='happy';moodTimer=0;danger=0;ropeCut=null;nextMilestone=1000;passedBest=false;medalsHit=0;eventsSeen=new Set();grow=1;revives=0;
  energy=0;boost=null;speedMult=1;shield=0;magnet=0;invuln=0;showcase=null;powerCount=0;
  generateCourse();$('#weather').textContent=stage.wind?'CALM AIR':stage.calm;$('#weather').classList.remove('gust');$('#hint').hidden=mode!=='ready';$('#menu').hidden=mode!=='menu';$('#menu').classList.remove('leaving');transition=null;$('#overlay').hidden=true;$('#panel').hidden=true;panelKind=null;$('#pause').innerHTML=icon('pause');$('#pause').setAttribute('aria-label','Pause game');$('#announce').replaceChildren();refreshMeta()}
@@ -38,7 +40,7 @@ function refreshMeta(){const b=stageBest();$('#best').innerHTML=b?`${iconHTML('t
 function updatePicker(){const i=STAGES.indexOf(stage),b=stageBest(),show=$('#stage-show');show.style.setProperty('--a',stage.top);show.style.setProperty('--b',stage.bottom);if(show.dataset.stage!==stage.id){show.dataset.stage=stage.id;$('#stage-icon').innerHTML=icon(stage.icon)}$('#stage-name').textContent=stage.name;$('#stage-best').textContent=b?`BEST ${b.toLocaleString()} m`:'NOT PLAYED YET';$('#stage-medals').innerHTML=MEDALS.map(m=>iconHTML('medal',m.tone,b>=m.at?'':'off')).join('');const wins=(save.bossWins||{})[stage.id]||0;$('#stage-boss').innerHTML=`${iconHTML('crown')}BOSS: ${BOSSES[stage.id].name}${wins?` · BEATEN x${wins}`:''}`;
  const dots=$('#stage-dots');if(dots.children.length!==STAGES.length){dots.replaceChildren(...STAGES.map((s,k)=>{const d=el('button');d.setAttribute('aria-label',s.name);d.onclick=()=>setStage(k);return d}))}[...dots.children].forEach((d,k)=>d.classList.toggle('on',k===i))}
 function setStage(i){if(state!=='menu')return;const next=STAGES[(i+STAGES.length)%STAGES.length];if(next===stage)return;stage=next;save.lastStage=stage.id;persist();reset('menu');swapFx=1;const show=$('#stage-show');show.classList.remove('pop');void show.offsetWidth;show.classList.add('pop');gameSound.effect('on')}
-function bank(){const gain=coinCount-banked;if(gain>0){save.coins+=gain;banked=coinCount;persist()}}
+function bank(){const gain=Math.floor(coinCount)-banked;if(gain>0){save.coins+=gain;banked=coinCount;persist()}}
 
 // ---- Menu, panels, full screen and sound ----
 const fsElement=()=>document.fullscreenElement||document.webkitFullscreenElement;
@@ -55,7 +57,7 @@ function openMenu(){bank();reset('menu')}
 function el(tag,cls='',text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
 function openPanel(kind){panelKind=kind;previews=[];const list=$('#panel-list');list.replaceChildren();
  if(kind==='store')renderStore();
- else{$('#panel-title').textContent='POWER-UPS';{const row=el('div','boost-item'),ico=el('span','ico'),text=el('div');ico.innerHTML=icon('skull');ico.style.setProperty('--c','#ff4d5e');text.append(el('h3','','BOSS FIGHTS'),el('p','',`Every ${BOSS_EVERY.toLocaleString()} m the stage boss arrives. Dodge its weapons until it runs out of stamina, then tap FATALITY. Each balloon skin has its own fatality.`));row.append(ico,text);list.append(row)}for(const p of Object.values(POWERS)){const row=el('div','boost-item'),ico=el('span','ico'),text=el('div');ico.innerHTML=icon(p.ico);ico.style.setProperty('--c',p.color);text.append(el('h3','',p.name),el('p','',p.desc));row.append(ico,text);list.append(row)}}
+ else{$('#panel-title').textContent='POWER-UPS';{const row=el('div','boost-item'),ico=el('span','ico'),text=el('div');ico.innerHTML=icon('skull');ico.style.setProperty('--c','#ff4d5e');text.append(el('h3','','BOSS FIGHTS'),el('p','',`Every ${BOSS_INTERVAL/60} minutes of flying the stage boss arrives. Dodge its weapons until it runs out of stamina, then tap FATALITY. Each balloon skin has its own fatality.`));row.append(ico,text);list.append(row)}for(const p of Object.values(POWERS)){const row=el('div','boost-item'),ico=el('span','ico'),text=el('div');ico.innerHTML=icon(p.ico);ico.style.setProperty('--c',p.color);text.append(el('h3','',p.name),el('p','',p.desc));row.append(ico,text);list.append(row)}}
  $('#panel').hidden=false;list.scrollTop=0}
 function renderStore(){$('#panel-title').textContent='STORE';const list=$('#panel-list'),scroll=list.scrollTop;list.replaceChildren();const top=el('div','store-top'),tabs=el('div','tabs');
  for(const [id,label,ic] of [['skins','SKINS','balloon'],['lives','LIVES','heart']]){const b=el('button','tab'+(storeTab===id?' on':''));b.innerHTML=iconHTML(ic)+label;b.onclick=()=>{storeTab=id;renderStore()};tabs.append(b)}
@@ -124,8 +126,8 @@ function finish(){state='dead';release();mood='dead';boost=null;shield=0;magnet=
  rings.push({x:bx,y:by,max:100,life:0,dur:.5,color:'#fff',width:8},{x:bx,y:by,max:160,life:0,dur:.75,color:'#ffd23f',width:5});
  popup(bx,by-40,'POP!','#ff4d5e',54);shake=22;flash=.9;flashColor='#fff';slowTimer=.45;deathTimer=1.1}
 function showResult(){bank();const a=Math.floor(alt),record=a>stageBest();if(record){save.best[stage.id]=a;persist()}const earned=MEDALS.filter(m=>a>=m.at);
- show(record?'NEW RECORD!':pick(['SO CLOSE!','NICE FLIGHT!','GREAT RUN!']),'POP!',`${stage.name} · ${smashes} smash${smashes===1?'':'es'} · ${nearMisses} close call${nearMisses===1?'':'s'} · best combo x${bestCombo} · wallet ${save.coins.toLocaleString()} coins`,'PLAY AGAIN','MENU',true);$('#result-medals').innerHTML=earned.map(m=>iconHTML('medal',m.tone)).join('');
- $('#record').hidden=!record;$('#stat-coins').textContent=coinCount;$('#stat-best').textContent=stageBest().toLocaleString()+' m';countUp($('#stat-alt'),a,' m');
+ show(record?'NEW RECORD!':pick(['SO CLOSE!','NICE FLIGHT!','GREAT RUN!']),'POP!',`${stage.name} · ${smashes} smash${smashes===1?'':'es'} · ${nearMisses} close call${nearMisses===1?'':'s'} · best multiplier x${bestMult.toFixed(1)} · wallet ${save.coins.toLocaleString()} coins`,'PLAY AGAIN','MENU',true);$('#result-medals').innerHTML=earned.map(m=>iconHTML('medal',m.tone)).join('');
+ $('#record').hidden=!record;$('#stat-coins').textContent=Math.floor(coinCount);$('#stat-best').textContent=stageBest().toLocaleString()+' m';countUp($('#stat-alt'),a,' m');
  if(save.lives>0){$('#revive').hidden=false;$('#revive').innerHTML=`${iconHTML('heart')}REVIVE (${save.lives})`}refreshMeta();if(record)gameSound.effect('record')}
 // Spend a life: clear the danger nearby, re-inflate the balloon and carry on from the same altitude.
 function revive(){if(state!=='dead'||save.lives<=0)return;save.lives--;persist();revives++;state='flying';$('#overlay').hidden=true;deathTimer=0;slowTimer=0;timeScale=1;
@@ -195,12 +197,20 @@ function flightSpeed(height){return (130+1.4*Math.sqrt(Math.max(0,height)))*stag
 function weightedPick(kinds){let total=0;for(const k of kinds)total+=POWERS[k].weight;let r=Math.random()*total;for(const k of kinds){r-=POWERS[k].weight;if(r<=0)return k}return kinds[0]}
 // Generate just ahead of the player; discard objects below the screen.
 function generateCourse(){if(boss)return;const horizon=alt+H/worldScale+flightSpeed(alt)*2.5;
- while(nextObstacle<horizon){const i=spawnIndex++,a=nextObstacle,slot=a-140,cx=.5+Math.sin(i*2.3)*.16,dir=i%2?1:-1;
-  obstacles.push({a,side:i%2,length:.25+(Math.sin(i*4.7)+1)*.105,moving:i>5&&i%4===0,phase:i*1.8,root:i%3===0});
-  let middle='coin';if(i>=6&&i%11===6)middle=weightedPick(PICKUPS);else if(i%3===1)middle='energy';
-  coins.push({a:slot-55,x:cx-.045*dir,kind:'coin'},{a:slot,x:cx,kind:middle},{a:slot+55,x:cx+.045*dir,kind:'coin'});
+ while(nextObstacle<horizon){const i=spawnIndex++,a=nextObstacle,o={a,side:i%2,length:.25+(Math.sin(i*4.7)+1)*.105,moving:i>5&&i%4===0,phase:i*1.8,root:i%3===0};obstacles.push(o);
+  // The safe path runs through the middle of the open space beside each ledge.
+  const reach=o.length*(stage.reach||1)+(o.moving?.065:0)+.03;let c=o.side?(1-reach)/2:(1+reach)/2;if(stage.walls)c=clamp(c,caveWall(a,0)+.12,1-caveWall(a,1)-.12);
+  layCoins(prevLedge,{a,c});prevLedge={a,c};
   const gap=Math.max(300,flightSpeed(a)*1.65);nextObstacle+=gap+(i>=3?spawnCritters(i,a,i%2,gap):0)}
  const floor=alt-H/worldScale-100;obstacles=obstacles.filter(o=>o.a>floor);coins=coins.filter(c=>!c.collected&&c.a>floor)}
+// Lay coins along the path from one ledge to the next: rows of 10, then a short break that sometimes
+// holds an energy cell or a power-up.
+function layCoins(p0,p1){while(coinCursor<p1.a){const k=clamp((coinCursor-p0.a)/(p1.a-p0.a),0,1),e=k*k*(3-2*k);let cx=p0.c+(p1.c-p0.c)*e;if(stage.walls)cx=clamp(cx,caveWall(coinCursor,0)+.1,1-caveWall(coinCursor,1)-.1);
+  if(rowCount<ROW_SIZE){if(rowCount===0){rowId++;rows.set(rowId,{total:0,got:0,closed:false,broken:false})}const r=rows.get(rowId);coins.push({a:coinCursor,x:cx,kind:'coin',row:rowId});r.total++;rowCount++;coinCursor+=COIN_STEP;if(rowCount===ROW_SIZE)r.closed=true}
+  else{rowCount=0;rowBreaks++;const kind=rowBreaks%6===3?weightedPick(PICKUPS):rowBreaks%2===0?'energy':null;if(kind)coins.push({a:coinCursor+60,x:cx,kind});coinCursor+=150}}}
+function closeCoinRow(){const r=rows.get(rowId);if(r&&!r.closed){r.closed=true;if(r.total&&r.got===r.total&&!r.broken)rowComplete()}rowCount=0}
+function rowComplete(){rowStreak++;if(rowStreak%3===0){coinMult=Math.round((1+.1*rowStreak/3)*10)/10;bestMult=Math.max(bestMult,coinMult);announce(`x${coinMult.toFixed(1)} COINS`,'3 PERFECT ROWS!','record','coin');gameSound.effect('charged');confetti(18);bump($('#mult'))}else{popup(x*W,balloonY()-84,`PERFECT ROW ${rowStreak%3}/3`,'#ffd23f',24);gameSound.effect('milestone')}rings.push({x:x*W,y:balloonY(),max:80,life:0,dur:.45,color:'#ffd23f',width:6})}
+function missRow(id){const r=rows.get(id);if(!r||r.broken)return;r.broken=true;if(rowStreak>0||coinMult>1)popup(x*W,balloonY()-84,coinMult>1?'MULTIPLIER LOST!':'ROW MISSED','#ff7a86',22);rowStreak=0;coinMult=1}
 // Creatures: bird flocks (sky), swinging monkeys (jungle, cave), bats (cave) and patrol drones (factory).
 // Each one gets the gap above ledge a to itself, widened by the returned extra distance. Monkeys hang
 // above that ledge, on its side, where the balloon never needs to be; flyers cross mid-gap.
@@ -255,12 +265,14 @@ function drawPickups(){for(const item of coins){if(item.collected)continue;const
  else if(item.kind==='energy')drawPickup('energy',cx,yy+bob,12);
  else{drawPickup(item.kind,cx,yy+bob,19*(1+.07*Math.sin(t*6)));const a=t*3;ctx.fillStyle='#fff';star(cx+Math.cos(a)*30,yy+bob+Math.sin(a)*30,5,2,4);ctx.fill()}}}
 function collectPickups(dt){for(const item of coins){if(item.collected)continue;let cx=item.x*W,cy=coinY(item);
+ if(item.row&&cy>balloonY()+46){item.collected=true;missRow(item.row);continue}
  if(magnet>0&&(item.kind==='coin'||item.kind==='energy')){const dx=x*W-cx,dy=balloonY()-cy;if(Math.hypot(dx,dy)<220){const k=Math.min(1,dt*6);item.x+=dx/W*k;item.a-=dy/worldScale*k;cx=item.x*W;cy=coinY(item)}}
  const dx=cx-x*W,dy=cy-balloonY();if((dx/43)**2+(dy/48)**2>=1)continue;item.collected=true;
- if(item.kind==='coin'){coinCount++;combo=comboTimer>0?combo+1:1;comboTimer=2.6;bestCombo=Math.max(bestCombo,combo);gameSound.effect('coin',combo);
+ if(item.kind==='coin'){const r=rows.get(item.row);coinCount+=coinMult;combo=comboTimer>0?combo+1:1;comboTimer=2.6;bestCombo=Math.max(bestCombo,combo);gameSound.effect('coin',r?r.got+1:1);
   burst(cx,cy,12,{colors:['#ffd23f','#fff3a0','#fff'],speed:[80,240],size:[2,4],life:[.3,.6],world:true});burst(cx,cy,4,{type:'star',colors:['#fff6b0'],speed:[40,120],size:[5,8],life:[.5,.8],world:true});
-  rings.push({x:cx,y:cy,max:40,life:0,dur:.35,color:'#ffe680',width:4});popup(cx,cy-24,combo>=3?`COMBO x${combo}!`:'+1',combo>=3?'#ff9a3c':'#ffd23f',combo>=3?28:24);
-  flyers.push({x:cx,y:cy,age:0});squashV+=3;if(moodTimer<=0||mood==='happy'){mood='joy';moodTimer=.6}if(combo>=3)shake=Math.max(shake,3)}
+  rings.push({x:cx,y:cy,max:40,life:0,dur:.35,color:'#ffe680',width:4});popup(cx,cy-24,coinMult>1?`+${coinMult.toFixed(1)}`:'+1',coinMult>1?'#ff9a3c':'#ffd23f',22);
+  flyers.push({x:cx,y:cy,age:0,value:coinMult});squashV+=3;if(moodTimer<=0||mood==='happy'){mood='joy';moodTimer=.6}
+  if(r){r.got++;if(r.closed&&!r.broken&&r.got===r.total)rowComplete()}}
  else if(item.kind==='energy'){const was=energy;energy=Math.min(5,energy+1);gameSound.effect('energy');burst(cx,cy,10,{type:'star',colors:['#ffd23f','#fff'],speed:[60,180],size:[3,6],life:[.3,.6],world:true});popup(cx,cy-22,energy===was?'FULL!':`ENERGY ${energy}/5`,'#ffd23f',22);if(energy===5&&was<5)chargedUp()}
  else if(item.kind==='nitro')startTurbo();
  else{const P=POWERS[item.kind];applyPower(item.kind);popup(x*W,balloonY()-70,`${P.name}!`,P.color,28);squashV+=4;mood='joy';moodTimer=.8}}}
@@ -344,21 +356,21 @@ function draw(){ctx.save();const amount=calm?shake*.3:shake;if(amount>.4)ctx.tra
  ctx.save();ctx.translate(OX,0);
  drawTicks();obstacles.forEach(drawObstacle);drawCritters();drawPickups();if(stage.walls)drawCaveWalls();drawRope();if(stage.dark)caveDark(x*W,balloonY(),engineOn());
  drawBossLayer();drawParticles(true);drawBalloon();drawAuras();drawBossFx();
- ctx.save();ctx.translate(-OX,0);drawLeaves();ctx.restore();drawChevrons();drawCritterWarnings();drawParticles(false);drawRings();if(showcase)drawShowcase();drawPopups();
+ ctx.save();ctx.translate(-OX,0);drawLeaves();ctx.restore();drawChevrons();drawCritterWarnings();drawParticles(false);drawRewardCoins();drawRings();if(showcase)drawShowcase();drawPopups();
  ctx.restore();drawSides();ctx.restore();
  drawFlyers();drawVignette();if(transition)drawIris();if(swapFx>0){ctx.globalAlpha=swapFx*.55;ctx.fillStyle=stage.top;ctx.fillRect(0,0,SW,H);ctx.globalAlpha=1}if(flash>0){ctx.globalAlpha=Math.min(1,flash);ctx.fillStyle=flashColor;ctx.fillRect(0,0,SW,H);ctx.globalAlpha=1}}
 function update(dt){t+=dt;spin+=dt*(.65+Math.abs(wind)*3+Math.abs(vx));if(state!=='flying')return;
- flightTime+=dt;generateCourse();updateWeather(dt);updateCritters(dt);if(boss&&boss.wind)wind+=boss.wind.dir*.32;if(!boss&&alt>=nextBoss)startBoss();
+ flightTime+=dt;generateCourse();updateWeather(dt);updateCritters(dt);if(boss&&boss.wind)wind+=boss.wind.dir*.32;if(!boss&&flightTime>=nextBossTime)startBoss();
  const direction=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0);let desired=direction*.65;if(target!==null)desired=clamp((target-x)*6,-.85,.85);vx+=(desired+wind-vx)*Math.min(1,dt*4);x+=vx*dt;x=clamp(x,(radius+5)/W,1-(radius+5)/W);
  alt+=dt*flightSpeed(alt)*speedMult*bossPace();collectPickups(dt);
- if(stage.walls){const hit=wallHit();if(hit){if(smashing()||shield>0){if(shield>0&&!smashing())breakShield();x=hit.limit;vx=-hit.side*.5;burst(x*W+hit.side*28,balloonY(),8,{colors:['#fff','#ffd23f'],speed:[80,220],life:[.2,.4]});shake=Math.max(shake,4)}else{finish();return}}}
+ if(stage.walls){const hit=wallHit();if(hit){if(boss){x=hit.limit;vx=-hit.side*.4}else if(smashing()||shield>0){if(shield>0&&!smashing())breakShield();x=hit.limit;vx=-hit.side*.5;burst(x*W+hit.side*28,balloonY(),8,{colors:['#fff','#ffd23f'],speed:[80,220],life:[.2,.4]});shake=Math.max(shake,4)}else{finish();return}}}
  for(const o of obstacles){if(o.broken||o.leaving!==undefined)continue;const z=spike(o);if(!hitsObstacle(z))continue;if(smashing()){breakLedge(o,z);continue}if(shield>0){breakShield();breakLedge(o,z);continue}finish();return}
  for(const h of critters){if(!hitsCritter(h))continue;if(smashing()){bonkCritter(h);continue}if(shield>0){breakShield();bonkCritter(h);continue}finish();return}
  checkNearMisses();checkProgress()}
 // Effects run once per frame; dt is slowed during slow motion and the boost intro, real is wall-clock time.
 function updateEffects(dt,real){shake*=Math.exp(-8*real);flash=Math.max(0,flash-real*2.4);swapFx=Math.max(0,swapFx-real*3);if(transition&&(transition.age+=real)>=transition.dur)transition=null;if(grow<1)grow=Math.min(1,grow+real*2.2);
  if(showcase&&(showcase.age+=real)>=showcase.dur){const kind=showcase.kind;showcase=null;applyPower(kind)}
- updateBoss(dt,real);const frozen=!!(boss&&boss.freeze),pdt=showcase||frozen?real:dt;
+ updateBoss(dt,real);updateRewardCoins(real);const frozen=!!(boss&&boss.freeze),pdt=showcase||frozen?real:dt;
  squashV+=(-squash*170-squashV*11)*pdt;squash+=squashV*pdt;
  if((nextBlink-=pdt)<=0){blink=.13;nextBlink=rand(2,5)}blink-=pdt;moodTimer-=pdt;
  if(boost&&(boost.time-=dt)<=0)boost=null;if(shield>0&&(shield-=dt)<=0&&state==='flying')popup(x*W,balloonY()-60,'SHIELD OFF','#bff4ff',20);magnet=Math.max(0,magnet-dt);invuln=Math.max(0,invuln-dt);
@@ -383,7 +395,7 @@ function updateEffects(dt,real){shake*=Math.exp(-8*real);flash=Math.max(0,flash-
  for(const f of flyers){f.age+=real;if(f.age>=.55){f.done=true;shownCoins+=f.value||1;bump($('#coin-pill'))}}flyers=flyers.filter(f=>!f.done)}
 function setText(id,value){if(hudCache[id]!==value){hudCache[id]=value;$(id).textContent=value}}
 function setChip(id,frac){const chip=$(id),on=frac>0;if(chip.hidden===on)chip.hidden=!on;if(on)chip.querySelector('b').style.width=(frac*100).toFixed(1)+'%'}
-function updateHud(){setText('#coin-count',String(shownCoins));setText('#altitude',Math.floor(alt).toLocaleString());setText('#speed',(state==='flying'||state==='paused'&&previousState==='flying'?Math.round(flightSpeed(alt)*speedMult):0)+' m/s');
+function updateHud(){setText('#coin-count',String(Math.floor(shownCoins)));setText('#mult-val',`x${coinMult.toFixed(1)}`);$('#mult').classList.toggle('hot',coinMult>1);$$('#mult .row-pips i').forEach((pip,k)=>pip.classList.toggle('on',k<rowStreak%3));setText('#boss-timer',state==='flying'&&!boss?`BOSS ${Math.floor(Math.max(0,nextBossTime-flightTime)/60)}:${String(Math.floor(Math.max(0,nextBossTime-flightTime)%60)).padStart(2,'0')}`:'');setText('#altitude',Math.floor(alt).toLocaleString());setText('#speed',(state==='flying'||state==='paused'&&previousState==='flying'?Math.round(flightSpeed(alt)*speedMult):0)+' m/s');
  shell.classList.toggle('ready',state==='ready'||(state==='paused'&&previousState==='ready'));shell.classList.toggle('in-menu',state==='menu');
  setChip('#chip-boost',boost?boost.time/boost.dur:0);if(boost){const ic=boost.kind==='nitro'?'flame':'bolt';if(hudCache.boostIcon!==ic){hudCache.boostIcon=ic;$('#chip-boost-icon').innerHTML=icon(ic)}$('#chip-boost').style.setProperty('--c',POWERS[boost.kind==='engine'?'energy':'nitro'].color)}
  setChip('#chip-shield',shield/20);setChip('#chip-magnet',magnet/8);
