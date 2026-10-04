@@ -220,3 +220,45 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 @keyframes menuOut{to{opacity:0;transform:scale(1.18)}}
 .skin-card.chosen{animation:stagePop .5s cubic-bezier(.3,1.7,.5,1)}
 @media(max-height:720px){.logo{margin-top:.5vh;font-size:44px}.stage-icon{width:66px;height:66px}.stage-name{font-size:21px}.side-btn{width:60px;height:60px}.side-btn .ico{width:30px;height:30px}.btn.huge{font-size:30px;padding:8px 24px 12px}.picker{margin-top:.6vh}.dots{margin-top:6px}.menu-actions{margin-top:1vh}}
+/* Boss fight */
+.game-shell.boss-fight .zone,.game-shell.boss-fight .flight-info{opacity:0}
+.boss-bar{position:absolute;top:calc(84px + var(--top));left:14px;right:14px;display:flex;align-items:center;gap:8px;padding:5px 10px 6px 6px;background:#1b1240d0;border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 #1b124088;animation:chipIn .4s cubic-bezier(.3,1.7,.5,1)}
+.boss-bar[hidden]{display:none}
+.boss-bar>.ico{width:30px;height:30px}
+.boss-info{flex:1;min-width:0}
+.boss-info b{display:block;font-family:var(--title);font-weight:400;font-size:15px;letter-spacing:.8px;text-shadow:var(--stroke)}
+.boss-info i{display:block;height:12px;margin-top:3px;background:#0008;border:2px solid var(--ink);border-radius:8px;overflow:hidden}
+.boss-info s{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff3b52,#ffb020);border-radius:6px;transition:width .2s}
+.boss-bar.tired b{color:var(--yellow);animation:pulse .3s ease-in-out infinite alternate}
+.fatality-btn{pointer-events:auto;position:absolute;left:50%;bottom:calc(22px + var(--bottom));transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:12px 26px 15px;font-family:var(--title);font-size:32px;letter-spacing:1px;color:#fff;text-shadow:var(--stroke);background:linear-gradient(#ff6a6a,#c8102e);border:4px solid var(--ink);border-radius:22px;box-shadow:inset 0 -7px 0 #8a0a20,inset 0 3px 0 #ffb0b0,0 7px 0 var(--ink);animation:fatal .45s ease-in-out infinite alternate}
+.fatality-btn[hidden]{display:none}
+.fatality-btn .ico{width:40px;height:40px}
+.fatality-btn:active{transform:translateX(-50%) translateY(4px)}
+@keyframes fatal{from{transform:translateX(-50%) scale(1) rotate(-2deg);filter:drop-shadow(0 0 0 #ff3b52)}to{transform:translateX(-50%) scale(1.1) rotate(2deg);filter:drop-shadow(0 0 18px #ff3b52)}}
+.stage-boss{margin-top:5px;display:flex;align-items:center;gap:5px;font-family:var(--title);font-size:12px;letter-spacing:.6px;padding:2px 9px 3px;background:#c8102ecc;border:2px solid var(--ink);border-radius:8px;text-shadow:var(--stroke)}
+.stage-boss .ico{width:16px;height:16px}
+.fatal-name{font-family:var(--title);font-size:10px;letter-spacing:.4px;color:#ffb0b0;text-shadow:0 1px 0 var(--ink)}
+/* Versus screen */
+.versus{position:absolute;inset:0;z-index:7;overflow:hidden;pointer-events:none}
+.versus[hidden]{display:none}
+.vs-panel{position:absolute;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:4%;padding:0 6%}
+.vs-top{top:0;height:58%;background:radial-gradient(circle at 70% 45%,#ff7a6a,#c8102e 60%,#6a0018);clip-path:polygon(0 0,100% 0,100% 72%,0 100%);flex-direction:row-reverse}
+.vs-bottom{bottom:0;height:58%;background:radial-gradient(circle at 30% 55%,#7ab8ff,#2c5ee0 60%,#14246a);clip-path:polygon(0 28%,100% 0,100% 100%,0 100%)}
+.vs-panel::before{content:'';position:absolute;inset:0;background:repeating-conic-gradient(from 0deg at 50% 50%,#ffffff14 0 8deg,transparent 8deg 16deg)}
+.vs-top canvas{width:min(62vw,300px);height:auto;margin-top:6%;position:relative}
+.vs-bottom canvas{width:min(48vw,220px);height:auto;margin-top:12%;position:relative}
+.vs-name{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center}
+.vs-name small{font-family:var(--title);font-size:14px;letter-spacing:2px;padding:2px 10px 4px;background:var(--ink);border-radius:8px}
+.vs-name b{font-family:var(--title);font-weight:400;font-size:clamp(28px,8vw,44px);line-height:1;margin-top:6px;text-shadow:var(--stroke),0 5px 0 var(--ink)}
+.vs-top .vs-name{margin-top:-6%}.vs-bottom .vs-name{margin-top:14%}
+.vs-crack{position:absolute;left:-5%;right:-5%;top:50%;height:10px;background:#fff;box-shadow:0 0 18px #fff,0 0 0 3px var(--ink);transform:translateY(-50%) rotate(-11deg);opacity:0}
+.vs-badge{position:absolute;left:50%;top:50%;width:120px;height:120px;margin:-60px 0 0 -60px;display:grid;place-items:center;font-family:var(--title);font-size:64px;color:var(--yellow);text-shadow:var(--stroke),0 6px 0 var(--ink);background:radial-gradient(#fff6b0,#ffb300);border:5px solid var(--ink);border-radius:50%;box-shadow:0 6px 0 var(--ink),0 0 40px #ffd23f;opacity:0}
+.versus.play .vs-top{animation:vsTop 2.6s cubic-bezier(.2,.9,.3,1) forwards}
+.versus.play .vs-bottom{animation:vsBottom 2.6s cubic-bezier(.2,.9,.3,1) forwards}
+.versus.play .vs-crack{animation:vsCrack 2.6s forwards}
+.versus.play .vs-badge{animation:vsBadge 2.6s cubic-bezier(.3,1.6,.5,1) forwards}
+@keyframes vsTop{0%{transform:translate(110%,-20%)}14%,82%{transform:none}100%{transform:translate(-110%,-20%)}}
+@keyframes vsBottom{0%{transform:translate(-110%,20%)}14%,82%{transform:none}100%{transform:translate(110%,20%)}}
+@keyframes vsCrack{0%,14%{opacity:0}18%,80%{opacity:1}86%,100%{opacity:0}}
+@keyframes vsBadge{0%,15%{opacity:0;transform:scale(4) rotate(-40deg)}24%{opacity:1;transform:scale(.9) rotate(6deg)}30%,78%{opacity:1;transform:scale(1) rotate(-4deg)}84%,100%{opacity:0;transform:scale(2.4) rotate(20deg)}}
+.announce.fatal{top:43%;animation-duration:2.7s}.announce.fatal strong{font-size:48px;color:var(--yellow)}.announce.fatal small{background:#c8102e;font-size:18px}

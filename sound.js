@@ -83,6 +83,13 @@ const gameSound = (() => {
     if (kind === 'charged') arpeggio([523.25, 783.99, 1046.5, 1568], .06, .035, 'square');
     if (kind === 'boop') { note(260, 900, .1, 0, .07, 'triangle'); note(900, 300, .14, .09, .05, 'triangle'); }
     if (kind === 'buy') { arpeggio([1046.5, 1318.5, 1568, 2093], .05, .035, 'square'); noise(.2, { filter: 'highpass', from: 6000, volume: .06 }); }
+    if (kind === 'siren') for (let i = 0; i < 4; i++) note(i % 2 ? 660 : 880, i % 2 ? 660 : 880, .22, i * .24, .045, 'square');
+    if (kind === 'vs') { note(110, 40, .6, 0, .25, 'sawtooth'); noise(.5, { filter: 'lowpass', from: 2000, to: 200, volume: .4 }); arpeggio([392, 523.25, 659.25, 783.99], .07, .05, 'square'); }
+    if (kind === 'roar') { note(90, 55, .7, 0, .18, 'sawtooth'); note(140, 70, .6, .02, .08, 'square'); noise(.6, { filter: 'lowpass', from: 900, to: 300, q: 2, volume: .25 }); }
+    if (kind === 'zap') { noise(.25, { filter: 'highpass', from: 2500, volume: .22 }); note(1800, 200, .25, 0, .05, 'sawtooth'); }
+    if (kind === 'pew') note(1200, 300, .12, 0, .035, 'square');
+    if (kind === 'fatality') { note(65, 65, 1.2, 0, .2, 'sawtooth'); arpeggio([196, 233.1, 277.2, 329.6], .12, .05, 'sawtooth'); noise(1, { filter: 'lowpass', from: 400, to: 3000, volume: .2 }); }
+    if (kind === 'boom') { noise(.8, { filter: 'lowpass', from: 1500, to: 80, q: .8, volume: .55 }); note(80, 30, .8, 0, .3, 'sine'); }
     if (kind === 'warn') { note(880, 880, .08, 0, .035, 'square'); note(880, 880, .08, .14, .035, 'square'); }
   }
   // A bouncy pentatonic loop; drums join once the balloon is flying.
