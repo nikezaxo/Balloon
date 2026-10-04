@@ -10,6 +10,7 @@ rope and climb as high as you can.
 - icons.js: hand-drawn cartoon SVG icons (buttons, stage badges, medals, power-ups)
 - stages.js: the six stages — backdrops, launch grounds, ledges, creatures and drawing helpers
 - skins.js: balloon skins sold in the store, with their animations, effects and trails
+- bosses.js: stage bosses, their attacks, the versus screen and each skin's fatality
 - game.js: game loop, input, physics, power-ups, store, revives and saving
 
 ## Run locally
@@ -17,7 +18,7 @@ Open index.html in a modern browser, or run `python -m http.server 8000` in the
 folder and open http://localhost:8000.
 
 ## Deploy
-Upload all seven files together to any static host, with index.html at the root.
+Upload all eight files together to any static host, with index.html at the root.
 When you change a file, bump the ?v= number on its link in index.html so browsers
 fetch the new copy instead of a cached one.
 There is no build step, backend, API key or database. The Lilita One and Nunito
@@ -50,10 +51,37 @@ Every stage is endless, with its own best altitude and medals
 - 🌌 Deep Universe: nebulae, a spinning galaxy and 3D-looking planets and suns
   that turn, then shrink into the distance after you pass them.
 
+## Boss fights
+Every 2,000 m (BOSS_EVERY in bosses.js) the stage boss arrives:
+1. WARNING: an alarm sounds, ledges retract into the walls and creatures flee.
+2. A versus screen slams in: your balloon against the boss.
+3. The boss drops in and attacks. Dodge its weapons; each attack and the passing
+   time drain its stamina bar. Boosts and shields protect you as usual.
+4. At zero stamina the boss is TIRED (dizzy and sweating). Tap FATALITY (or press
+   F, Space or Enter) to finish it with your skin's fatality.
+5. Defeat pays 50 coins (+25 per earlier win against that boss, +25 with the
+   Golden King skin), and the course resumes. Repeat wins make the boss faster.
+
+Bosses and weapons:
+- Thunder King (Sunny Sky): lightning strikes, hail fans, wind gusts.
+- Tiki Titan (Jungle Island): fire darts, coconut rain, fire ring.
+- Bat Queen (Crystal Cave): sonic rings, falling stalactites, homing bats.
+- Mecha Crusher (Robo Factory): aimed lasers, homing missiles, bouncing saws.
+- UFO Overlord (Outer Space): plasma fans, tractor-beam sweep, triple bursts.
+- Star Devourer (Deep Universe): star spirals, black hole pull with meteors, cosmic rings.
+Rings always leave a gap, falling objects leave free lanes, and lasers, strikes
+and sweeps are telegraphed before they fire.
+
+Fatalities (one per skin): Classic – Balloon Slam, Gumball – Bubble Trap,
+Funny Clown – Pie Party, Toy Robot – Laser Eyes, Watermelon – Seed Storm,
+Monster – Mega Chomp, Ninja – Shadow Slash, Galaxy – Black Hole,
+Golden King – Midas Touch.
+
 ## Controls
 Touch/mouse: swipe across the rope to launch, then hold and drag to steer.
 Keyboard: Space plays/launches; Left/Right arrows or A/D steer; B, W, Up or
-Shift fires the boost engine; P or Escape pauses.
+Shift fires the boost engine; F, Space or Enter performs a fatality on a tired
+boss; P or Escape pauses.
 
 ## Coins, power-ups and boost
 - Coins come in small trails between ledges. Chain them for combos. Coins you
