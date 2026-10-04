@@ -81,6 +81,8 @@ const gameSound = (() => {
     if (kind === 'smash') { noise(.3, { filter: 'lowpass', from: 1400, to: 200, q: .7, volume: .45 }); note(120, 40, .25, 0, .16, 'square'); }
     if (kind === 'energy') note(660, 1320, .12, 0, .045, 'square');
     if (kind === 'charged') arpeggio([523.25, 783.99, 1046.5, 1568], .06, .035, 'square');
+    if (kind === 'boop') { note(260, 900, .1, 0, .07, 'triangle'); note(900, 300, .14, .09, .05, 'triangle'); }
+    if (kind === 'buy') { arpeggio([1046.5, 1318.5, 1568, 2093], .05, .035, 'square'); noise(.2, { filter: 'highpass', from: 6000, volume: .06 }); }
     if (kind === 'warn') { note(880, 880, .08, 0, .035, 'square'); note(880, 880, .08, .14, .035, 'square'); }
   }
   // A bouncy pentatonic loop; drums join once the balloon is flying.

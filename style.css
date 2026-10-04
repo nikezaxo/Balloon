@@ -4,7 +4,7 @@ html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;backgrou
 body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
 button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .game-shell{position:fixed;inset:0;overflow:hidden;background:#3fa9ff}
-canvas{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;outline:none}
+#game{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;outline:none}
 .play-col{position:absolute;top:0;bottom:0;left:50%;width:var(--pw,100%);transform:translateX(-50%);pointer-events:none}
 
 /* Chunky arcade buttons */
@@ -13,6 +13,7 @@ canvas{position:absolute;inset:0;display:block;width:100%;height:100%;touch-acti
 .btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
 .btn.blue{background:linear-gradient(#6fc1ff,#2f86ff);box-shadow:inset 0 -6px 0 #1d5fd0,inset 0 3px 0 #bfe4ff,0 6px 0 var(--ink)}
 .btn.purple{background:linear-gradient(#b48cff,#7a3cff);box-shadow:inset 0 -6px 0 #5521c9,inset 0 3px 0 #e2d4ff,0 6px 0 var(--ink)}
+.btn.green{background:linear-gradient(#7ef08f,#2fbf4f);box-shadow:inset 0 -6px 0 #1f8f39,inset 0 3px 0 #c9ffd2,0 6px 0 var(--ink)}
 .btn.huge{font-size:42px;padding:12px 58px 18px;border-radius:22px;animation:breathe 1.4s ease-in-out infinite}
 @keyframes breathe{50%{transform:scale(1.06)}}
 .icon-btn{width:46px;height:46px;padding:0;font-size:21px;line-height:1;color:#fff;border:3px solid var(--ink);border-radius:14px;background:linear-gradient(#6fc1ff,#2f86ff);box-shadow:inset 0 -4px 0 #1d5fd0,0 4px 0 var(--ink)}
@@ -136,8 +137,47 @@ canvas{position:absolute;inset:0;display:block;width:100%;height:100%;touch-acti
 .boost-item .ico{flex:none;width:54px;height:54px;display:grid;place-items:center;font-size:28px;background:var(--c);border:3px solid var(--ink);border-radius:16px;box-shadow:inset 0 -5px 0 #0003}
 .boost-item p{margin:2px 0 4px;font-size:13px}
 .boost-item small{font-family:var(--title);font-size:12px;letter-spacing:.8px;color:var(--yellow)}
-.boost-item.locked .ico{filter:grayscale(.8)}
-button:focus-visible,canvas:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
 
 @media(max-height:640px){.menu-title{margin-top:2vh}.menu-buttons{margin-top:3vh}.btn.huge{font-size:34px}}
 @media(prefers-reduced-motion:reduce){.logo,.hand,.hint strong,.air-warning,.flight-info .gust,.overlay h2,.record-badge,.record-badge::before,.btn.huge,.boost-btn.ready{animation:none}}
+
+/* Menu wallet */
+.wallet-row{display:flex;gap:8px}
+.pill{display:flex;align-items:center;gap:6px;padding:3px 12px 3px 5px;font-family:var(--title);font-size:20px;background:#1b1240c0;border:3px solid var(--ink);border-radius:20px;text-shadow:var(--stroke)}
+.pill b{font-weight:400}
+.hint-stage{margin-bottom:10px;font-family:var(--title);font-size:22px;letter-spacing:1px;padding:5px 16px 7px;background:linear-gradient(#a273ff,#6a35ef);border:3px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);text-shadow:var(--stroke)}
+.revive{display:block;width:100%;margin-top:18px;font-size:24px;animation:breathe 1s ease-in-out infinite}
+.revive[hidden]{display:none}
+/* Stage picker */
+.stage-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.stage-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-height:150px;padding:10px 12px 12px;text-align:left;color:#fff;background:linear-gradient(160deg,var(--a),var(--b));border:3px solid var(--ink);border-radius:18px;box-shadow:inset 0 -6px 0 #0003,0 5px 0 var(--ink);overflow:hidden;transition:transform .12s}
+.stage-card:hover{transform:translateY(-3px) rotate(-1deg)}
+.stage-card:active{transform:translateY(3px);box-shadow:0 2px 0 var(--ink)}
+.stage-card .emoji{font-size:36px;line-height:1;filter:drop-shadow(0 3px 0 var(--ink))}
+.stage-card h3{margin:2px 0 0;font-family:var(--title);font-weight:400;font-size:19px;line-height:1.05;text-shadow:var(--stroke)}
+.stage-card p{margin:2px 0 4px;font-size:11px;line-height:1.35;font-weight:900;text-shadow:0 1px 0 var(--ink),1px 0 0 var(--ink),-1px 0 0 var(--ink)}
+.stage-best{margin-top:auto;font-family:var(--title);font-size:12px;letter-spacing:.6px;padding:2px 8px 3px;background:#1b1240b0;border-radius:8px}
+.medals{position:absolute;top:10px;right:10px;font-size:15px;letter-spacing:-2px}
+/* Store */
+.store-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tabs{display:flex;gap:6px}
+.tab{font-family:var(--title);font-size:16px;color:#fff;text-shadow:var(--stroke);padding:6px 12px 8px;background:#1b124066;border:3px solid var(--ink);border-radius:12px}
+.tab.on{background:linear-gradient(#ffe46b,#ffc414);box-shadow:inset 0 -4px 0 #e08e00}
+.skin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.skin-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px 8px;background:#1b124055;border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink)}
+.skin-card.equipped{background:linear-gradient(#ffe46b55,#ffc41433);border-color:#ffd23f}
+.skin-card canvas{display:block;width:80px;height:90px}
+.skin-card b{font-family:var(--title);font-weight:400;font-size:13px;letter-spacing:.3px;text-align:center;text-shadow:var(--stroke)}
+.buy{font-family:var(--title);font-size:14px;color:#fff;text-shadow:var(--stroke);padding:4px 10px 6px;border:3px solid var(--ink);border-radius:10px;background:linear-gradient(#ffe46b,#ffc414);box-shadow:inset 0 -3px 0 #e08e00,0 3px 0 var(--ink)}
+.buy.own{background:linear-gradient(#6fc1ff,#2f86ff);box-shadow:inset 0 -3px 0 #1d5fd0,0 3px 0 var(--ink)}
+.buy.on{background:linear-gradient(#7ef08f,#2fbf4f);box-shadow:inset 0 -3px 0 #1f8f39,0 3px 0 var(--ink)}
+.buy:active{transform:translateY(2px)}
+.buy:disabled{filter:grayscale(.8);cursor:default}
+.nope{animation:nope .4s}
+@keyframes nope{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.lives-box{display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px 10px;text-align:center;background:#1b124055;border:3px solid var(--ink);border-radius:16px}
+.hearts{font-size:28px;letter-spacing:2px;line-height:1.3}
+.lives-box p{margin:0}
+.lives-box .buy{font-size:18px;padding:8px 16px 10px}
+@media(max-width:360px){.skin-grid{grid-template-columns:repeat(2,1fr)}.stage-card h3{font-size:16px}}
