@@ -73,6 +73,15 @@ const gameSound = (() => {
     if (kind === 'milestone') { note(783.99, 783.99, .14, 0, .06, 'triangle'); note(1174.7, 1174.7, .35, .11, .06, 'triangle'); }
     if (kind === 'record') arpeggio([659.25, 783.99, 987.77, 1318.5, 1568, 1975.5], .06, .03, 'square');
     if (kind === 'on') note(660, 660, .09, 0, .045, 'triangle');
+    if (kind === 'power') { arpeggio([784, 988, 1175, 1568, 1976], .05, .03, 'square'); noise(.6, { from: 500, to: 4000, q: .7, volume: .16 }); }
+    if (kind === 'boost') { noise(.5, { from: 400, to: 3000, q: .8, volume: .2 }); note(300, 900, .4, 0, .05, 'sawtooth'); }
+    if (kind === 'nitro') { noise(1.2, { filter: 'lowpass', from: 300, to: 1800, q: 2, volume: .3 }); note(70, 180, 1, 0, .08, 'sawtooth'); note(140, 360, 1, 0, .035, 'square'); }
+    if (kind === 'shield') { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(f, f * 1.01, .9, i * .03, .03, 'sine')); noise(.5, { filter: 'highpass', from: 5000, volume: .05 }); }
+    if (kind === 'shieldbreak') { noise(.4, { filter: 'highpass', from: 3000, volume: .3 }); note(1600, 400, .3, 0, .05, 'triangle'); }
+    if (kind === 'smash') { noise(.3, { filter: 'lowpass', from: 1400, to: 200, q: .7, volume: .45 }); note(120, 40, .25, 0, .16, 'square'); }
+    if (kind === 'energy') note(660, 1320, .12, 0, .045, 'square');
+    if (kind === 'charged') arpeggio([523.25, 783.99, 1046.5, 1568], .06, .035, 'square');
+    if (kind === 'warn') { note(880, 880, .08, 0, .035, 'square'); note(880, 880, .08, .14, .035, 'square'); }
   }
   // A bouncy pentatonic loop; drums join once the balloon is flying.
   const melody = [523.25, 659.25, 783.99, 659.25, 587.33, 0, 523.25, 0, 440, 523.25, 659.25, 587.33, 523.25, 0, 392, 0];
