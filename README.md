@@ -21,16 +21,24 @@ There is no build command, package installation, backend, API key or database.
 If a host asks for an output directory, select the folder containing index.html.
 This package contains no credentials or account-specific hosting configuration.
 
+## Main menu & full screen
+The game fills the whole screen. The main menu has PLAY, STAGES (every zone with
+its events and hazards) and BOOSTS (every power-up and where it appears).
+Pressing PLAY switches the browser to full screen where supported (iPhone Safari
+does not allow web pages to go full screen; the game still fills the window).
+On wide screens the action stays in a centred column framed by side walls.
+
 ## Controls
 Touch/mouse: swipe across the rope to launch, then hold and drag to steer.
-Keyboard: Space launches; Left/Right arrows or A/D steer; P or Escape pauses.
-After a collision, click Try again or press Space to reset, then launch again.
-Sound is optional and can be enabled using the Sound button.
+Keyboard: Space plays/launches; Left/Right arrows or A/D steer; B, W, Up or
+Shift fires the boost engine; P or Escape pauses.
+After a crash, choose Play again or Menu. Sound and full screen can be toggled
+from the menu or the pause card.
 
 ## Gameplay
 - Spinning, shaded 3D-style balloon rendered on a 2D HTML canvas.
-- Starting climb speed: 90 m/s (game-world units).
-- Speed increases without a programmed cap: 90 + 1.2 * sqrt(altitude).
+- Starting climb speed: 130 m/s (game-world units).
+- Speed increases without a programmed cap: 130 + 1.4 * sqrt(altitude).
 - Endless course: there is no winning altitude or finish line.
 - Gold coins increase your coin count; they do not provide temporary boosts.
 - Gusts alternate direction with advance warnings and flying leaves.
@@ -38,9 +46,30 @@ Sound is optional and can be enabled using the Sound button.
 - Off-screen objects are discarded, keeping course memory bounded.
 - Small physics steps help prevent missed collisions as speed increases.
 
+## Hazards by stage
+- 1,500 m+: falling satellite junk (broken solar panels and gears).
+- 3,000 m+: broken satellites rain down more often, sparking as they fall.
+- 6,000 m+: asteroids drift through the gaps and bounce off the walls.
+- 16,000 m+: blazing meteors streak across diagonally.
+- 23,000 m+: meteor showers mixed with junk and asteroid fields.
+Falling hazards are announced by a flashing warning triangle a second ahead.
+
+## Power-ups
+- Gas boost (300 m+): short speed burst plus 2 energy cells.
+- Energy cells (800 m+): collect 5 to charge the BOOST engine, then tap BOOST.
+  The engine rockets you up for 3.5 s and smashes anything in the way.
+- Coin magnet (1,500 m+): pulls coins and energy cells in for 8 s.
+- Nitro engine (2,500 m+): a rocket for 5 s that smashes through everything.
+- Bubble shield (4,500 m+): absorbs one hit, lasting up to 20 s.
+Collecting a power-up triggers a short intro: the action freezes, rays spin
+and the balloon zooms in to celebrate with star eyes or sunglasses.
+Smashed hazards are worth a coin. Parachutists are never harmed: boosts and
+shields simply push them aside.
+
 ## Customize
 In game.js, edit flightSpeed(height) for starting speed and acceleration.
-Edit generateCourse() for obstacle spacing and coin placement.
+Edit generateCourse() for obstacle spacing, coin, power-up and asteroid placement.
+Edit POWERS in game.js for power-up unlock heights and fallPlan() for falling hazards.
 Edit weatherAt(seconds) for gust timing and strength.
 Edit drawBalloon() for balloon colours and the rotating surface emblem.
 Edit style.css for the page colours and layout.
@@ -70,7 +99,7 @@ close-call swishes, zone fanfares and a punchy pop. No nature recordings or exte
 ## Aircraft sequence
 At 1,200 game metres, a shaded 3D plane enters from the left and arcs toward
 the upper left. It trails smoke near the end of its pass. After a delay,
-three parachutists fall 3.5 seconds apart in widely separated random lanes.
+three parachutists drop 2.5 seconds apart in widely separated random lanes.
 Side obstacles are cleared during the event to leave room for avoidance.
 The plane event occurs once per run, within the atmosphere.
 
