@@ -18,6 +18,8 @@ folder and open http://localhost:8000.
 
 ## Deploy
 Upload all seven files together to any static host, with index.html at the root.
+When you change a file, bump the ?v= number on its link in index.html so browsers
+fetch the new copy instead of a cached one.
 There is no build step, backend, API key or database. The Lilita One and Nunito
 fonts load from Google Fonts, with system fallbacks.
 
