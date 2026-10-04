@@ -45,12 +45,27 @@ Edit weatherAt(seconds) for gust timing and strength.
 Edit drawBalloon() for balloon colours and the rotating surface emblem.
 Edit style.css for the page colours and layout.
 
-No external libraries, images or font downloads are required.
+No external libraries or images are required. The Lilita One and Nunito fonts
+load from Google Fonts, with system fallbacks if they are unavailable.
+
+## Look & feel
+- Bold cartoon style with thick outlines, chunky buttons and a Lilita One font.
+- Cel-shaded striped balloon with a face that blinks, follows your steering,
+  grins after coins and panics near spikes.
+- Squash-and-stretch launch, rope-snap animation and a big "GO!" banner.
+- Coins burst into sparks and fly into the HUD counter; chain them for combos.
+- Skimming past a spike tip triggers a "CLOSE CALL!" bonus popup.
+- Speed lines, trails, wind streaks, gust warning chevrons and a red danger vignette.
+- Crashing pops the balloon into rubber shards and confetti, with slow motion,
+  screen shake and a white flash, then shows a results card.
+- Slam-in banners for every 1,000 m, each new zone and beating your best.
+- Your best altitude is saved in the browser (localStorage).
+- Reduced-motion settings soften the shake and decorative animations.
 
 ## Sound
-A gentle toy-piano-style melody starts on your first launch. Sound off mutes
-all audio. Soft leaf rustling plays during gusts, with short coin and pop
-sounds. No nature recordings or external audio files are required.
+A bouncy pentatonic loop starts on your first launch; drums join once you fly. Sound off mutes
+all audio. Soft leaf rustling plays during gusts, with whooshes, rising combo coin chimes,
+close-call swishes, zone fanfares and a punchy pop. No nature recordings or external audio files are required.
 
 ## Aircraft sequence
 At 1,200 game metres, a shaded 3D plane enters from the left and arcs toward
