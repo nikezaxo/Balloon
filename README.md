@@ -59,23 +59,19 @@ Every stage is endless, with its own best altitude and medals
   that turn, then shrink into the distance after you pass them.
 
 ## Voices
-Balloons speak real English lines through the device's speech voice, each with its own
-pitch and speed and a mood (angry lines faster and lower, sad ones slow, happy ones higher),
-for example Classic "Here we go!", Toy Robot "Turbo mode activated.", Monster "Mega chomp!",
-Golden King "Long live the king!". The line also pops up as a bubble above the balloon.
-Bosses speak a taunt, a tired line and "Nooo! Impossible!". The lines are in SPEECH in voices.js.
-If a device has no speech voice, the synthesised cartoon voice below is used instead.
+Every balloon has its own cartoon voice and says short English lines in a funny, angry or sad
+way: when you pick it in the store, cut the rope, boost, hit something, lose your shield, earn
+a star, start a fatality, beat a boss, pop and revive. Examples: Classic "Wheee! Here we go!",
+Gumball (chipmunk squeak) "Hee hee! I'm Gumball!", Toy Robot "Turbo mode, activated!",
+Monster (deep growl) "Mega chomp!", Golden King "Long live the king!". Bosses have a taunt,
+a tired line and "Nooo! Impossible!". The words also pop up as a bubble above the balloon.
 
-Every balloon has its own cartoon voice, made live by a small formant synthesiser
-(a buzzy pitched tone shaped into vowels), so there are no recordings to download:
-Classic is a cheerful kid, Gumball a giggly squeak, Funny Clown a goofy laugh with a honk,
-Toy Robot a ring-modulated robot, Watermelon a wobbly "wheee", Monster a growl, Ninja a
-whisper with a sword swish, Galaxy an echoing "ooo-wooo" and Golden King a deep royal "ho ho ho".
-Each one speaks when you cut the rope, fire a boost, smash or bonk something, lose your
-shield, earn a star, start a fatality, beat a boss, pop and revive, and says its
-catchphrase with its pose when you pick it in the store.
-Birds squawk, bats squeak, monkeys chatter and drones say "uh-oh" when you knock them out.
-Bosses laugh during the versus splash, pant while tired and cry "nooo" when finished.
+The lines are pre-made clips in audio/voices/<character>/ (about 1.5 MB, mp3). They were
+spoken by the open-source Kokoro speech model and then turned into cartoon voices with
+ffmpeg: chipmunk pitch shifts, growls, a robot filter, chorus and echo, each character
+with its own settings. Only the clips for your skin and the stage boss load, in the
+background, once sound is on. Until a clip has loaded, or if it can't load, a small
+synthesised cartoon voice is used instead (also used for birds, bats, monkeys and drones).
 The music dips while someone talks. On iPhone, sound plays even with the silent switch on
 (Safari 17 and newer).
 
@@ -104,10 +100,10 @@ With online play switched on:
 - Your best score goes on the ALL TIME board and your best this week on the WEEKLY board.
   The results screen shows your world and weekly rank after each run.
 - The weekly tournament runs Monday 00:00 to Sunday 23:59 UTC. The first time you sign in
-  after it ends you get coins for your final rank: 1st 1,000, 2nd 750, 3rd 500,
-  top 10 300, top 50 150, everyone else who played 50.
+  after it ends you get your prize: 1st 1,000 coins + 50 gems, 2nd 750 + 30 gems,
+  3rd 500 + 20 gems, 4th-10th 300 + 10 gems, top 50 150 coins, everyone else who played 50 coins.
 - Your progress (coins, skins, lives, bests and stars) is saved to your account, so it
-  follows you to other devices. Skins and records merge; coins and lives come from the newer save.
+  follows you to other devices. Skins and records merge; coins, gems and lives come from the newer save.
 - The leaderboard shows your first name and last initial; RENAME picks another name.
 Without it the high scores screen shows your bests on this device.
 
@@ -163,16 +159,20 @@ Shift fires the boost engine; F, Space or Enter performs a fatality on a tired
 boss; P or Escape pauses.
 
 ## Coins, power-ups and boost
-- Coins come in rows of 10 that follow the safe path between ledges. Collect
+- Coins are scarce in normal flight: rows of 10 that follow the safe path, about one row
+  every three ledges. The big haul is the COIN RUSH: while the engine boost (two lanes) or
+  turbo fires, a wavy river of coins pours in and the balloon pulls nearby coins in.
+- Coin rows: Collect
   every coin in 3 rows in a row to raise the coin multiplier to x1.1, then x1.2
   after the next 3, and so on; each coin is worth the multiplier. Missing a single
   coin resets it to x1.0. The multiplier and row progress show under the coin
   counter. Coins you collect are added to your wallet for the store.
-- Energy cells (in every second break between coin rows): collect 5, then tap ⚡ BOOST. This is the only
+- Energy cells (in every second gap between coin rows, roughly one engine boost every
+  13,000 m): collect 5, then tap ⚡ BOOST. This is the only
   power with a cinematic intro — the action freezes, rays spin and the balloon
   zooms in with sunglasses — then a rocket engine smashes through everything for
   3.5 seconds.
-- Rare power-ups (in every sixth break between coin rows): coin magnet, bubble shield and turbo.
+- Rare power-ups (in every eighth gap between coin rows): coin magnet, bubble shield and turbo.
   Turbo plays a quick mini intro in slow motion, then rockets you up.
 - Smashing ledges or drones, or bonking creatures while boosted, earns a coin.
 
@@ -186,7 +186,10 @@ boss; P or Escape pauses.
   Robot Dance with laser eyes, Watermelon – Melon Twister, Monster – Monster Roar,
   Ninja – Shadow Clones, Galaxy – Cosmic Warp, Golden King – King's Treasure.
 - Skins: Classic (free), Gumball, Funny Clown, Toy Robot, Watermelon, Monster,
-  Ninja, Galaxy and Golden King. Each has its own colours, decorations that turn
+  Ninja, Galaxy and Golden King for coins, and three MYTHIC skins sold only for gems:
+  Fire Dragon (30 gems, Dragon Fire pose, Dragon Breath fatality), Rainbow Unicorn
+  (50 gems, Rainbow Dash, Rainbow Blast) and Diamond (80 gems, Crystal Shine, Diamond Storm).
+- Gems are won in the weekly tournament's top 10 and shown next to your coins. Each has its own colours, decorations that turn
   with the balloon, and some have their own face and accessories. In the store
   every skin's card moves in its own style with its own effect (bouncing gumball with
   bubbles, wobbling clown with confetti, jerky robot with sparks, spinning

@@ -409,3 +409,8 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .mini-btn{font-family:var(--title);font-size:12px;letter-spacing:.5px;color:#fff;text-shadow:var(--stroke);padding:3px 9px 5px;background:linear-gradient(#6fc1ff,#2f86ff);border:2px solid var(--ink);border-radius:9px;box-shadow:0 3px 0 var(--ink)}
 @media(max-height:720px){.weekly-banner{margin-top:.6vh;padding:3px 12px 4px 6px}.weekly-banner .ico{width:20px;height:20px}.weekly-banner b{font-size:14px}}
 .rank-tabs .tab{font-size:13px;padding:5px 8px 7px}.rank-tabs .tab .ico{width:16px;height:16px}
+/* Gems */
+.wallets{display:flex;gap:6px;flex-wrap:wrap}
+.gem-pill b{color:#ffd6f6}
+.buy.gem{background:linear-gradient(#ff9ae6,#c81f8f);box-shadow:inset 0 -3px 0 #8a106a,0 3px 0 var(--ink)}
+.buy.big.gem{box-shadow:inset 0 -4px 0 #8a106a,0 4px 0 var(--ink)}

@@ -193,5 +193,20 @@ const gameSound = (() => {
   }
   // Lower the music for a while (used while a character talks).
   const duck = seconds => { if (context) duckUntil = Math.max(duckUntil, context.currentTime + seconds); };
-  return { enable, effect, update, speak, duck };
+  // Recorded voice clips: fetched once, decoded, then played through the mix.
+  const clips = new Map();
+  function loadClip(url) {
+    if (!context) return null;
+    if (!clips.has(url)) clips.set(url, fetch(url).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(b => new Promise((ok, no) => context.decodeAudioData(b, ok, no))).catch(() => { clips.delete(url); return null; }));
+    return clips.get(url);
+  }
+  function playClip(buffer, { volume = 1, delay = 0, rate = 1 } = {}) {
+    if (!running() || !buffer) return 0;
+    const src = context.createBufferSource(), gain = context.createGain(), at = context.currentTime + delay;
+    src.buffer = buffer; src.playbackRate.value = rate; gain.gain.value = volume;
+    src.connect(gain); gain.connect(master); src.start(at);
+    src.onended = () => { src.disconnect(); gain.disconnect(); };
+    const length = buffer.duration / rate; duckUntil = Math.max(duckUntil, at + length); return delay + length;
+  }
+  return { enable, effect, update, speak, duck, loadClip, playClip };
 })();
