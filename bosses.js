@@ -2,7 +2,7 @@
 // Stage bosses. Every BOSS_INTERVAL seconds of flying the ledges retract, creatures flee, a versus screen plays and
 // the stage's boss attacks with its own weapons. Attacks and time drain its stamina; once it is tired
 // the player finishes it with the equipped skin's fatality.
-const BOSS_INTERVAL=300,FATALITY_TIME=2.8;
+const BOSS_INTERVAL=300,FATALITY_TIME=2.8,VERSUS_TIME=3.2;
 let boss=null,nextBossTime=BOSS_INTERVAL,bossBuf=null,rewardCoins=[],rewardSound=0;
 const easeIn=k=>k*k,easeOut=k=>1-(1-k)*(1-k);
 
@@ -71,12 +71,12 @@ function artCosmic(o){ctx.lineCap='round';
  ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(0,-4,40,eh,0,0,TAU);ctx.stroke();planetRing(0,0,62,'#5ff0ff',false);
  ctx.fillStyle='#fff6b0';for(let k=0;k<5;k++){const a=o.t*1.2+k*TAU/5;star(Math.cos(a)*100,Math.sin(a)*30,6,2.4,4);ctx.fill()}}
 const BOSSES={
- sky:{name:'THUNDER KING',title:'STORM BOSS',art:artStorm,attacks:['lightning','hail','gust']},
- jungle:{name:'TIKI TITAN',title:'JUNGLE BOSS',art:artTiki,attacks:['darts','coconuts','firering']},
- cave:{name:'BAT QUEEN',title:'CAVE BOSS',art:artBat,attacks:['sonic','stalactites','swarm']},
- factory:{name:'MECHA CRUSHER',title:'FACTORY BOSS',art:artMecha,attacks:['laser','missiles','saws']},
- space:{name:'UFO OVERLORD',title:'SPACE BOSS',art:artUFO,attacks:['plasma','tractor','burst']},
- universe:{name:'STAR DEVOURER',title:'COSMIC BOSS',art:artCosmic,attacks:['spiral','blackhole','ring']}};
+ sky:{name:'THUNDER KING',title:'STORM BOSS',art:artStorm,colors:['#d8f2ff','#3f8ff0','#1a3d9e'],attacks:['lightning','hail','gust']},
+ jungle:{name:'TIKI TITAN',title:'JUNGLE BOSS',art:artTiki,colors:['#fff1a0','#ff9a1a','#b8360c'],attacks:['darts','coconuts','firering']},
+ cave:{name:'BAT QUEEN',title:'CAVE BOSS',art:artBat,colors:['#f0d8ff','#9a5cff','#3a1580'],attacks:['sonic','stalactites','swarm']},
+ factory:{name:'MECHA CRUSHER',title:'FACTORY BOSS',art:artMecha,colors:['#ffe6a0','#ff7a2a','#9e2410'],attacks:['laser','missiles','saws']},
+ space:{name:'UFO OVERLORD',title:'SPACE BOSS',art:artUFO,colors:['#d8ffe8','#2fcf9a','#0c5a5a'],attacks:['plasma','tractor','burst']},
+ universe:{name:'STAR DEVOURER',title:'COSMIC BOSS',art:artCosmic,colors:['#ffd8f6','#d94ae0','#4a1080'],attacks:['spiral','blackhole','ring']}};
 
 // ---------- Attacks ----------
 function bossShot(b,o){b.shots.push({age:0,kind:'orb',...o})}
@@ -113,24 +113,60 @@ function startBoss(){const def=BOSSES[stage.id]||BOSSES.sky,level=save.bossWins&
  for(const o of obstacles)if(o.leaving===undefined)o.leaving=0;for(const h of critters){if(h.dormant)h.gone=true;else knock(h,critterPos(h))}critters=critters.filter(h=>!h.gone);
  closeCoinRow();announce('WARNING!','BOSS INCOMING','power','skull');gameSound.effect('siren');shake=Math.max(shake,6)}
 function setPhase(p){boss.phase=p;boss.age=0}
-function showVersus(){const v=$('#versus');$('#vs-boss-name').textContent=boss.def.name;$('#vs-boss-title').textContent=boss.def.title;$('#vs-hero-name').textContent=(SKINS[save.skin]||SKINS.classic).name.toUpperCase();v.hidden=false;v.classList.remove('play');void v.offsetWidth;v.classList.add('play');gameSound.effect('vs');setTimeout(()=>gameSound.effect('roar'),700)}
-function renderVersus(){const main=ctx,s=performance.now()/1000;
- const hc=$('#vs-hero').getContext('2d');hc.setTransform(1,0,0,1,0,0);hc.clearRect(0,0,240,240);hc.setTransform(2.8,0,0,2.8,120,128);ctx=hc;ctx.rotate(Math.sin(s*3)*.08);drawBalloonBody(SKINS[save.skin]||SKINS.classic,s,'cool',0);
- const bc=$('#vs-boss').getContext('2d');bc.setTransform(1,0,0,1,0,0);bc.clearRect(0,0,320,260);bc.setTransform(1.05,0,0,1.05,160,138+Math.sin(s*2)*4);ctx=bc;boss.def.art({t:s,tired:false,attack:.5+.5*Math.sin(s*4),lookX:-.7,lookY:.6});ctx=main}
+// Versus splash in the style of an Angry Birds 2 poster: rays and focus lines, the boss slams in from the
+// top, your balloon rockets up to meet it, they clash in a burst, then the boss name drops in letter by letter.
+function showVersus(){const v=$('#versus'),name=boss.def.name;$('#vs-boss-title').textContent=boss.def.title;$('#vs-hero-name').textContent=`CHALLENGER · ${(SKINS[save.skin]||SKINS.classic).name.toUpperCase()}`;
+ const word=$('#vs-boss-name');word.setAttribute('aria-label',name);word.replaceChildren();let n=0;for(const part of name.split(' ')){const w=el('span','w');for(const ch of part){const l=el('i','',ch);l.style.setProperty('--r',`${(hash(n*7.3+name.length)-.5)*14}deg`);l.style.setProperty('--y',`${(hash(n*3.1)-.5)*10}%`);l.style.setProperty('--d',`${n*.045}s`);w.append(l);n++}word.append(w)}
+ boss.vs={fx:[],last:performance.now()/1000,fired:new Set(),lines:[],lineClock:0};v.hidden=false;v.classList.remove('play');void v.offsetWidth;v.classList.add('play');gameSound.effect('vs')}
+function vsLayout(){const sp=Math.min(SW,H*.62),sx=Math.min(SW,H*.95);return {sp,S:sp/330,boss:{x:SW/2+sx*.1,y:H*.27},hero:{x:SW/2-sx*.19,y:H*.57},hit:{x:SW/2+sx*.19,y:H*.49}}}
+function renderVersus(){const b=boss,V=b.vs;if(!V)return;const cv=$('#vs-canvas'),now=performance.now()/1000,dt=Math.min(.05,now-V.last),age=b.age,L=vsLayout(),[c0,c1,c2]=b.def.colors||['#fff1a0','#ff9a1a','#b8360c'];V.last=now;
+ if(cv.width!==Math.round(SW*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(SW*dpr);cv.height=Math.round(H*dpr)}
+ const vb=$('#versus .vs-badge');vb.style.setProperty('--vx',L.hit.x+'px');vb.style.setProperty('--vy',L.hit.y+'px');
+ const at=(th,fn)=>{if(age>=th&&!V.fired.has(th)){V.fired.add(th);fn()}};
+ at(.42,()=>{gameSound.effect('roar');V.shake=10});
+ at(.74,()=>{gameSound.effect('boom');gameSound.effect('smash');V.shake=22;const look=stage.look,gores=(SKINS[save.skin]||SKINS.classic).gores;for(let i=0;i<34;i++){const a=rand(0,TAU),s=rand(260,900);V.fx.push({type:i%4===0?'star':'shard',x:L.hit.x,y:L.hit.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-200,g:1100,life:0,max:rand(.8,1.5),size:rand(7,15),rot:rand(0,TAU),vr:rand(-12,12),color:i%4===0?'#ffd23f':pick([look.body,look.top,look.dark,gores[0][1],gores[gores.length-1][1],'#fff'])})}V.fx.push({type:'ring',x:L.hit.x,y:L.hit.y,life:0,max:.5,size:L.sp*.7})});
+ const main=ctx;ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);V.shake=(V.shake||0)*Math.exp(-7*dt);if(V.shake>.5)ctx.translate(rand(-V.shake,V.shake),rand(-V.shake,V.shake));
+ // Sunburst background in the boss colours.
+ const fxp=L.hit.x,fyp=L.hit.y*.9,R=Math.hypot(SW,H)*1.1,bg=ctx.createRadialGradient(fxp,fyp,0,fxp,fyp,R*.7);bg.addColorStop(0,c0);bg.addColorStop(.35,c1);bg.addColorStop(1,c2);ctx.fillStyle=bg;ctx.fillRect(-40,-40,SW+80,H+80);
+ ctx.save();ctx.translate(fxp,fyp);ctx.rotate(now*.25);ctx.fillStyle='rgba(255,255,255,.16)';for(let i=0;i<18;i++){ctx.rotate(TAU/18);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(R,-R*.09);ctx.lineTo(R,R*.09);ctx.closePath();ctx.fill()}ctx.restore();
+ // Focus lines rush toward the clash, strongest during the slam-in.
+ if((V.lineClock-=dt)<=0){V.lineClock=.05;V.lines=Array.from({length:46},()=>({a:rand(0,TAU),r:rand(.3,.5),w:rand(2,7)}))}
+ const la=age<1.3?.6:.25;ctx.save();ctx.translate(fxp,fyp);ctx.fillStyle=`rgba(255,255,255,${la})`;for(const l of V.lines){const r0=R*l.r*.6;ctx.save();ctx.rotate(l.a);ctx.beginPath();ctx.moveTo(r0,0);ctx.lineTo(R,-l.w);ctx.lineTo(R,l.w);ctx.closePath();ctx.fill();ctx.restore()}ctx.restore();
+ const vg=ctx.createRadialGradient(SW/2,H/2,Math.min(SW,H)*.35,SW/2,H/2,Math.max(SW,H)*.75);vg.addColorStop(0,'rgba(20,8,50,0)');vg.addColorStop(1,'rgba(20,8,50,.45)');ctx.fillStyle=vg;ctx.fillRect(0,0,SW,H);
+ // Clash burst behind the VS letters.
+ if(age>.72){const k=Math.min(1,(age-.72)/.16),r=L.sp*.29*backOut(k)*(1+.04*Math.sin(now*9));ctx.save();ctx.translate(L.hit.x,L.hit.y);ctx.rotate(.2+Math.sin(now*2)*.04);ctx.beginPath();for(let i=0;i<28;i++){const a=i/28*TAU,rr=r*(i%2?.62:1)*(.85+.3*hash(i*5.7));ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr)}ctx.closePath();ctx.fillStyle='#fff';ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.lineJoin='round';ctx.fill();ctx.stroke();ctx.scale(.62,.62);ctx.beginPath();for(let i=0;i<28;i++){const a=i/28*TAU+.1,rr=r*(i%2?.62:1);ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr)}ctx.closePath();ctx.fillStyle='#ffe14a';ctx.fill();ctx.restore()}
+ const exit=Math.max(0,(age-2.75)/.45);
+ // The boss slams in from the top right with a motion trail.
+ const pb=Math.min(1,Math.max(0,(age-.08)/.38)),bpos=k=>({x:SW*1.3+(L.boss.x-SW*1.3)*k,y:-H*.25+(L.boss.y+H*.25)*k}),bossAt=(k,alpha)=>{const q=bpos(k),bob=pb>=1?Math.sin(now*2.4)*6:0,sc=L.S*(1+exit*.5)*(k<1?1.15-.15*k:1);ctx.save();ctx.globalAlpha=alpha;ctx.translate(q.x+exit*SW*.3,q.y+bob-exit*H*.3);ctx.rotate(.45*(1-k)-.06+Math.sin(now*1.7)*.03);ctx.scale(sc,sc);b.def.art({t:now,tired:false,attack:age<1.4?1:.5+.5*Math.sin(now*5),lookX:-.8,lookY:.7});ctx.restore()};
+ if(pb>0){if(pb<1)for(const [lag,al] of [[.3,.15],[.18,.25],[.08,.4]])bossAt(Math.max(0,easeOut(pb)-lag),al);bossAt(easeOut(pb),1)}
+ // Your balloon rockets up from the bottom left, angry and ready.
+ const ph=Math.min(1,Math.max(0,(age-.38)/.36)),hpos=k=>({x:-SW*.3+(L.hero.x+SW*.3)*k,y:H*1.25+(L.hero.y-H*1.25)*k}),skin=SKINS[save.skin]||SKINS.classic,heroAt=(k,alpha)=>{const q=hpos(k),bob=ph>=1?Math.sin(now*3)*5:0,sc=L.S*2.3*(1+exit*.5);ctx.save();ctx.globalAlpha=alpha;ctx.translate(q.x-exit*SW*.3,q.y+bob+exit*H*.3);ctx.rotate(-.5*(1-k)+.14+Math.sin(now*2.2)*.04);ctx.scale(sc,sc);
+  if(k<1){const g=ctx.createLinearGradient(0,40,0,120);g.addColorStop(0,'rgba(255,255,255,.9)');g.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(-16,30);ctx.lineTo(16,30);ctx.lineTo(4,130);ctx.lineTo(-4,130);ctx.closePath();ctx.fill()}
+  drawBalloonBody(skin,now*1.2,'angry',0);ctx.restore()};
+ if(ph>0){if(ph<1)for(const [lag,al] of [[.24,.18],[.12,.32]])heroAt(Math.max(0,easeOut(ph)-lag),al);heroAt(easeOut(ph),1)}
+ // Debris from the clash.
+ for(const p of V.fx){p.life+=dt;if(p.vx!==undefined){p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.exp(-1.5*dt);p.rot+=p.vr*dt}const k=p.life/p.max;ctx.save();ctx.translate(p.x,p.y);
+  if(p.type==='ring'){ctx.globalAlpha=1-k;ctx.strokeStyle='#fff';ctx.lineWidth=14*(1-k)+1;ctx.beginPath();ctx.arc(0,0,p.size*easeOut(k),0,TAU);ctx.stroke()}
+  else if(p.type==='star'){ctx.rotate(p.rot);ctx.globalAlpha=1-k*k;ctx.fillStyle=p.color;ctx.strokeStyle=INK;ctx.lineWidth=2;star(0,0,p.size,p.size*.45,5);ctx.fill();ctx.stroke()}
+  else{ctx.rotate(p.rot);ctx.globalAlpha=k>.75?(1-k)/.25:1;ctx.fillStyle=p.color;ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(-p.size,-p.size*.4);ctx.lineTo(p.size*.8,-p.size*.6);ctx.lineTo(p.size*.3,p.size*.6);ctx.closePath();ctx.fill();ctx.stroke()}
+  ctx.restore()}V.fx=V.fx.filter(p=>p.life<p.max);
+ // White flashes on the clash and on the way out.
+ const fl=Math.max(age<.2?1-age/.2:0,age>.74&&age<.95?1-(age-.74)/.21:0,exit>0?Math.min(1,exit*1.6)*.85:0);if(fl>0){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=fl;ctx.fillStyle='#fff';ctx.fillRect(0,0,SW,H);ctx.globalAlpha=1}
+ ctx=main}
 function bossPace(){return boss?boss.pace:1}
 function updateBoss(dt,real){caveWallScale+=((boss&&boss.phase!=='done'?.15:1)-caveWallScale)*Math.min(1,real*1.5);if(!boss||state==='dead')return;const b=boss;b.animT+=real;b.attack=Math.max(0,b.attack-real*1.4);if(b.wind&&(b.wind.time-=dt)<=0)b.wind=null;
  const target=b.phase==='clear'||b.phase==='done'?1:.35;b.pace+=(target-b.pace)*Math.min(1,real*2);
  for(const o of obstacles)if(o.leaving!==undefined)o.leaving+=real;obstacles=obstacles.filter(o=>o.leaving===undefined||o.leaving<.6);
  b.freeze=b.phase==='versus'||b.phase==='fatality';
  if(b.phase==='clear'){if((b.age+=real)>1.1){setPhase('versus');showVersus()}return}
- if(b.phase==='versus'){if((b.age+=real)>2.6){$('#versus').hidden=true;setPhase('enter')}return}
- const homeX=W/2+Math.sin(b.clock*.55)*W*.24,homeY=Math.max(H*.27,200*b.scale+40)+Math.sin(b.clock*1.4)*10;
+ if(b.phase==='versus'){if((b.age+=real)>VERSUS_TIME){$('#versus').hidden=true;setPhase('enter')}return}
+ const homeX=W/2+Math.sin(b.clock*.55)*W*.24,homeY=Math.max(H*.31,200*b.scale+76)+Math.sin(b.clock*1.4)*10;
  if(b.phase==='enter'){b.age+=dt;b.clock+=dt;const k=Math.min(1,b.age/1.1);b.x=homeX;b.y=-220+(homeY+220)*easeOut(k);if(k>=1){setPhase('fight');announce('FIGHT!','','go');gameSound.effect('roar');shake=Math.max(shake,14)}return}
  if(b.phase==='fight'){b.clock+=dt;b.x+=(homeX-b.x)*Math.min(1,dt*3);b.y+=(homeY-b.y)*Math.min(1,dt*3);
   for(const tm of b.timers)if(b.clock>=tm.at){tm.done=true;tm.fn()}b.timers=b.timers.filter(tm=>!tm.done);
   b.stamina-=dt*2.2;if((b.cool-=dt)<=0&&b.stamina>0){let k;do k=Math.floor(Math.random()*b.def.attacks.length);while(k===b.last&&b.def.attacks.length>1);b.last=k;b.stamina-=ATTACKS[b.def.attacks[k]](b);b.attack=1;b.cool=rand(3,3.6)/b.sp}
   if(b.stamina<=0&&!b.timers.length){b.stamina=0;setPhase('tired');for(const s of b.shots)burst(s.x||s.cx||x*W,s.y||s.cy||0,4,{type:'puff',colors:['#ffffff'],speed:[20,60],size:[5,9],life:[.3,.5]});b.shots=[];b.wind=null;announce('TIRED!','TAP FATALITY!','fatal','skull');gameSound.effect('charged')}}
- if(b.phase==='tired'){b.clock+=dt*.3;b.x+=(W/2-b.x)*Math.min(1,dt*2);b.y+=(Math.max(H*.31,200*b.scale+70)+Math.sin(b.animT*2)*6-b.y)*Math.min(1,dt*2)}
+ if(b.phase==='tired'){b.clock+=dt*.3;b.x+=(W/2-b.x)*Math.min(1,dt*2);b.y+=(Math.max(H*.33,200*b.scale+95)+Math.sin(b.animT*2)*6-b.y)*Math.min(1,dt*2)}
  if(b.phase==='fatality'){b.age+=real;const f=b.fatal;f.p=Math.min(1,b.age/FATALITY_TIME);f.pose={};f.balloon=null;f.def.pose(f.p,b,f);if(f.p>=1)bossDefeated()}
  if(b.phase==='done'&&(b.age+=real)>3.2){endBoss();return}
  updateShots(b,dt)}
@@ -151,7 +187,7 @@ function updateShots(b,dt){const bx=x*W,by=balloonY()-5,br=14;
 function bossHit(s){if(smashing()){if(s.kind==='orb'||s.kind==='faller'){s.dead=true;burst(s.x,s.y,8,{colors:['#fff','#ffd23f'],speed:[80,220],life:[.2,.4]})}else s.hit=true;return}
  if(shield>0){breakShield();if(s.kind==='orb'||s.kind==='faller')s.dead=true;else s.hit=true;return}finish()}
 function startFatality(){if(!boss||boss.phase!=='tired'||state!=='flying')return;const def=FATALITIES[save.skin]||FATALITIES.classic;setPhase('fatality');boss.fatal={def,p:0,pose:{},balloon:null,fired:new Set(),at(th,fn){if(this.p>=th&&!this.fired.has(th)){this.fired.add(th);fn()}}};announce(def.name,'FATALITY!','fatal','skull');gameSound.effect('fatality');shake=Math.max(shake,8)}
-function bossDefeated(){const b=boss,reward=500+100*b.level+(save.skin==='gold'?100:0);spawnRewardCoins(b,reward);
+function bossDefeated(){const b=boss,reward=500+100*b.level+(save.skin==='gold'?100:0);spawnRewardCoins(b,reward);bonus+=PTS.boss;bossKills++;popup(W/2,H*.5,`+${PTS.boss.toLocaleString()}`,'#fff',40);
  save.bossWins=save.bossWins||{};save.bossWins[stage.id]=(save.bossWins[stage.id]||0)+1;persist();
  announce('BOSS DEFEATED!',`+${reward} COINS`,'record','trophy');confetti(50);gameSound.effect('record');b.hidden=true;b.shots=[];setPhase('done')}
 function endBoss(){boss=null;nextBossTime=flightTime+BOSS_INTERVAL;nextObstacle=alt+H/worldScale*.95;prevLedge={a:nextObstacle-300,c:.5};coinCursor=Math.max(coinCursor,nextObstacle-260)}

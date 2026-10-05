@@ -2,15 +2,15 @@
 // Balloon skins sold in the store. Gores are the vertical panels (light, mid and dark tones);
 // dots are decorations placed on the sphere, so they turn with the balloon.
 const SKINS={
- classic:{name:'Classic',price:0,gores:[['#ff7a86','#ff3b52','#c41d3d'],['#ffe680','#ffc21a','#d98a00']]},
- gumball:{name:'Gumball',price:150,gores:[['#ffc6e6','#ff7ac0','#d94a98']],dots:'sprinkles',gloss:true},
- clown:{name:'Funny Clown',price:200,gores:[['#ff8a8a','#ff4d5e','#c41d3d'],['#ffffff','#eceaf6','#b9b6cf'],['#8fd8ff','#3d9bff','#1f5fc4'],['#fff08a','#ffd23f','#d99400']],face:'goofy',extras:['hair','nose']},
- toy:{name:'Toy Robot',price:250,gores:[['#9cd8ff','#3d8bff','#2350b8'],['#d4dbe8','#9aa6bd','#6b7690']],face:'robot',dots:'rivets',extras:['antenna']},
- melon:{name:'Watermelon',price:300,gores:[['#8be38f','#3fbf55','#23863a'],['#c5f7a8','#8fdc6e','#55a83e']],dots:'seeds'},
- monster:{name:'Monster',price:400,gores:[['#c4ff8a','#7ad83f','#3f8f1d']],face:'monster',dots:'spots',extras:['horns']},
- ninja:{name:'Ninja',price:500,gores:[['#5a5a78','#34344c','#1a1a2c']],face:'ninja',extras:['headband']},
- galaxy:{name:'Galaxy',price:700,gores:[['#8a6cff','#5232c4','#24125e'],['#4d7bff','#2846b8','#101d5c']],dots:'stars'},
- gold:{name:'Golden King',price:1000,gores:[['#fff6b8','#ffd23f','#c98a00']],dots:'sparkle',extras:['crown'],gloss:true}};
+ classic:{name:'Classic',price:0,rarity:'common',about:'Bobs along happily, blowing hearts.',gores:[['#ff7a86','#ff3b52','#c41d3d'],['#ffe680','#ffc21a','#d98a00']]},
+ gumball:{name:'Gumball',price:150,rarity:'common',about:'Bouncy pink gum that blows bubbles.',gores:[['#ffc6e6','#ff7ac0','#d94a98']],dots:'sprinkles',gloss:true},
+ clown:{name:'Funny Clown',price:200,rarity:'rare',about:'Wobbly, goofy and full of confetti.',gores:[['#ff8a8a','#ff4d5e','#c41d3d'],['#ffffff','#eceaf6','#b9b6cf'],['#8fd8ff','#3d9bff','#1f5fc4'],['#fff08a','#ffd23f','#d99400']],face:'goofy',extras:['hair','nose']},
+ toy:{name:'Toy Robot',price:250,rarity:'rare',about:'Clanky robot moves, sparks and laser eyes.',gores:[['#9cd8ff','#3d8bff','#2350b8'],['#d4dbe8','#9aa6bd','#6b7690']],face:'robot',dots:'rivets',extras:['antenna']},
+ melon:{name:'Watermelon',price:300,rarity:'rare',about:'Spins like a top and splashes juice.',gores:[['#8be38f','#3fbf55','#23863a'],['#c5f7a8','#8fdc6e','#55a83e']],dots:'seeds'},
+ monster:{name:'Monster',price:400,rarity:'epic',about:'Growls, shakes and drips slime.',gores:[['#c4ff8a','#7ad83f','#3f8f1d']],face:'monster',dots:'spots',extras:['horns']},
+ ninja:{name:'Ninja',price:500,rarity:'epic',about:'Dashes in a blink and leaves smoke.',gores:[['#5a5a78','#34344c','#1a1a2c']],face:'ninja',extras:['headband']},
+ galaxy:{name:'Galaxy',price:700,rarity:'legendary',about:'A swirl of stars that bends space.',gores:[['#8a6cff','#5232c4','#24125e'],['#4d7bff','#2846b8','#101d5c']],dots:'stars'},
+ gold:{name:'Golden King',price:1000,rarity:'legendary',about:'Royal shine, glitter and a crown.',gores:[['#fff6b8','#ffd23f','#c98a00']],dots:'sparkle',extras:['crown'],gloss:true}};
 const SKIN_ORDER=Object.keys(SKINS);
 const DOTS=Array.from({length:28},(_,i)=>({lat:(hash(i*3.1)-.5)*2.3,lon:hash(i*7.7)*TAU,s:.7+hash(i*1.3)*.6,ang:hash(i*5.3)*TAU,c:i}));
 const DOT_COLORS={sprinkles:['#ffffff','#4fd3ff','#ffe066','#7cf08a','#b48cff'],seeds:['#1b1240'],spots:['#4fa82a','#8fe04f'],stars:['#ffffff','#ffe680'],rivets:['#eef3fb'],sparkle:['#ffffff']};
@@ -60,3 +60,56 @@ function skinFx(kind,s,layer){ctx.save();ctx.lineJoin='round';ctx.lineCap='round
 function goldSweep(s){const p=(s*.6)%1.6-.3;ctx.save();ctx.clip(BALLOON);ctx.fillStyle='rgba(255,255,255,.55)';ctx.beginPath();ctx.moveTo(-40+p*90,-45);ctx.lineTo(-28+p*90,-45);ctx.lineTo(-48+p*90,30);ctx.lineTo(-60+p*90,30);ctx.closePath();ctx.fill();ctx.restore()}
 // Celebration burst when a skin is picked in the store.
 function chosenFx(k){ctx.save();ctx.globalAlpha=k;ctx.strokeStyle='#ffd23f';ctx.lineWidth=5*k;ctx.beginPath();ctx.arc(0,-5,30+(1-k)*30,0,TAU);ctx.stroke();for(let i=0;i<10;i++){const a=i*TAU/10,r=30+(1-k)*36;ctx.fillStyle=i%2?'#fff':'#ffd23f';star(Math.cos(a)*r,-5+Math.sin(a)*r,6*k+1,2,4);ctx.fill()}ctx.restore()}
+
+// Store cards: each rarity has its own card colours.
+const RARITY={common:{name:'COMMON',a:'#5fe3d6',b:'#1f8fa8'},rare:{name:'RARE',a:'#7cc0ff',b:'#2c5ee0'},epic:{name:'EPIC',a:'#c79cff',b:'#6a35ef'},legendary:{name:'LEGENDARY',a:'#ffd36b',b:'#ff7a00'}};
+// Selection poses: a short show each skin performs on its store card after you pick it. fn(p,s) gets the
+// progress p (0 to 1) and the clock s, and returns the balloon's offset, turn, face and fx drawn behind
+// (back) and in front (front) of it, in balloon coordinates. sfx lists sounds to play at given progress.
+const POSE_TIME=2.2;
+const seg=(p,a,b)=>Math.min(1,Math.max(0,(p-a)/(b-a))),bell=k=>Math.sin(Math.PI*Math.min(1,Math.max(0,k))),ease=k=>k<.5?2*k*k:1-(2-2*k)**2/2;
+function poseText(text,px,py,size,color,rot=0){ctx.save();ctx.translate(px,py);ctx.rotate(rot);ctx.font=`${size}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=size*.32;ctx.strokeStyle=INK;ctx.strokeText(text,0,0);ctx.fillStyle=color;ctx.fillText(text,0,0);ctx.restore()}
+function puffs(px,py,k,n=7,r=12){ctx.save();ctx.globalAlpha=(1-k)*.85;ctx.fillStyle='#8a8aa6';for(let i=0;i<n;i++){const a=i*TAU/n;ctx.beginPath();ctx.arc(px+Math.cos(a)*(10+k*40),py+Math.sin(a)*(8+k*30),Math.max(0,r*(1+k)),0,TAU);ctx.fill()}ctx.restore()}
+const SKIN_POSES={
+ classic:{name:'HEART HUG',sfx:[[0,'boop'],[.2,'boop'],[.42,'boost'],[.58,'charged']],fn(p){const h1=bell(seg(p,0,.18)),h2=bell(seg(p,.2,.4)),spin=ease(seg(p,.4,.66)),b=seg(p,.58,1),land=bell(seg(p,.4,.5));
+  return {y:-(h1*16+h2*26),rot:spin*TAU,sx:1+land*.14,sy:1-land*.12,face:p>.58?'star':'joy',
+   back(){if(b>0&&b<1){ctx.save();ctx.translate(0,4);const k=.6+ease(b)*2.4;ctx.scale(k,k);heart(30);ctx.globalAlpha=(1-b)*.35;ctx.fillStyle='#ff9ab0';ctx.fill();ctx.globalAlpha=1-b;ctx.lineWidth=7/k;ctx.strokeStyle='#ff4d6d';ctx.stroke();ctx.lineWidth=2.5/k;ctx.strokeStyle='#fff';ctx.stroke();ctx.restore()}},
+   front(){if(b>0&&b<1)for(let i=0;i<10;i++){const a=i*TAU/10+b,r=34+ease(b)*58;ctx.save();ctx.globalAlpha=1-b*b;ctx.translate(Math.cos(a)*r,-5+Math.sin(a)*r);ctx.rotate(Math.sin(a)*.4);ctx.fillStyle=i%2?'#ff4d6d':'#ff9ab0';ctx.strokeStyle=INK;ctx.lineWidth=1.5;heart(7);ctx.fill();ctx.stroke();ctx.restore()}}}}},
+ gumball:{name:'BUBBLE POP',sfx:[[.08,'boop'],[.62,'pop']],fn(p,s){const blow=seg(p,.1,.62),pop=seg(p,.62,.82),after=seg(p,.62,1),wob=p>.62&&p<.86?Math.sin(s*60)*3*(1-after):0,sq=bell(seg(p,.62,.76));
+  return {x:wob,y:-bell(seg(p,0,.12))*8,sx:1+sq*.12,sy:1-sq*.1,face:p<.62?'happy':p<.86?'wow':'joy',
+   front(){if(p<.62&&blow>0){const r=3+ease(blow)*30+Math.sin(s*12)*blow;ctx.fillStyle='rgba(255,140,200,.82)';ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,4+r*.45,r,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle='rgba(255,255,255,.8)';ctx.beginPath();ctx.ellipse(-r*.38,4+r*.05,r*.18,r*.28,.5,0,TAU);ctx.fill()}
+    if(pop>0&&pop<1){ctx.globalAlpha=1-pop;ctx.strokeStyle='#ff7ac0';ctx.lineWidth=4;for(let i=0;i<12;i++){const a=i*TAU/12,r1=16+pop*20,r2=r1+10+pop*28;ctx.beginPath();ctx.moveTo(Math.cos(a)*r1,18+Math.sin(a)*r1);ctx.lineTo(Math.cos(a)*r2,18+Math.sin(a)*r2);ctx.stroke()}poseText('POP!',0,-58-pop*12,22,'#ff7ac0',-.15)}
+    if(after>0&&after<1){ctx.globalAlpha=1;ctx.fillStyle='#ff9ad5';ctx.strokeStyle=INK;ctx.lineWidth=1.5;for(const [bx,by,br] of [[-14,4,5],[12,8,6],[2,16,4],[-6,-2,3]]){ctx.beginPath();ctx.arc(bx,by+after*6,br*(1-after*.5),0,TAU);ctx.fill();ctx.stroke()}}}}}},
+ clown:{name:'JUGGLE & HONK',sfx:[[0,'launch'],[.3,'boop'],[.8,'boop'],[.82,'record']],fn(p,s){const jump=bell(seg(p,0,.3)),flip=ease(seg(p,.03,.27)),jug=seg(p,.3,.8),honk=bell(seg(p,.8,.92)),c=seg(p,.8,1);
+  return {y:-jump*40,rot:flip*TAU,sx:1+honk*.16,sy:1-honk*.14,face:p>.8?'joy':'happy',
+   front(){if(jug>0&&jug<1)['#ff4d5e','#ffd23f','#44d9ff'].forEach((col,i)=>{const ph=(s*2.4+i/3)%1,bx=Math.cos(ph*TAU)*24,by=-62-Math.sin(ph*TAU)*16-Math.abs(Math.cos(ph*TAU))*6;ctx.fillStyle=col;ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.beginPath();ctx.arc(bx,by,6,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle='rgba(255,255,255,.7)';ctx.beginPath();ctx.arc(bx-2,by-2,1.8,0,TAU);ctx.fill()});
+    if(honk>0)poseText('HONK!',34,-30,18,'#ffd23f',.25);
+    if(c>0&&c<1)for(let i=0;i<22;i++){const a=-Math.PI/2+(hash(i*1.7)-.5)*2.6,sp=50+hash(i*3.1)*60,px=Math.cos(a)*sp*c,py=-10+Math.sin(a)*sp*c+c*c*60;ctx.save();ctx.globalAlpha=1-c*c;ctx.translate(px,py);ctx.rotate(c*12+i);ctx.fillStyle=['#ff4d5e','#ffd23f','#44d9ff','#4fd36b','#a273ff'][i%5];ctx.fillRect(-3.5,-1.8,7,3.6);ctx.restore()}}}}},
+ toy:{name:'ROBOT DANCE',sfx:[[0,'on'],[.1,'on'],[.2,'on'],[.3,'on'],[.4,'on'],[.5,'on'],[.62,'zap']],fn(p,s){const step=Math.floor(p*10),dance=p<.6,beam=seg(p,.62,.95),mv=[[-10,-.22,0],[0,0,-7],[10,.22,0],[0,0,-7]][step%4];
+  return {x:dance?mv[0]:0,rot:dance?mv[1]:0,y:dance?mv[2]:0,face:'happy',
+   front(){if(dance&&(p*10)%1<.35){ctx.strokeStyle='#5ff0ff';ctx.lineWidth=2;for(let k=0;k<3;k++){const a=-Math.PI/2+(k-1)*.9;let px=0,py=-54;ctx.beginPath();ctx.moveTo(px,py);for(let j=1;j<=3;j++){px+=Math.cos(a)*6+(j%2?3:-3);py+=Math.sin(a)*6;ctx.lineTo(px,py)}ctx.stroke()}}
+    if(beam>0&&beam<1){const tx=-66+beam*132,ty=64;ctx.globalAlpha=Math.min(1,bell(beam)*3);for(const ex of [-8,8]){ctx.strokeStyle='rgba(255,60,80,.45)';ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(ex,-9);ctx.lineTo(tx+ex*.3,ty);ctx.stroke();ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.stroke()}
+     for(let i=0;i<5;i++){ctx.fillStyle=i%2?'#ffd23f':'#fff';star(tx+(hash(i+s*9)-.5)*18,ty-hash(i*2+s*7)*14,4,1.5,4);ctx.fill()}}}}}},
+ melon:{name:'MELON TWISTER',sfx:[[0,'boost'],[.52,'smash']],fn(p,s){const sp=bell(seg(p,0,.8)),spl=seg(p,.52,1);
+  return {spin:ease(seg(p,0,.8))*48,y:-sp*16,rot:Math.sin(s*34)*.05*sp,sx:1+sp*.08,sy:1-sp*.08,face:p>.52?'star':'joy',
+   back(){if(sp>.05){ctx.globalAlpha=sp*.8;ctx.strokeStyle='#ffffff';ctx.lineWidth=3;ctx.lineCap='round';for(let k=0;k<3;k++){const a=s*14+k*TAU/3;ctx.beginPath();ctx.ellipse(0,-5,44,14,0,a,a+1.6);ctx.stroke()}}},
+   front(){if(spl>0&&spl<1)for(let i=0;i<16;i++){const a=i*TAU/16,r=30+ease(spl)*64;ctx.save();ctx.globalAlpha=1-spl;ctx.translate(Math.cos(a)*r,-5+Math.sin(a)*r+spl*spl*30);ctx.rotate(a+Math.PI/2);ctx.fillStyle=i%3===0?'#1b1240':i%2?'#ff5a7a':'#7fe08a';ctx.beginPath();ctx.ellipse(0,0,i%3===0?1.8:3,i%3===0?3:5,0,0,TAU);ctx.fill();ctx.restore()}}}}},
+ monster:{name:'MONSTER ROAR',sfx:[[.28,'roar']],fn(p,s){const crouch=bell(seg(p,0,.28)),roar=seg(p,.28,.86),on=roar>0&&roar<1,lunge=bell(seg(p,.28,.42)),grow=on?.2*(1-roar*.6):0;
+  return {x:on?Math.sin(s*70)*3:0,y:crouch*9-lunge*12,sx:1-crouch*.08+grow,sy:1-crouch*.15+grow,face:on?'wow':'happy',
+   front(){if(on){for(let i=0;i<3;i++){const q=(roar*2.4+i/3)%1;ctx.globalAlpha=1-q;ctx.strokeStyle='#b6ff7a';ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,4,24+q*58,-.9,.9);ctx.stroke();ctx.beginPath();ctx.arc(0,4,24+q*58,Math.PI-.9,Math.PI+.9);ctx.stroke()}ctx.globalAlpha=1;poseText('ROAR!',0,-66+Math.sin(s*50)*2,26,'#b6ff7a',Math.sin(s*30)*.06)}
+    if(roar>.1)for(let i=0;i<6;i++){const q=(roar*1.6+hash(i*2.3))%1;ctx.globalAlpha=1-q;ctx.fillStyle='#7ad83f';ctx.strokeStyle=INK;ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse((hash(i*5.1)-.5)*50,26+q*40,3,4+q*4,0,0,TAU);ctx.fill();ctx.stroke()}}}}},
+ ninja:{name:'SHADOW CLONES',sfx:[[0,'close'],[.5,'zap'],[.76,'close']],fn(p,s){const out=seg(p,0,.14),cl=seg(p,.14,.76),sl=seg(p,.5,.78),back=seg(p,.76,.92);
+  return {alpha:p<.14?1-out:p<.76?0:back,y:p>=.76?(1-back)*-8:0,face:'happy',
+   back(){if(cl>0&&cl<1){const spread=ease(Math.min(1,cl*3))*(1-seg(cl,.85,1));for(const k of [-1,0,1]){ctx.save();ctx.globalAlpha=k?.75:1;ctx.translate(k*50*spread,Math.abs(k)*6-bell(seg(cl,.2+Math.abs(k)*.1,.5+Math.abs(k)*.1))*10);ctx.scale(.72,.72);drawBalloonBody(SKINS.ninja,s*.9,'happy',0);ctx.restore()}}},
+   front(){if(p<.24)puffs(0,-5,seg(p,0,.24));if(p>.7&&p<.95)puffs(0,-5,seg(p,.7,.95));
+    if(sl>0&&sl<1)for(let i=0;i<3;i++){const k=seg(sl,i*.2,i*.2+.5);if(k<=0||k>=1)continue;const y0=-40+i*30,dx=70;ctx.globalAlpha=1-k*k;ctx.strokeStyle='#fff';ctx.lineWidth=6*(1-k)+1;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-dx,y0-20);ctx.lineTo(-dx+ease(Math.min(1,k*2))*dx*2,y0-20+ease(Math.min(1,k*2))*40);ctx.stroke()}}}}},
+ galaxy:{name:'COSMIC WARP',sfx:[[0,'zone'],[.7,'boom']],fn(p,s){const v=bell(seg(p,0,1)),sh=bell(seg(p,.3,.72)),out=seg(p,.7,1);
+  return {y:-v*10,rot:ease(seg(p,.3,.72))*TAU*2,sx:1-sh*.72+bell(out)*.2,sy:1-sh*.72+bell(out)*.2,face:'star',
+   back(){ctx.globalAlpha=v;ctx.save();ctx.translate(0,-5);ctx.rotate(s*4);for(let k=0;k<3;k++){ctx.rotate(TAU/3);const g=ctx.createLinearGradient(0,0,70,0);g.addColorStop(0,'rgba(255,255,255,.9)');g.addColorStop(.4,'rgba(162,115,255,.7)');g.addColorStop(1,'rgba(68,140,255,0)');ctx.strokeStyle=g;ctx.lineWidth=10;ctx.lineCap='round';ctx.beginPath();for(let a=0;a<3.2;a+=.2){const r=6+a*20;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.stroke()}ctx.restore()},
+   front(){ctx.globalAlpha=v;for(let i=0;i<12;i++){const q=1-((s*1.6+i/12)%1),a=i*2.4+s;ctx.fillStyle=i%2?'#fff':'#ffe680';star(Math.cos(a)*q*80,-5+Math.sin(a)*q*60,3+q*3,1.2+q,4);ctx.fill()}
+    if(out>0&&out<1){ctx.globalAlpha=1-out;ctx.strokeStyle='#c9a8ff';ctx.lineWidth=7*(1-out)+1;ctx.beginPath();ctx.arc(0,-5,30+out*60,0,TAU);ctx.stroke()}}}}},
+ gold:{name:"KING'S TREASURE",sfx:[[0,'launch'],[.3,'coin'],[.45,'coin'],[.5,'buy']],fn(p,s){const toss=seg(p,0,.5),rain=seg(p,.25,1),land=bell(seg(p,.48,.6));
+  return {y:-bell(seg(p,.5,.66))*10,sx:1+land*.1,sy:1-land*.1,face:p>.5?'star':'joy',noCrown:toss<1,
+   back(){const k=bell(rain);if(k>0){ctx.save();ctx.translate(0,-5);ctx.rotate(s*.8);ctx.globalAlpha=k*.5;ctx.fillStyle='#fff3a0';for(let i=0;i<12;i++){ctx.rotate(TAU/12);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(110,-11);ctx.lineTo(110,11);ctx.closePath();ctx.fill()}ctx.restore()}},
+   front(){if(toss<1){ctx.save();ctx.translate(0,-44-bell(toss)*70);ctx.rotate(toss*TAU*2);ctx.translate(0,44);skinExtras({extras:['crown']});ctx.restore()}
+    if(rain>0&&rain<1)for(let i=0;i<12;i++){const q=(rain*1.7+hash(i*3.3))%1,cx=(hash(i*1.9)-.5)*130,cy=-95+q*180;ctx.globalAlpha=Math.min(1,(1-rain)*4);drawCoin(cx,cy,6,s*8+i,false)}}}}}};
