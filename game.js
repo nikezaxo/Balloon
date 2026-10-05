@@ -19,7 +19,7 @@ const starsFor=v=>STAR_SCORES.filter(s=>v>=s).length;
 // Wallet, owned skins, lives and per-stage bests live in the browser's localStorage.
 function loadSave(){const fresh={coins:0,lives:1,skins:['classic'],skin:'classic',best:{},scores:{},stars:{},lastStage:'sky'};try{const s=JSON.parse(localStorage.getItem('skybound-save'));if(s)return {...fresh,...s,best:{...(s.best||{})},scores:{...(s.scores||{})},stars:{...(s.stars||{})}};const old=Number(localStorage.getItem('skybound-best'))||0;if(old)fresh.best.sky=old}catch{}return fresh}
 const save=loadSave();
-function persist(){try{localStorage.setItem('skybound-save',JSON.stringify(save))}catch{}}
+function persist(){save.updated=Date.now();try{localStorage.setItem('skybound-save',JSON.stringify(save))}catch{}if(typeof online!=='undefined')online.saved()}
 let stage=STAGES.find(s=>s.id===save.lastStage)||STAGES[0];
 let SW=420,W=420,OX=0,H=700,dpr=1,state='menu',previousState='ready',alt=0,x=.5,vx=0,t=0,last=0,obstacles=[],coins=[],critters=[],particles=[],pointer=null,target=null,sound=false,soundTouched=false,flightTime=0,spin=0,wind=0,weatherNow=null,leaves=[],leafClock=0,coinCount=0,shownCoins=0,banked=0,nextObstacle=450,spawnIndex=0;
 // Game feel: camera shake, flashes, slow motion, popups, combos and a springy balloon with a face.
@@ -61,6 +61,7 @@ function openMenu(){bank();reset('menu')}
 function el(tag,cls='',text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
 function openPanel(kind){panelKind=kind;previews=[];storePick=save.skin;const list=$('#panel-list');list.replaceChildren();
  if(kind==='store')renderStore();
+ else if(kind==='ranks')renderRanks();
  else{$('#panel-title').textContent='POWER-UPS';{const row=el('div','boost-item'),ico=el('span','ico'),text=el('div');ico.innerHTML=icon('skull');ico.style.setProperty('--c','#ff4d5e');text.append(el('h3','','BOSS FIGHTS'),el('p','',`Every ${BOSS_INTERVAL/60} minutes of flying the stage boss arrives. Dodge its weapons until it runs out of stamina, then tap FATALITY. Each balloon skin has its own fatality.`));row.append(ico,text);list.append(row)}for(const p of Object.values(POWERS)){const row=el('div','boost-item'),ico=el('span','ico'),text=el('div');ico.innerHTML=icon(p.ico);ico.style.setProperty('--c',p.color);text.append(el('h3','',p.name),el('p','',p.desc));row.append(ico,text);list.append(row)}}
  $('#panel').hidden=false;list.scrollTop=0}
 function renderStore(){$('#panel-title').textContent='STORE';const list=$('#panel-list'),scroll=list.scrollTop;list.replaceChildren();const top=el('div','store-top'),tabs=el('div','tabs');
@@ -86,7 +87,7 @@ function buyLives(n,price,b){if(save.coins<price)return notEnough(b,price);save.
 function placeBalloon(a,pop){const b=1+Math.sin(pop*Math.PI)*.28;ctx.translate(a.x||0,a.y||0);ctx.rotate(a.rot||0);ctx.scale((a.sx||1)*b,(a.sy||1)*b)}
 function renderPreviews(){const main=ctx,now=performance.now()/1000;for(const cv of previews){const id=cv.dataset.skin,c=cv.getContext('2d'),big=!!cv.dataset.feature;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);if(big)c.setTransform(2.5,0,0,2.5,180,238);else c.setTransform(1.55,0,0,1.55,70,84);ctx=c;
   let p=skinPop[id]?(now-skinPop[id])/POSE_TIME:1;if(!big)p=1;
-  if(big&&p<1){const P=SKIN_POSES[id],fired=poseSfx[id]&&poseSfx[id].start===skinPop[id]?poseSfx[id]:(poseSfx[id]={start:skinPop[id],done:new Set()});if(P)for(const [at,kind] of P.sfx||[])if(p>=at&&!fired.done.has(at+kind)){fired.done.add(at+kind);gameSound.effect(kind)}}
+  if(big&&p<1){const P=SKIN_POSES[id];let fired=poseSfx[id];if(!fired||fired.start!==skinPop[id]){fired=poseSfx[id]={start:skinPop[id],done:new Set()};sayVoice('select',{skin:id,force:true})}if(P)for(const [at,kind] of P.sfx||[])if(p>=at&&!fired.done.has(at+kind)){fired.done.add(at+kind);gameSound.effect(kind)}}
   drawSkinShow(id,now,big?p:1,big?0:(skinPop[id]?Math.max(0,1-(now-skinPop[id])/.9):0))}ctx=main}
 // A skin on a store card: its idle style and effect, or its selection pose while one is playing.
 function drawSkinShow(id,now,p,pop){const skin=SKINS[id]||SKINS.classic,fx=SKIN_FX[id]||SKIN_FX.classic,P=p<1&&SKIN_POSES[id]?SKIN_POSES[id].fn(p,now):null,a=P||fx.anim(now);
@@ -94,12 +95,12 @@ function drawSkinShow(id,now,p,pop){const skin=SKINS[id]||SKINS.classic,fx=SKIN_
  if(!P&&fx.afterimage)for(const [lag,alpha] of [[.09,.16],[.045,.3]]){ctx.save();ctx.globalAlpha=alpha;placeBalloon(fx.anim(now-lag),0);drawBalloonBody(skin,(now-lag)*.9,'happy',0);ctx.restore()}
  if(!P||P.alpha!==0){ctx.save();if(P&&P.alpha!==undefined)ctx.globalAlpha=P.alpha;placeBalloon(a,pop);drawBalloonBody(P&&P.noCrown?{...skin,extras:[]}:skin,now*.9*(a.turn||1)+(P&&P.spin||0),P?P.face||'joy':pop>0?'star':'happy',0);if(id==='gold')goldSweep(now);ctx.restore()}
  ctx.save();if(P){if(P.front)P.front()}else skinFx(fx.fx,now,'front');ctx.restore();if(pop>0)chosenFx(pop)}
-$('#play').onclick=()=>startRun('click');$('#prev-stage').onclick=()=>setStage(STAGES.indexOf(stage)-1);$('#next-stage').onclick=()=>setStage(STAGES.indexOf(stage)+1);$('#open-store').onclick=()=>openPanel('store');$('#open-boosts').onclick=()=>openPanel('boosts');$('#panel-close').onclick=()=>{$('#panel').hidden=true;panelKind=null;previews=[];refreshMeta()};
+$('#play').onclick=()=>startRun('click');$('#prev-stage').onclick=()=>setStage(STAGES.indexOf(stage)-1);$('#next-stage').onclick=()=>setStage(STAGES.indexOf(stage)+1);$('#open-store').onclick=()=>openPanel('store');$('#open-boosts').onclick=()=>openPanel('boosts');$('#weekly-banner').onclick=()=>{ranksTab=online.configured()?'week':'mine';openPanel('ranks')};$('#account').onclick=()=>{if(online.user)openPanel('ranks');else online.signIn().catch(()=>{})};$('#panel-close').onclick=()=>{$('#panel').hidden=true;panelKind=null;previews=[];refreshMeta()};
 {let sx=null;const show=$('#stage-show');show.addEventListener('pointerdown',e=>{sx=e.clientX});show.addEventListener('pointerup',e=>{if(sx!==null&&Math.abs(e.clientX-sx)>35)setStage(STAGES.indexOf(stage)+(e.clientX<sx?1:-1));sx=null})}
 $$('.sound-toggle').forEach(b=>b.onclick=toggleSound);$$('.fs-toggle').forEach(b=>b.onclick=toggleFullscreen);$('#boost').onclick=activateEngine;$('#fatality').onclick=startFatality;$('#revive').onclick=revive;
 
 function launch(quiet){if(state!=='ready')return;
- state='flying';$('#hint').hidden=true;gameSound.effect('launch');
+ state='flying';$('#hint').hidden=true;gameSound.effect('launch');sayVoice('launch',{force:true,delay:.05});
  const r=rope(),cutY=(r.a.y+r.b.y)/2;ropeCut={age:0,length:r.b.y-cutY};
  burst(W/2,cutY,14,{type:'star',colors:['#fff','#ffd23f'],speed:[80,240],size:[4,7],life:[.3,.6]});
  rings.push({x:W/2,y:cutY,max:60,life:0,dur:.4,color:'#fff',width:5});
@@ -136,7 +137,7 @@ function announce(text,sub,kind,ic,tone){const layer=$('#announce');layer.replac
 function countUp(node,value,suffix){const start=performance.now();const tick=now=>{const k=Math.min(1,(now-start)/900);node.textContent=Math.round(value*(1-(1-k)**3)).toLocaleString()+suffix;if(k<1)requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 const backOut=k=>1+3.2*(k-1)**3+2.2*(k-1)**2;
 
-function finish(){state='dead';release();mood='dead';boost=null;shield=0;magnet=0;showcase=null;gameSound.effect('pop');const bx=x*W,by=balloonY(),gores=(SKINS[save.skin]||SKINS.classic).gores;
+function finish(){state='dead';release();mood='dead';boost=null;shield=0;magnet=0;showcase=null;gameSound.effect('pop');sayVoice('die',{force:true,delay:.12});const bx=x*W,by=balloonY(),gores=(SKINS[save.skin]||SKINS.classic).gores;
  for(let i=0;i<16;i++){const a=Math.random()*TAU,s=rand(160,380);particles.push({type:'shard',x:bx+Math.cos(a)*15,y:by-5+Math.sin(a)*15,vx:Math.cos(a)*s,vy:Math.sin(a)*s-80,life:0,max:rand(.9,1.5),size:rand(6,12),color:gores[i%gores.length][1],gravity:600,drag:1.2,rot:rand(0,TAU),vr:rand(-14,14)})}
  burst(bx,by,26,{type:'confetti',colors:PARTY,speed:[120,420],size:[6,10],life:[.7,1.2],gravity:300,drag:1.5});
  burst(bx,by,18,{colors:['#fff','#ffd23f'],speed:[200,500],size:[2,4],life:[.25,.5]});
@@ -154,7 +155,7 @@ function showResult(){bank();const a=Math.floor(alt),record=a>stageBest();if(rec
  $('#res-stage-icon').innerHTML=icon(stage.icon);$('#res-alt').textContent=a.toLocaleString()+' m';$('#res-medals').innerHTML=MEDALS.filter(m=>a>=m.at).map(m=>iconHTML('medal',m.tone)).join('');$('#res-coins').textContent=Math.floor(coinCount).toLocaleString();
  $('#res-extra').textContent=bossKills?`${bossKills} BOSS${bossKills>1?'ES':''}`:`x${bestMult.toFixed(1)}`;$('#res-extra').previousElementSibling.innerHTML=icon(bossKills?'crown':'coin');
  if(save.lives>0){$('#revive').hidden=false;$('#revive').innerHTML=`${iconHTML('heart')}REVIVE (${save.lives})`}else $('#revive').hidden=true;
- results={score:sc,stars,high,record,age:0,shown:-1,lit:0,done:false,tick:0,confetti:0};resFx=[];refreshMeta()}
+ results={score:sc,stars,high,record,age:0,shown:-1,lit:0,done:false,tick:0,confetti:0,rank:undefined};resFx=[];refreshMeta();resultsOnline()}
 function resStarPop(k){const n=$(`.res-star[data-k="${k}"]`);n.innerHTML=icon('star');n.classList.add('on');gameSound.effect('star',k);
  const fx=$('#res-fx').getBoundingClientRect(),r=n.getBoundingClientRect(),cx=r.left+r.width/2-fx.left,cy=r.top+r.height/2-fx.top;
  for(let i=0;i<22;i++){const a=rand(0,TAU),sp=rand(120,420);resFx.push({type:i%3?'spark':'star',x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,g:i%3?0:500,life:0,max:rand(.4,.9),size:i%3?rand(2,4):rand(6,11),color:pick(['#fff','#ffd23f','#fff6b0']),rot:rand(0,TAU),vr:rand(-8,8)})}
@@ -193,7 +194,7 @@ function drawCrew(){const cv=$('#res-crew'),w=cv.clientWidth,h=cv.clientHeight;i
 function revive(){if(state!=='dead'||save.lives<=0)return;save.lives--;persist();revives++;state='flying';$('#overlay').hidden=true;$('#results').hidden=true;$('#panel').hidden=true;panelKind=null;previews=[];deathTimer=0;slowTimer=0;timeScale=1;
  const by=balloonY();if(boss){boss.shots=[];boss.timers=[];boss.cool=Math.max(boss.cool,1.6)}for(const o of obstacles)if(Math.abs(spike(o).y-by)<280)o.broken=true;for(const h of critters){const p=critterPos(h);if(Math.abs(p.y-by)<320)knock(h,p)}
  if(stage.walls)x=.5;vx=0;grow=0;invuln=3;mood='star';moodTimer=1.8;
- announce('REVIVED!',`${save.lives} ${save.lives===1?'LIFE':'LIVES'} LEFT`,'record','heart');gameSound.effect('power');burst(x*W,by,18,{type:'heart',colors:['#ff4d5e','#ff7a9a','#ffffff'],speed:[90,260],size:[6,10],life:[.6,1.1],drag:1.5});rings.push({x:x*W,y:by,max:120,life:0,dur:.6,color:'#ff7a9a',width:7});refreshMeta()}
+ announce('REVIVED!',`${save.lives} ${save.lives===1?'LIFE':'LIVES'} LEFT`,'record','heart');gameSound.effect('power');sayVoice('revive',{force:true,delay:.2});burst(x*W,by,18,{type:'heart',colors:['#ff4d5e','#ff7a9a','#ffffff'],speed:[90,260],size:[6,10],life:[.6,1.1],drag:1.5});rings.push({x:x*W,y:by,max:120,life:0,dur:.6,color:'#ff7a9a',width:7});refreshMeta()}
 
 // ---- Course ----
 function spike(o){const yy=balloonY()+(alt-o.a)*worldScale;const len=W*(o.length*(stage.reach||1)+(o.moving?Math.sin(t*.8+o.phase)*.065:0))*(o.leaving===undefined?1:Math.max(0,1-o.leaving/.6));return {y:yy,len,side:o.side}}
@@ -344,8 +345,8 @@ function chargedUp(){gameSound.effect('charged');announce('BOOST READY!','TAP BO
 const smashing=()=>engineOn()||invuln>0;
 // The engine boost is the one power with a cinematic intro: the action freezes and the balloon celebrates.
 // Turbo pickup: a quick mini intro in slow motion (no full freeze), then the rocket fires.
-function startTurbo(){showcase={kind:'nitro',age:0,dur:.7,mini:true};invuln=Math.max(invuln,1);mood='cool';moodTimer=1.6;popup(x*W,balloonY()-78,'TURBO!','#ff8a2a',40);gameSound.effect('boost');squash=.25;squashV=0;burst(x*W,balloonY(),16,{type:'star',colors:['#ff8a2a','#ffd23f','#fff'],speed:[120,300],size:[4,7],life:[.4,.7],drag:1.5})}
-function activateEngine(){if(state!=='flying'||showcase||energy<5)return;energy=0;showcase={kind:'energy',age:0,dur:1.15};mood='cool';moodTimer=2;announce('ENGINE BOOST','FULL POWER!','power','bolt');gameSound.effect('power');
+function startTurbo(){sayVoice('boost',{force:true});showcase={kind:'nitro',age:0,dur:.7,mini:true};invuln=Math.max(invuln,1);mood='cool';moodTimer=1.6;popup(x*W,balloonY()-78,'TURBO!','#ff8a2a',40);gameSound.effect('boost');squash=.25;squashV=0;burst(x*W,balloonY(),16,{type:'star',colors:['#ff8a2a','#ffd23f','#fff'],speed:[120,300],size:[4,7],life:[.4,.7],drag:1.5})}
+function activateEngine(){if(state!=='flying'||showcase||energy<5)return;energy=0;sayVoice('boost',{force:true});showcase={kind:'energy',age:0,dur:1.15};mood='cool';moodTimer=2;announce('ENGINE BOOST','FULL POWER!','power','bolt');gameSound.effect('power');
  burst(x*W,balloonY(),26,{type:'star',colors:['#ffd23f','#fff','#ff8a2a'],speed:[80,260],size:[4,8],life:[.6,1.1],drag:1.5});confetti(24);squash=.3;squashV=0}
 function applyPower(kind){const P=POWERS[kind],bx=x*W,by=balloonY();powerCount++;
  if(kind==='magnet'){magnet=8;gameSound.effect('boost')}
@@ -353,10 +354,10 @@ function applyPower(kind){const P=POWERS[kind],bx=x*W,by=balloonY();powerCount++
  if(kind==='shield'){shield=20;gameSound.effect('shield')}
  if(kind==='energy'){boost={kind:'engine',time:3.5,dur:3.5,mult:1.75};gameSound.effect('nitro')}
  burst(bx,by,24,{colors:[P.color,'#fff'],speed:[150,420],size:[2,5],life:[.3,.6]});rings.push({x:bx,y:by,max:110,life:0,dur:.5,color:P.color,width:7});shake=Math.max(shake,kind==='energy'?12:6);flash=kind==='energy'?.3:.12;flashColor=P.color;squash=-.2}
-function breakShield(){shield=0;invuln=1.2;gameSound.effect('shieldbreak');const bx=x*W,by=balloonY();burst(bx,by,22,{type:'shard',colors:['#bff4ff','#44d9ff','#ffffff'],speed:[150,330],size:[5,9],life:[.5,.9],gravity:300});rings.push({x:bx,y:by,max:90,life:0,dur:.45,color:'#bff4ff',width:6});popup(bx,by-60,'SHIELD SAVED YOU!','#44d9ff',24);shake=Math.max(shake,12)}
+function breakShield(){shield=0;invuln=1.2;gameSound.effect('shieldbreak');sayVoice('oof',{force:true});const bx=x*W,by=balloonY();burst(bx,by,22,{type:'shard',colors:['#bff4ff','#44d9ff','#ffffff'],speed:[150,330],size:[5,9],life:[.5,.9],gravity:300});rings.push({x:bx,y:by,max:90,life:0,dur:.45,color:'#bff4ff',width:6});popup(bx,by-60,'SHIELD SAVED YOU!','#44d9ff',24);shake=Math.max(shake,12)}
 function smashFx(px,py,colors,text){smashes++;bonus+=PTS.smash;gameSound.effect('smash');burst(px,py,14,{type:'shard',colors,speed:[120,320],size:[5,10],life:[.6,1],gravity:500,world:true});burst(px,py,10,{colors:['#fff','#ffd23f'],speed:[150,380],life:[.2,.45]});rings.push({x:px,y:py,max:60,life:0,dur:.35,color:'#fff',width:5});popup(px,py-30,text,'#ff8a2a',26);shake=Math.max(shake,9)}
-function breakLedge(o,z){o.broken=true;const reach=Math.min(z.len,x*W+40),px=o.side?W-reach*.6:reach*.6;smashFx(px,z.y,[stage.look.body,stage.look.top,stage.look.dark],'SMASH!')}
-function bonkCritter(h){const p=critterPos(h);knock(h,p);coinCount++;flyers.push({x:p.x,y:p.y,age:0});if(h.kind==='drone')smashFx(p.x,p.y,['#c4cee0','#5f6b85','#ffd23f'],'SMASH +1');else{bonus+=PTS.smash;gameSound.effect('boop');burst(p.x,p.y,10,{type:'star',colors:['#fff','#ffd23f'],speed:[80,220],size:[4,7],life:[.3,.6]});popup(p.x,p.y-30,'BOOP +1','#ffd23f',24);shake=Math.max(shake,5)}}
+function breakLedge(o,z){o.broken=true;sayVoice('hit');const reach=Math.min(z.len,x*W+40),px=o.side?W-reach*.6:reach*.6;smashFx(px,z.y,[stage.look.body,stage.look.top,stage.look.dark],'SMASH!')}
+function bonkCritter(h){const p=critterPos(h);knock(h,p);critterVoice(h.kind);sayVoice('hit',{delay:.1});coinCount++;flyers.push({x:p.x,y:p.y,age:0});if(h.kind==='drone')smashFx(p.x,p.y,['#c4cee0','#5f6b85','#ffd23f'],'SMASH +1');else{bonus+=PTS.smash;gameSound.effect('boop');burst(p.x,p.y,10,{type:'star',colors:['#fff','#ffd23f'],speed:[80,220],size:[4,7],life:[.3,.6]});popup(p.x,p.y-30,'BOOP +1','#ffd23f',24);shake=Math.max(shake,5)}}
 
 const gapTo=(o,z)=>o.side?(W-z.len-8)-(x*W+28):(x*W-28)-(z.len+8);
 function hitsObstacle(z){const left=z.side?W-z.len-8:0,right=z.side?W:z.len+8;const tilt=vx*.16+wind*.12;const cx=x*W+Math.sin(tilt)*5,cy=balloonY()-Math.cos(tilt)*5;const nx=Math.max(left,Math.min(cx,right)),ny=Math.max(z.y-26,Math.min(cy,z.y+26));return ((cx-nx)/28)**2+((cy-ny)/32)**2<1}
@@ -368,7 +369,7 @@ function measureDanger(){let d=0;const by=balloonY();for(const o of obstacles){i
  for(const h of critters){if(h.dormant||h.knocked)continue;const p=critterPos(h);d=Math.max(d,clamp(1-(Math.hypot(p.x-x*W,p.y-by)-h.r-30)/90,0,1))}
  if(stage.walls){const l=caveWall(alt,0)*W,r=W-caveWall(alt,1)*W;d=Math.max(d,clamp(1-(Math.min(x*W-l,r-x*W)-28)/40,0,1))}return Math.min(1,d)}
 // Passing a star target mid-flight sends a star from the balloon into the HUD star meter.
-function checkStars(){if(starsHit>=STAR_SCORES.length||runScore()<STAR_SCORES[starsHit])return;const k=starsHit++;starFlyers.push({x:x*W,y:balloonY()-20,age:0,k});popup(x*W,balloonY()-96,`${k+1} STAR${k?'S':''}!`,'#ffd23f',32);gameSound.effect('star',k);rings.push({x:x*W,y:balloonY(),max:90,life:0,dur:.5,color:'#ffd23f',width:6})}
+function checkStars(){if(starsHit>=STAR_SCORES.length||runScore()<STAR_SCORES[starsHit])return;const k=starsHit++;sayVoice('star');starFlyers.push({x:x*W,y:balloonY()-20,age:0,k});popup(x*W,balloonY()-96,`${k+1} STAR${k?'S':''}!`,'#ffd23f',32);gameSound.effect('star',k);rings.push({x:x*W,y:balloonY(),max:90,life:0,dur:.5,color:'#ffd23f',width:6})}
 function checkProgress(){if(boss)return;
  if(medalsHit<MEDALS.length&&alt>=MEDALS[medalsHit].at){const m=MEDALS[medalsHit++];if(stageBest()<m.at){announce(`${m.name} MEDAL`,'NEW MEDAL!','record','medal',m.tone);gameSound.effect('record');confetti(30);nextMilestone=Math.max(nextMilestone,Math.floor(alt/1000)*1000+1000);return}}
  if(stage.id==='space')for(const ev of spaceEvents())if(!eventsSeen.has(ev.key)){eventsSeen.add(ev.key);announce(ev.e.label,'LOOK!','milestone');gameSound.effect('zone');return}

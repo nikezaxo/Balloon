@@ -123,8 +123,8 @@ function renderVersus(){const b=boss,V=b.vs;if(!V)return;const cv=$('#vs-canvas'
  if(cv.width!==Math.round(SW*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(SW*dpr);cv.height=Math.round(H*dpr)}
  const vb=$('#versus .vs-badge');vb.style.setProperty('--vx',L.hit.x+'px');vb.style.setProperty('--vy',L.hit.y+'px');
  const at=(th,fn)=>{if(age>=th&&!V.fired.has(th)){V.fired.add(th);fn()}};
- at(.42,()=>{gameSound.effect('roar');V.shake=10});
- at(.74,()=>{gameSound.effect('boom');gameSound.effect('smash');V.shake=22;const look=stage.look,gores=(SKINS[save.skin]||SKINS.classic).gores;for(let i=0;i<34;i++){const a=rand(0,TAU),s=rand(260,900);V.fx.push({type:i%4===0?'star':'shard',x:L.hit.x,y:L.hit.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-200,g:1100,life:0,max:rand(.8,1.5),size:rand(7,15),rot:rand(0,TAU),vr:rand(-12,12),color:i%4===0?'#ffd23f':pick([look.body,look.top,look.dark,gores[0][1],gores[gores.length-1][1],'#fff'])})}V.fx.push({type:'ring',x:L.hit.x,y:L.hit.y,life:0,max:.5,size:L.sp*.7})});
+ at(.3,()=>bossVoice('taunt'));at(.42,()=>{gameSound.effect('roar');V.shake=10});
+ at(.74,()=>{gameSound.effect('boom');gameSound.effect('smash');sayVoice('fatality',{force:true,delay:.05});V.shake=22;const look=stage.look,gores=(SKINS[save.skin]||SKINS.classic).gores;for(let i=0;i<34;i++){const a=rand(0,TAU),s=rand(260,900);V.fx.push({type:i%4===0?'star':'shard',x:L.hit.x,y:L.hit.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-200,g:1100,life:0,max:rand(.8,1.5),size:rand(7,15),rot:rand(0,TAU),vr:rand(-12,12),color:i%4===0?'#ffd23f':pick([look.body,look.top,look.dark,gores[0][1],gores[gores.length-1][1],'#fff'])})}V.fx.push({type:'ring',x:L.hit.x,y:L.hit.y,life:0,max:.5,size:L.sp*.7})});
  const main=ctx;ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);V.shake=(V.shake||0)*Math.exp(-7*dt);if(V.shake>.5)ctx.translate(rand(-V.shake,V.shake),rand(-V.shake,V.shake));
  // Sunburst background in the boss colours.
  const fxp=L.hit.x,fyp=L.hit.y*.9,R=Math.hypot(SW,H)*1.1,bg=ctx.createRadialGradient(fxp,fyp,0,fxp,fyp,R*.7);bg.addColorStop(0,c0);bg.addColorStop(.35,c1);bg.addColorStop(1,c2);ctx.fillStyle=bg;ctx.fillRect(-40,-40,SW+80,H+80);
@@ -166,7 +166,7 @@ function updateBoss(dt,real){caveWallScale+=((boss&&boss.phase!=='done'?.15:1)-c
   for(const tm of b.timers)if(b.clock>=tm.at){tm.done=true;tm.fn()}b.timers=b.timers.filter(tm=>!tm.done);
   b.stamina-=dt*2.2;if((b.cool-=dt)<=0&&b.stamina>0){let k;do k=Math.floor(Math.random()*b.def.attacks.length);while(k===b.last&&b.def.attacks.length>1);b.last=k;b.stamina-=ATTACKS[b.def.attacks[k]](b);b.attack=1;b.cool=rand(3,3.6)/b.sp}
   if(b.stamina<=0&&!b.timers.length){b.stamina=0;setPhase('tired');for(const s of b.shots)burst(s.x||s.cx||x*W,s.y||s.cy||0,4,{type:'puff',colors:['#ffffff'],speed:[20,60],size:[5,9],life:[.3,.5]});b.shots=[];b.wind=null;announce('TIRED!','TAP FATALITY!','fatal','skull');gameSound.effect('charged')}}
- if(b.phase==='tired'){b.clock+=dt*.3;b.x+=(W/2-b.x)*Math.min(1,dt*2);b.y+=(Math.max(H*.33,200*b.scale+95)+Math.sin(b.animT*2)*6-b.y)*Math.min(1,dt*2)}
+ if(b.phase==='tired'){if((b.pant=(b.pant===undefined?.6:b.pant)-real)<=0){b.pant=2.8;bossVoice('tired')}b.clock+=dt*.3;b.x+=(W/2-b.x)*Math.min(1,dt*2);b.y+=(Math.max(H*.33,200*b.scale+95)+Math.sin(b.animT*2)*6-b.y)*Math.min(1,dt*2)}
  if(b.phase==='fatality'){b.age+=real;const f=b.fatal;f.p=Math.min(1,b.age/FATALITY_TIME);f.pose={};f.balloon=null;f.def.pose(f.p,b,f);if(f.p>=1)bossDefeated()}
  if(b.phase==='done'&&(b.age+=real)>3.2){endBoss();return}
  updateShots(b,dt)}
@@ -186,10 +186,10 @@ function updateShots(b,dt){const bx=x*W,by=balloonY()-5,br=14;
 // A boss shot reached the balloon: boosts shrug it off, a shield absorbs it, otherwise the balloon pops.
 function bossHit(s){if(smashing()){if(s.kind==='orb'||s.kind==='faller'){s.dead=true;burst(s.x,s.y,8,{colors:['#fff','#ffd23f'],speed:[80,220],life:[.2,.4]})}else s.hit=true;return}
  if(shield>0){breakShield();if(s.kind==='orb'||s.kind==='faller')s.dead=true;else s.hit=true;return}finish()}
-function startFatality(){if(!boss||boss.phase!=='tired'||state!=='flying')return;const def=FATALITIES[save.skin]||FATALITIES.classic;setPhase('fatality');boss.fatal={def,p:0,pose:{},balloon:null,fired:new Set(),at(th,fn){if(this.p>=th&&!this.fired.has(th)){this.fired.add(th);fn()}}};announce(def.name,'FATALITY!','fatal','skull');gameSound.effect('fatality');shake=Math.max(shake,8)}
+function startFatality(){if(!boss||boss.phase!=='tired'||state!=='flying')return;const def=FATALITIES[save.skin]||FATALITIES.classic;setPhase('fatality');boss.fatal={def,p:0,pose:{},balloon:null,fired:new Set(),at(th,fn){if(this.p>=th&&!this.fired.has(th)){this.fired.add(th);fn()}}};announce(def.name,'FATALITY!','fatal','skull');gameSound.effect('fatality');sayVoice('fatality',{force:true});bossVoice('defeat',1.4);shake=Math.max(shake,8)}
 function bossDefeated(){const b=boss,reward=500+100*b.level+(save.skin==='gold'?100:0);spawnRewardCoins(b,reward);bonus+=PTS.boss;bossKills++;popup(W/2,H*.5,`+${PTS.boss.toLocaleString()}`,'#fff',40);
  save.bossWins=save.bossWins||{};save.bossWins[stage.id]=(save.bossWins[stage.id]||0)+1;persist();
- announce('BOSS DEFEATED!',`+${reward} COINS`,'record','trophy');confetti(50);gameSound.effect('record');b.hidden=true;b.shots=[];setPhase('done')}
+ announce('BOSS DEFEATED!',`+${reward} COINS`,'record','trophy');confetti(50);gameSound.effect('record');sayVoice('win',{force:true,delay:.3});b.hidden=true;b.shots=[];setPhase('done')}
 function endBoss(){boss=null;nextBossTime=flightTime+BOSS_INTERVAL;nextObstacle=alt+H/worldScale*.95;prevLedge={a:nextObstacle-300,c:.5};coinCursor=Math.max(coinCursor,nextObstacle-260)}
 // Boss reward: coins burst out across the screen, hang for a moment, then all fly into the balloon.
 function spawnRewardCoins(b,n){const cx=b.x,cy=Math.max(60,b.y);for(let i=0;i<n;i++){const a=rand(0,TAU),sp=rand(60,560);rewardCoins.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,age:0,hold:rand(.7,1.3),phase:rand(0,TAU)})}}
