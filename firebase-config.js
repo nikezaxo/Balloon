@@ -1,6 +1,10 @@
 // Online play (Google sign-in, cloud save, worldwide and weekly high scores) runs on Firebase.
-// It stays off while this is null. To switch it on, follow "Online high scores" in README.md and
-// paste your Firebase web app config here, for example:
-// const FIREBASE_CONFIG={apiKey:'AIza...',authDomain:'your-app.firebaseapp.com',projectId:'your-app',appId:'1:123:web:abc'};
 // These values identify the project and are safe to publish; firestore.rules protects the data.
-const FIREBASE_CONFIG=null;
+const FIREBASE_CONFIG={
+ apiKey:'AIzaSyBd5zWMBPkhPyeON9w94BU31hKDp3EzFU4',
+ authDomain:'ballonfly-a8cbc.firebaseapp.com',
+ projectId:'ballonfly-a8cbc',
+ storageBucket:'ballonfly-a8cbc.firebasestorage.app',
+ messagingSenderId:'456079632903',
+ appId:'1:456079632903:web:df1d754c2f0a349a5c98a2'
+};

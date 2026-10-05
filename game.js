@@ -52,8 +52,8 @@ function enterFullscreen(){const el=document.documentElement,request=el.requestF
 function toggleFullscreen(){if(fsElement()){const p=(document.exitFullscreen||document.webkitExitFullscreen).call(document);if(p&&p.catch)p.catch(()=>{})}else enterFullscreen()}
 if(!document.documentElement.requestFullscreen&&!document.documentElement.webkitRequestFullscreen)$$('.fs-toggle').forEach(b=>b.hidden=true);
 function syncSound(){for(const b of $$('.sound-toggle')){b.innerHTML=icon(sound?'speaker':'mute');b.classList.toggle('on',sound);b.setAttribute('aria-pressed',String(sound));b.setAttribute('aria-label',sound?'Disable sound':'Enable sound')}}
-async function toggleSound(){soundTouched=true;sound=await gameSound.enable(!sound);syncSound();if(sound)gameSound.effect('on')}
-function ensureSound(){if(soundTouched)return;gameSound.enable(true).then(on=>{if(on&&!soundTouched){soundTouched=true;sound=true;syncSound();gameSound.effect('on')}})}
+async function toggleSound(){unlockSpeech();soundTouched=true;sound=await gameSound.enable(!sound);syncSound();if(sound)gameSound.effect('on')}
+function ensureSound(){unlockSpeech();if(soundTouched)return;gameSound.enable(true).then(on=>{if(on&&!soundTouched){soundTouched=true;sound=true;syncSound();gameSound.effect('on')}})}
 // Leave the menu straight into the chosen stage: the menu flies away and an iris opens on the stage.
 function startRun(how){if(state!=='menu')return;if(how==='swipe')wantFullscreen=true;else enterFullscreen();ensureSound();const menu=$('#menu');menu.classList.add('leaving');setTimeout(()=>{if(menu.classList.contains('leaving')){menu.hidden=true;menu.classList.remove('leaving')}},280);
  state='ready';launch(true);transition={age:0,dur:1.2};announce(stage.name,"LET'S FLY!",'stage',stage.icon);canvas.focus()}
