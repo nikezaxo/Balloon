@@ -191,5 +191,7 @@ const gameSound = (() => {
     windFilter.frequency.setTargetAtTime(650 + gust * 400, now, .08);
     if (windPan) windPan.pan.setTargetAtTime(Math.max(-.8, Math.min(.8, wind * 2)), now, .2);
   }
-  return { enable, effect, update, speak };
+  // Lower the music for a while (used while a character talks).
+  const duck = seconds => { if (context) duckUntil = Math.max(duckUntil, context.currentTime + seconds); };
+  return { enable, effect, update, speak, duck };
 })();

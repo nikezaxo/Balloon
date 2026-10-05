@@ -59,6 +59,13 @@ Every stage is endless, with its own best altitude and medals
   that turn, then shrink into the distance after you pass them.
 
 ## Voices
+Balloons speak real English lines through the device's speech voice, each with its own
+pitch and speed and a mood (angry lines faster and lower, sad ones slow, happy ones higher),
+for example Classic "Here we go!", Toy Robot "Turbo mode activated.", Monster "Mega chomp!",
+Golden King "Long live the king!". The line also pops up as a bubble above the balloon.
+Bosses speak a taunt, a tired line and "Nooo! Impossible!". The lines are in SPEECH in voices.js.
+If a device has no speech voice, the synthesised cartoon voice below is used instead.
+
 Every balloon has its own cartoon voice, made live by a small formant synthesiser
 (a buzzy pitched tone shaped into vowels), so there are no recordings to download:
 Classic is a cheerful kid, Gumball a giggly squeak, Funny Clown a goofy laugh with a honk,
