@@ -10,16 +10,21 @@ const SKINS={
  monster:{name:'Monster',price:400,rarity:'epic',about:'Growls, shakes and drips slime.',gores:[['#c4ff8a','#7ad83f','#3f8f1d']],face:'monster',dots:'spots',extras:['horns']},
  ninja:{name:'Ninja',price:500,rarity:'epic',about:'Dashes in a blink and leaves smoke.',gores:[['#5a5a78','#34344c','#1a1a2c']],face:'ninja',extras:['headband']},
  galaxy:{name:'Galaxy',price:700,rarity:'legendary',about:'A swirl of stars that bends space.',gores:[['#8a6cff','#5232c4','#24125e'],['#4d7bff','#2846b8','#101d5c']],dots:'stars'},
- gold:{name:'Golden King',price:1000,rarity:'legendary',about:'Royal shine, glitter and a crown.',gores:[['#fff6b8','#ffd23f','#c98a00']],dots:'sparkle',extras:['crown'],gloss:true}};
+ gold:{name:'Golden King',price:1000,rarity:'legendary',about:'Royal shine, glitter and a crown.',gores:[['#fff6b8','#ffd23f','#c98a00']],dots:'sparkle',extras:['crown'],gloss:true},
+ // Gem-only skins: gems come from the weekly tournament top 10.
+ dragon:{name:'Fire Dragon',gems:30,rarity:'mythic',about:'Breathes fire and leaves glowing embers.',gores:[['#ff9a6a','#f0441c','#a3200c'],['#ffd36b','#ff9a1a','#c25a00']],dots:'scales',extras:['dragon']},
+ unicorn:{name:'Rainbow Unicorn',gems:50,rarity:'mythic',about:'A magic horn, a rainbow mane and sparkles.',gores:[['#ffc2d4','#ff6f9a','#d23e70'],['#fff3a6','#ffd23f','#d99a00'],['#c4ffd8','#4fd38a','#22945a'],['#c2e8ff','#4fb0ff','#2367c4'],['#e8d4ff','#a273ff','#6a35ef']],dots:'sparkle',extras:['mane','horn'],gloss:true},
+ diamond:{name:'Diamond',gems:80,rarity:'mythic',about:'Crystal facets that flash in the light.',gores:[['#ffffff','#c9f6ff','#79d6f5'],['#eefcff','#9fe6ff','#3aa8e0'],['#f6feff','#b6eeff','#5cc0ea']],dots:'sparkle',extras:['shine'],gloss:true}};
 const SKIN_ORDER=Object.keys(SKINS);
 const DOTS=Array.from({length:28},(_,i)=>({lat:(hash(i*3.1)-.5)*2.3,lon:hash(i*7.7)*TAU,s:.7+hash(i*1.3)*.6,ang:hash(i*5.3)*TAU,c:i}));
-const DOT_COLORS={sprinkles:['#ffffff','#4fd3ff','#ffe066','#7cf08a','#b48cff'],seeds:['#1b1240'],spots:['#4fa82a','#8fe04f'],stars:['#ffffff','#ffe680'],rivets:['#eef3fb'],sparkle:['#ffffff']};
+const DOT_COLORS={sprinkles:['#ffffff','#4fd3ff','#ffe066','#7cf08a','#b48cff'],seeds:['#1b1240'],spots:['#4fa82a','#8fe04f'],stars:['#ffffff','#ffe680'],rivets:['#eef3fb'],sparkle:['#ffffff'],scales:['#a3200c','#7a1606']};
 // Decorations inside the balloon clip, in balloon coordinates (centre 0,-5; radius about 29).
 function skinDots(skin,turn){if(!skin.dots)return;const colors=DOT_COLORS[skin.dots];
  for(const d of DOTS){const lon=d.lon+turn,c=Math.cos(lon);if(c<.08)continue;const s=shape(d.lat),px=s.r*Math.sin(lon),py=s.y,k=d.s;ctx.save();ctx.translate(px,py);ctx.scale(Math.max(.2,c),1);ctx.fillStyle=colors[d.c%colors.length];
   if(skin.dots==='sprinkles'){ctx.rotate(d.ang);ctx.beginPath();ctx.roundRect(-3.5*k,-1.3*k,7*k,2.6*k,1.3*k);ctx.fill()}
   else if(skin.dots==='seeds'){ctx.rotate(d.ang*.3);ctx.beginPath();ctx.ellipse(0,0,1.6*k,2.8*k,0,0,TAU);ctx.fill()}
   else if(skin.dots==='spots'){ctx.beginPath();ctx.arc(0,0,3.6*k,0,TAU);ctx.fill()}
+  else if(skin.dots==='scales'){ctx.strokeStyle=ctx.fillStyle;ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(0,-1.5*k,3.4*k,.15*Math.PI,.85*Math.PI);ctx.stroke()}
   else if(skin.dots==='rivets'){if(d.c%2){ctx.beginPath();ctx.arc(0,0,1.9,0,TAU);ctx.fill();ctx.strokeStyle='rgba(27,18,64,.6)';ctx.lineWidth=1;ctx.stroke()}}
   else{const tw=skin.dots==='sparkle'?.5+.5*Math.sin(t*4+d.c):1;star(0,0,3.6*k*tw,1.3*k*tw,4);ctx.fill()}
   ctx.restore()}
@@ -32,6 +37,12 @@ function skinExtras(skin){if(!skin.extras)return;ctx.strokeStyle=INK;ctx.lineWid
   if(e==='antenna'){ctx.beginPath();ctx.moveTo(0,-37);ctx.lineTo(0,-50);ctx.stroke();ctx.fillStyle=Math.sin(t*6)>0?'#ff3b4f':'#ffd23f';ctx.beginPath();ctx.arc(0,-52,4,0,TAU);ctx.fill();ctx.stroke()}
   if(e==='horns')for(const s of [-1,1]){ctx.fillStyle='#fff3d6';ctx.beginPath();ctx.moveTo(s*9,-33);ctx.quadraticCurveTo(s*20,-44,s*15,-54);ctx.quadraticCurveTo(s*24,-44,s*18,-30);ctx.closePath();ctx.fill();ctx.stroke()}
   if(e==='headband')for(const k of [0,1]){ctx.fillStyle='#ff3b52';ctx.beginPath();ctx.moveTo(27,-23);ctx.quadraticCurveTo(38,-26+k*6+Math.sin(t*8+k)*3,46,-18+k*8+Math.sin(t*8+k)*4);ctx.lineTo(44,-14+k*8);ctx.quadraticCurveTo(36,-20+k*6,27,-19);ctx.closePath();ctx.fill();ctx.stroke()}
+  if(e==='dragon'){const flap=Math.sin(t*7)*.35;for(const s of [-1,1]){ctx.save();ctx.translate(s*27,-10);ctx.rotate(s*(-.25+flap));ctx.fillStyle='#c42a10';ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(s*14,-22,s*30,-18);ctx.lineTo(s*24,-8);ctx.lineTo(s*28,0);ctx.lineTo(s*20,4);ctx.lineTo(s*22,12);ctx.quadraticCurveTo(s*8,10,0,6);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='rgba(27,18,64,.5)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,2);ctx.lineTo(s*24,-8);ctx.moveTo(0,4);ctx.lineTo(s*20,4);ctx.stroke();ctx.restore();ctx.strokeStyle=INK;ctx.lineWidth=2.5}
+   for(const s of [-1,1]){ctx.fillStyle='#ffe9b0';ctx.beginPath();ctx.moveTo(s*8,-33);ctx.quadraticCurveTo(s*14,-46,s*22,-50);ctx.quadraticCurveTo(s*18,-40,s*16,-30);ctx.closePath();ctx.fill();ctx.stroke()}
+   ctx.fillStyle='#fff';ctx.lineWidth=1.5;for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*5,3);ctx.lineTo(s*3.5,8);ctx.lineTo(s*2,3.5);ctx.closePath();ctx.fill();ctx.stroke()}ctx.lineWidth=2.5}
+  if(e==='horn'){ctx.fillStyle='#ffe680';ctx.beginPath();ctx.moveTo(-6,-34);ctx.lineTo(0,-62);ctx.lineTo(6,-34);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='#d99a00';ctx.lineWidth=1.8;for(let i=0;i<4;i++){const y=-38-i*6;ctx.beginPath();ctx.moveTo(-5+i*1.2,y);ctx.lineTo(4-i*1.2,y-3);ctx.stroke()}ctx.strokeStyle=INK;ctx.lineWidth=2.5}
+  if(e==='mane')['#ff6f9a','#ffd23f','#4fd38a','#4fb0ff','#a273ff'].forEach((c,i)=>{const a=-1.9+i*.32,r=31+Math.sin(t*5+i)*1.5;ctx.fillStyle=c;ctx.beginPath();ctx.arc(Math.cos(a)*r+4,Math.sin(a)*r-5,6.5,0,TAU);ctx.fill();ctx.stroke()});
+  if(e==='shine'){const k=.5+.5*Math.sin(t*3);ctx.save();ctx.globalAlpha=.6+.4*k;ctx.fillStyle='#fff';ctx.strokeStyle='#79d6f5';ctx.lineWidth=1.5;star(-15,-26,7+k*3,1.8,4);ctx.fill();ctx.stroke();star(14,6,4+k*2,1.2,4);ctx.fill();ctx.restore();ctx.strokeStyle=INK;ctx.lineWidth=2.5}
   if(e==='crown'){ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.moveTo(-13,-34);ctx.lineTo(-15,-50);ctx.lineTo(-7,-42);ctx.lineTo(0,-54);ctx.lineTo(7,-42);ctx.lineTo(15,-50);ctx.lineTo(13,-34);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ff4d5e';ctx.beginPath();ctx.arc(0,-40,2.6,0,TAU);ctx.fill();ctx.fillStyle='#44d9ff';ctx.beginPath();ctx.arc(-8,-38,2,0,TAU);ctx.arc(8,-38,2,0,TAU);ctx.fill()}}}
 // Every skin has its own idle animation and particle effect in the store, plus its own flight trail.
 // anim(s) returns an offset/rotation/scale; fx is drawn around the balloon (layer 'back' or 'front').
@@ -44,7 +55,10 @@ const SKIN_FX={
  monster:{anim:s=>{const g=Math.max(0,Math.sin(s*1.7))**8;return {x:Math.sin(s*60)*2.6*g,y:Math.sin(s*2)*2,sx:1+g*.14,sy:1+g*.12}},fx:'slime',trail:{type:'slime',colors:['#7ad83f','#b6ff7a']}},
  ninja:{anim:s=>{const p=s%2.4,d=p<.2?-1+p/.2*2:p<1.2?1:p<1.4?1-(p-1.2)/.2*2:-1;return {x:d*13,rot:(p<.2?.25:p>=1.2&&p<1.4?-.25:0),y:Math.sin(s*3)*2}},fx:'smoke',afterimage:true,trail:{type:'puff',colors:['#4a4a63','#2c2c40','#6b6b88']}},
  galaxy:{anim:s=>({y:Math.sin(s*1.6)*6,rot:Math.sin(s)*.06}),fx:'orbit',trail:{type:'star',colors:['#ffffff','#c9a8ff','#9fe8ff']}},
- gold:{anim:s=>{const p=1+Math.sin(s*4)*.025;return {y:Math.sin(s*2)*4,rot:Math.sin(s*1.2)*.05,sx:p,sy:p}},fx:'glitter',trail:{type:'star',colors:['#ffd23f','#fff6b0','#ffffff']}}};
+ gold:{anim:s=>{const p=1+Math.sin(s*4)*.025;return {y:Math.sin(s*2)*4,rot:Math.sin(s*1.2)*.05,sx:p,sy:p}},fx:'glitter',trail:{type:'star',colors:['#ffd23f','#fff6b0','#ffffff']}},
+ dragon:{anim:s=>{const b=Math.sin(s*7);return {y:Math.sin(s*2.2)*5-Math.max(0,b)*3,rot:Math.sin(s*1.4)*.07,sx:1+Math.sin(s*1.1)*.03,sy:1-Math.sin(s*1.1)*.03}},fx:'embers',trail:{type:'spark',colors:['#ff8a2a','#ffd23f','#ff4d2e']}},
+ unicorn:{anim:s=>{const g=Math.abs(Math.sin(s*3.4));return {y:-g*9,rot:Math.sin(s*3.4)*.09}},fx:'rainbow',trail:{type:'star',colors:['#ff6f9a','#ffd23f','#4fd38a','#4fb0ff','#a273ff']}},
+ diamond:{anim:s=>({y:Math.sin(s*1.8)*5,rot:Math.sin(s*.9)*.05,turn:1.7}),fx:'prism',trail:{type:'star',colors:['#ffffff','#9fe6ff','#c9f6ff']}}};
 function skinFx(kind,s,layer){ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
  if(kind==='hearts'&&layer==='front')for(let i=0;i<3;i++){const ph=(s*.35+i/3)%1;ctx.globalAlpha=Math.sin(ph*Math.PI);ctx.fillStyle='#ff6b81';ctx.strokeStyle=INK;ctx.lineWidth=1.5;ctx.save();ctx.translate(Math.sin(ph*7+i*2)*8+(i-1)*24,30-ph*80);ctx.scale(.5,.5);ctx.beginPath();ctx.moveTo(0,4);ctx.bezierCurveTo(-11,-4,-4.5,-10.5,0,-4.5);ctx.bezierCurveTo(4.5,-10.5,11,-4,0,4);ctx.fill();ctx.stroke();ctx.restore()}
  if(kind==='bubbles'&&layer==='back')for(let i=0;i<7;i++){const ph=(s*.45+i/7)%1,x=(hash(i*3.3)-.5)*70,y=36-ph*96,r=2.5+hash(i*2.1)*4;if(ph>.92){ctx.strokeStyle='#ff9ad5';ctx.lineWidth=1.5;for(let k=0;k<6;k++){const a=k*TAU/6;ctx.beginPath();ctx.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r);ctx.lineTo(x+Math.cos(a)*r*2,y+Math.sin(a)*r*2);ctx.stroke()}continue}ctx.fillStyle='rgba(255,220,240,.35)';ctx.strokeStyle='#ff7ac0';ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x-r*.35,y-r*.35,r*.3,0,TAU);ctx.fill()}
@@ -55,6 +69,9 @@ function skinFx(kind,s,layer){ctx.save();ctx.lineJoin='round';ctx.lineCap='round
  if(kind==='smoke'){const p=s%2.4;for(const [at,side] of [[0,-1],[.2,1],[1.2,1],[1.4,-1]]){const age=p-at;if(age<0||age>.7)continue;ctx.globalAlpha=(1-age/.7)*.7;ctx.fillStyle='#8a8aa6';for(let k=0;k<4;k++){ctx.beginPath();ctx.arc(side*13+(k-1.5)*9,-5+Math.sin(k*2)*10,6+age*16,0,TAU);ctx.fill()}}}
  if(kind==='orbit')for(let i=0;i<4;i++){const a=s*1.4+i*TAU/4,front=Math.sin(a)>0;if(front!==(layer==='front'))continue;ctx.fillStyle=i%2?'#ffffff':'#ffe680';ctx.strokeStyle=INK;ctx.lineWidth=1.2;star(Math.cos(a)*40,-5+Math.sin(a)*12,front?5:3.5,front?2:1.4,4);ctx.fill();ctx.stroke()}
  if(kind==='glitter'){if(layer==='back')glow(0,-5,55,'#ffd23f',.4+.15*Math.sin(s*3));else for(let i=0;i<8;i++){const tw=Math.max(0,Math.sin(s*3+i*1.9));if(tw<.1)continue;ctx.globalAlpha=tw;ctx.fillStyle='#fff';star((hash(i*7.1)-.5)*84,(hash(i*3.7)-.5)*84-5,5*tw,1.4,4);ctx.fill()}}
+ if(kind==='embers'&&layer==='front')for(let i=0;i<9;i++){const ph=(s*.7+i/9)%1,ex=(hash(i*2.3)-.5)*60+Math.sin(ph*8+i)*6,ey=30-ph*100;ctx.globalAlpha=1-ph;ctx.fillStyle=i%3?'#ff8a2a':'#ffd23f';ctx.beginPath();ctx.arc(ex,ey,2.4*(1-ph)+1,0,TAU);ctx.fill()}
+ if(kind==='rainbow'){if(layer==='back'){ctx.lineWidth=5;['#ff6f9a','#ffd23f','#4fd38a','#4fb0ff','#a273ff'].forEach((c,i)=>{ctx.strokeStyle=c;ctx.globalAlpha=.75;ctx.beginPath();ctx.arc(0,18,58-i*5,Math.PI*1.05+Math.sin(s)*.1,Math.PI*1.95+Math.sin(s)*.1);ctx.stroke()})}else for(let i=0;i<6;i++){const tw=Math.max(0,Math.sin(s*3.3+i*1.7));ctx.globalAlpha=tw;ctx.fillStyle=['#ff6f9a','#ffd23f','#4fd38a','#4fb0ff','#a273ff','#fff'][i];star((hash(i*4.7)-.5)*90,(hash(i*1.9)-.5)*80-8,5*tw+1,1.5,4);ctx.fill()}}
+ if(kind==='prism'){if(layer==='back'){ctx.save();ctx.translate(0,-5);ctx.rotate(s*.5);for(let i=0;i<8;i++){ctx.rotate(TAU/8);ctx.globalAlpha=.18+.1*Math.sin(s*2+i);ctx.fillStyle=['#9fe6ff','#ffffff','#ffb0f0','#fff3a0'][i%4];ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(80,-7);ctx.lineTo(80,7);ctx.closePath();ctx.fill()}ctx.restore()}else for(let i=0;i<5;i++){const tw=Math.max(0,Math.sin(s*2.6+i*2.1));if(tw<.1)continue;ctx.globalAlpha=tw;ctx.fillStyle='#fff';star((hash(i*6.1)-.5)*76,(hash(i*2.9)-.5)*76-5,6*tw,1.3,4);ctx.fill()}}
  ctx.restore()}
 // A gleam that sweeps across the golden balloon.
 function goldSweep(s){const p=(s*.6)%1.6-.3;ctx.save();ctx.clip(BALLOON);ctx.fillStyle='rgba(255,255,255,.55)';ctx.beginPath();ctx.moveTo(-40+p*90,-45);ctx.lineTo(-28+p*90,-45);ctx.lineTo(-48+p*90,30);ctx.lineTo(-60+p*90,30);ctx.closePath();ctx.fill();ctx.restore()}
@@ -62,7 +79,7 @@ function goldSweep(s){const p=(s*.6)%1.6-.3;ctx.save();ctx.clip(BALLOON);ctx.fil
 function chosenFx(k){ctx.save();ctx.globalAlpha=k;ctx.strokeStyle='#ffd23f';ctx.lineWidth=5*k;ctx.beginPath();ctx.arc(0,-5,30+(1-k)*30,0,TAU);ctx.stroke();for(let i=0;i<10;i++){const a=i*TAU/10,r=30+(1-k)*36;ctx.fillStyle=i%2?'#fff':'#ffd23f';star(Math.cos(a)*r,-5+Math.sin(a)*r,6*k+1,2,4);ctx.fill()}ctx.restore()}
 
 // Store cards: each rarity has its own card colours.
-const RARITY={common:{name:'COMMON',a:'#5fe3d6',b:'#1f8fa8'},rare:{name:'RARE',a:'#7cc0ff',b:'#2c5ee0'},epic:{name:'EPIC',a:'#c79cff',b:'#6a35ef'},legendary:{name:'LEGENDARY',a:'#ffd36b',b:'#ff7a00'}};
+const RARITY={common:{name:'COMMON',a:'#5fe3d6',b:'#1f8fa8'},rare:{name:'RARE',a:'#7cc0ff',b:'#2c5ee0'},epic:{name:'EPIC',a:'#c79cff',b:'#6a35ef'},legendary:{name:'LEGENDARY',a:'#ffd36b',b:'#ff7a00'},mythic:{name:'MYTHIC',a:'#ff9ae6',b:'#a020c0'}};
 // Selection poses: a short show each skin performs on its store card after you pick it. fn(p,s) gets the
 // progress p (0 to 1) and the clock s, and returns the balloon's offset, turn, face and fx drawn behind
 // (back) and in front (front) of it, in balloon coordinates. sfx lists sounds to play at given progress.
@@ -71,6 +88,17 @@ const seg=(p,a,b)=>Math.min(1,Math.max(0,(p-a)/(b-a))),bell=k=>Math.sin(Math.PI*
 function poseText(text,px,py,size,color,rot=0){ctx.save();ctx.translate(px,py);ctx.rotate(rot);ctx.font=`${size}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=size*.32;ctx.strokeStyle=INK;ctx.strokeText(text,0,0);ctx.fillStyle=color;ctx.fillText(text,0,0);ctx.restore()}
 function puffs(px,py,k,n=7,r=12){ctx.save();ctx.globalAlpha=(1-k)*.85;ctx.fillStyle='#8a8aa6';for(let i=0;i<n;i++){const a=i*TAU/n;ctx.beginPath();ctx.arc(px+Math.cos(a)*(10+k*40),py+Math.sin(a)*(8+k*30),Math.max(0,r*(1+k)),0,TAU);ctx.fill()}ctx.restore()}
 const SKIN_POSES={
+ dragon:{name:'DRAGON FIRE',sfx:[[.3,'nitro'],[.32,'boom']],fn(p,s){const back=bell(seg(p,0,.3)),fire=seg(p,.3,.85),on=fire>0&&fire<1;
+  return {x:on?Math.sin(s*60)*2:0,y:back*8-(on?4:0),rot:-back*.15,sx:1-back*.06+(on?.06:0),sy:1-back*.1+(on?.05:0),face:on?'angry':'happy',
+   front(){if(!on)return;const len=40+ease(Math.min(1,fire*3))*70;for(let i=0;i<22;i++){const q=(s*3+i/22)%1,d=10+q*len,sp=(hash(i*3.7)-.5)*(8+q*26);ctx.globalAlpha=(1-q)*.9;ctx.fillStyle=q<.3?'#fff6b0':q<.6?'#ffd23f':'#ff5a1f';ctx.beginPath();ctx.arc(sp,6+d,(3+q*9)*(1-q*.3),0,TAU);ctx.fill()}ctx.globalAlpha=1;if(fire>.2)poseText('ROAR!',0,-64+Math.sin(s*40)*2,24,'#ff8a2a',-.08)}}}},
+ unicorn:{name:'RAINBOW DASH',sfx:[[0,'launch'],[.5,'charged']],fn(p,s){const jump=bell(seg(p,0,.6)),spin=ease(seg(p,.05,.55)),b=seg(p,.5,1);
+  return {y:-jump*34,rot:spin*TAU,face:p>.5?'star':'joy',
+   back(){const k=bell(seg(p,0,.9));if(k>0){ctx.lineWidth=7;ctx.globalAlpha=k;['#ff6f9a','#ffd23f','#4fd38a','#4fb0ff','#a273ff'].forEach((c,i)=>{ctx.strokeStyle=c;ctx.beginPath();ctx.arc(0,-5,46+i*6,-Math.PI/2,-Math.PI/2+TAU*Math.min(1,p*1.8));ctx.stroke()})}},
+   front(){if(b>0&&b<1)for(let i=0;i<12;i++){const a=i*TAU/12,r=30+ease(b)*60;ctx.globalAlpha=1-b;ctx.fillStyle=['#ff6f9a','#ffd23f','#4fd38a','#4fb0ff','#a273ff','#fff'][i%6];star(Math.cos(a)*r,-5+Math.sin(a)*r,6,2,4);ctx.fill()}}}}},
+ diamond:{name:'CRYSTAL SHINE',sfx:[[0,'shield'],[.55,'charged']],fn(p,s){const sp=bell(seg(p,0,.6)),fl=seg(p,.55,1);
+  return {spin:ease(seg(p,0,.6))*30,y:-sp*12,sx:1+bell(seg(p,.5,.65))*.12,sy:1+bell(seg(p,.5,.65))*.12,face:p>.55?'cool':'joy',
+   back(){const k=bell(fl);if(k>0){ctx.save();ctx.translate(0,-5);ctx.rotate(s);ctx.globalAlpha=k*.6;for(let i=0;i<12;i++){ctx.rotate(TAU/12);ctx.fillStyle=i%2?'#ffffff':'#9fe6ff';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(110,-8);ctx.lineTo(110,8);ctx.closePath();ctx.fill()}ctx.restore()}},
+   front(){if(fl>0&&fl<1)for(let i=0;i<10;i++){const a=i*TAU/10+.3,r=30+ease(fl)*55;ctx.save();ctx.globalAlpha=1-fl;ctx.translate(Math.cos(a)*r,-5+Math.sin(a)*r);ctx.rotate(a);ctx.fillStyle=i%2?'#c9f6ff':'#ffffff';ctx.strokeStyle=INK;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,-6);ctx.lineTo(4,0);ctx.lineTo(0,6);ctx.lineTo(-4,0);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}}}}},
  classic:{name:'HEART HUG',sfx:[[0,'boop'],[.2,'boop'],[.42,'boost'],[.58,'charged']],fn(p){const h1=bell(seg(p,0,.18)),h2=bell(seg(p,.2,.4)),spin=ease(seg(p,.4,.66)),b=seg(p,.58,1),land=bell(seg(p,.4,.5));
   return {y:-(h1*16+h2*26),rot:spin*TAU,sx:1+land*.14,sy:1-land*.12,face:p>.58?'star':'joy',
    back(){if(b>0&&b<1){ctx.save();ctx.translate(0,4);const k=.6+ease(b)*2.4;ctx.scale(k,k);heart(30);ctx.globalAlpha=(1-b)*.35;ctx.fillStyle='#ff9ab0';ctx.fill();ctx.globalAlpha=1-b;ctx.lineWidth=7/k;ctx.strokeStyle='#ff4d6d';ctx.stroke();ctx.lineWidth=2.5/k;ctx.strokeStyle='#fff';ctx.stroke();ctx.restore()}},

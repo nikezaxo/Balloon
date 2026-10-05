@@ -7,7 +7,8 @@
 //   players/{uid}                cloud save           {save, at}
 const online=(()=>{
  const SDK='https://www.gstatic.com/firebasejs/12.19.0/',TOP=50;
- const REWARDS=[[1,1000],[2,750],[3,500],[10,300],[50,150],[Infinity,50]];
+ // Weekly tournament prizes by final rank: [rank, coins, gems]. Gems only go to the top 10.
+ const REWARDS=[[1,1000,50],[2,750,30],[3,500,20],[10,300,10],[50,150,0],[Infinity,50,0]];
  let fb=null,user=null,loading=null,status='off',saveTimer=0,reward=null;
  const best={all:0,week:0,weekId:''};
  const configured=()=>typeof FIREBASE_CONFIG==='object'&&!!FIREBASE_CONFIG&&!!FIREBASE_CONFIG.apiKey;
@@ -39,7 +40,7 @@ const online=(()=>{
  const entry=(score,stageId,skin)=>({name:displayName(),score:Math.floor(score),stage:String(stageId).slice(0,12),skin:String(skin).slice(0,12),at:fb.F.serverTimestamp()});
  // Cloud save: unlocks and records merge (union and best of both); coins, lives and skin come from the newer save.
  function mergeSave(cloud){if(!cloud||typeof cloud!=='object')return;const num=(v,lo,hi)=>typeof v==='number'&&isFinite(v)?Math.min(hi,Math.max(lo,Math.floor(v))):null;
-  if((cloud.updated||0)>(save.updated||0)){const c=num(cloud.coins,0,1e9),l=num(cloud.lives,0,MAX_LIVES);if(c!==null)save.coins=c;if(l!==null)save.lives=l;if(SKINS[cloud.skin])save.skin=cloud.skin;save.updated=cloud.updated}
+  if((cloud.updated||0)>(save.updated||0)){const c=num(cloud.coins,0,1e9),l=num(cloud.lives,0,MAX_LIVES),g=num(cloud.gems,0,1e6);if(c!==null)save.coins=c;if(g!==null)save.gems=g;if(l!==null)save.lives=l;if(SKINS[cloud.skin])save.skin=cloud.skin;save.updated=cloud.updated}
   save.skins=[...new Set([...(save.skins||[]),...(Array.isArray(cloud.skins)?cloud.skins:[])])].filter(id=>SKINS[id]);if(!save.skins.includes(save.skin))save.skin='classic';
   for(const k of ['best','scores','stars','bossWins']){save[k]=save[k]||{};for(const [id,v] of Object.entries(cloud[k]||{})){const n=num(v,0,1e9);if(n!==null&&STAGES.some(s=>s.id===id))save[k][id]=Math.max(save[k][id]||0,n)}}
   save.weeklyClaimed=[...new Set([...(save.weeklyClaimed||[]),...(Array.isArray(cloud.weeklyClaimed)?cloud.weeklyClaimed:[])])].slice(-12);if(!save.nick&&cloud.nick)save.nick=clean(cloud.nick);
@@ -57,7 +58,7 @@ const online=(()=>{
  // Weekly tournament: the first time a player signs in after a week ends, they get coins for their final rank.
  async function claimWeekly(){const last=weekId(new Date(Date.now()-7*864e5));save.weeklyClaimed=save.weeklyClaimed||[];if(save.weeklyClaimed.includes(last))return;
   const me=await fb.F.getDoc(ref('weekly',last,'leaders',user.uid));let rank=null;if(me.exists())rank=await rankOf(['weekly',last,'leaders'],me.data().score);
-  save.weeklyClaimed.push(last);if(rank){const coins=REWARDS.find(([r])=>rank<=r)[1];save.coins+=coins;reward={rank,coins,week:last};gameSound.effect('buy')}persist();refreshMeta()}
+  save.weeklyClaimed.push(last);if(rank){const [,coins,gems]=REWARDS.find(([r])=>rank<=r);save.coins+=coins;save.gems=(save.gems||0)+gems;reward={rank,coins,gems,week:last};gameSound.effect('buy')}persist();refreshMeta()}
  async function rename(nick){const n=clean(nick);if(!n)return;save.nick=n;persist();if(!user||!fb)return;const uid=user.uid,jobs=[];
   if(best.all)jobs.push(fb.F.setDoc(ref('leaders',uid),{...entry(best.all,save.lastStage,save.skin)}));if(best.week)jobs.push(fb.F.setDoc(ref('weekly',best.weekId,'leaders',uid),{...entry(best.week,save.lastStage,save.skin)}));await Promise.all(jobs.map(j=>j.catch(()=>{})))}
  return {configured,start,signIn,signOut,submit,top,saved,rename,timeLeft,weekId,displayName,REWARDS,get status(){return status},get user(){return user},get best(){return best},get reward(){return reward},takeReward(){const r=reward;reward=null;return r}};
@@ -80,12 +81,12 @@ function resultsOnline(rank){const box=$('#res-online');box.replaceChildren();if
  const add=(ic,label,v)=>{const s=el('span','res-rank');s.innerHTML=iconHTML(ic);s.append(el('b','',v?`#${v.toLocaleString()}`:'—'),el('small','',label));box.append(s)};add('planet','WORLD',rank.all);add('trophy','THIS WEEK',rank.week)}
 function postResult(score){if(!online.user)return;results.rank=null;resultsOnline(null);const mine=results;online.submit(score,stage.id,save.skin).then(r=>{if(results===mine){results.rank=r||{all:null,week:null};resultsOnline(results.rank)}})}
 function renderRanks(){const list=$('#panel-list'),on=online.configured();$('#panel-title').textContent='HIGH SCORES';list.replaceChildren();
- const r=online.takeReward&&online.takeReward();if(r){const b=el('div','reward-banner');b.innerHTML=iconHTML('trophy');b.append(el('div','',''));b.lastChild.append(el('b','',`LAST WEEK YOU PLACED #${r.rank}!`),el('span','',`Tournament reward: +${r.coins} coins`));list.append(b);confetti(30)}
+ const r=online.takeReward&&online.takeReward();if(r){const b=el('div','reward-banner');b.innerHTML=iconHTML('trophy');b.append(el('div','',''));b.lastChild.append(el('b','',`LAST WEEK YOU PLACED #${r.rank}!`),el('span','',`Tournament reward: +${r.coins} coins${r.gems?` and +${r.gems} gems`:''}`));list.append(b);confetti(30)}
  if(!on)ranksTab='mine';
  const tabs=el('div','tabs rank-tabs');for(const [id,label,ic] of [['week','WEEKLY','trophy'],['all','ALL TIME','planet'],['mine','MY BESTS','star']]){if(!on&&id!=='mine')continue;const b=el('button','tab'+(ranksTab===id?' on':''));b.innerHTML=iconHTML(ic)+label;b.onclick=()=>{ranksTab=id;renderRanks()};tabs.append(b)}list.append(tabs);
  if(ranksTab==='mine'){const box=el('div','rank-list');for(const s of STAGES){const st=save.stars[s.id]||0,row=el('div','rank-row stage-row'),ico=el('span','ico');ico.innerHTML=icon(s.icon);const trio=el('span','star-trio');trio.innerHTML=[0,1,2].map(k=>iconHTML('star',k<st?'':'off',k===1?'mid':'')).join('');row.append(ico,el('b','rank-name',s.name),trio,el('b','rank-score',(save.scores[s.id]||0).toLocaleString()));box.append(row)}list.append(box);
   if(!on)list.append(el('p','rank-note','Worldwide and weekly leaderboards with Google sign-in switch on once the game is connected to Firebase (see README).'));return}
- if(ranksTab==='week'){const info=el('div','week-info');info.innerHTML=iconHTML('trophy');info.append(el('div',''));info.lastChild.append(el('b','',`ENDS IN ${online.timeLeft()}`),el('span','',`Top 1: ${online.REWARDS[0][1]} · Top 3: ${online.REWARDS[2][1]} · Top 10: ${online.REWARDS[3][1]} · everyone: ${online.REWARDS[5][1]} coins`));list.append(info)}
+ if(ranksTab==='week'){const info=el('div','week-info');info.innerHTML=iconHTML('trophy');info.append(el('div',''));info.lastChild.append(el('b','',`ENDS IN ${online.timeLeft()}`),el('span','',`TOP 10 WIN GEMS! 1st: 50 gems + 1000 coins · 2nd: 30 + 750 · 3rd: 20 + 500 · 4th-10th: 10 + 300 · everyone: 50 coins`));list.append(info)}
  const box=el('div','rank-list');box.append(el('p','rank-note',online.status==='error'?'Could not reach the leaderboard. Check your connection.':'Loading…'));list.append(box);
  const foot=el('div','rank-foot');if(online.user){const me=el('div','me');me.append(avatar(online.displayName(),save.skin),el('b','',online.displayName()));const edit=el('button','mini-btn','RENAME');edit.onclick=()=>{const n=prompt('Leaderboard name (up to 16 letters)',online.displayName());if(n!==null)online.rename(n).then(()=>renderRanks())};const out=el('button','mini-btn','SIGN OUT');out.onclick=()=>online.signOut();me.append(edit,out);foot.append(me,el('small','','Your first name and last initial show on the leaderboard unless you rename yourself.'))}else foot.append(googleButton(),el('small','','Sign in to post your scores, save your progress and join the weekly tournament.'));list.append(foot);
  const req=++ranksReq,board=ranksTab;
