@@ -364,3 +364,48 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .store-top{flex-wrap:wrap}
 @media(max-width:400px){.feat-card{flex-basis:44%}.feat-info h3{font-size:22px}.feat-info p{font-size:12px}.buy.big{font-size:17px;padding:6px 12px 8px}.skin-feature{gap:9px}}
 @media(max-height:700px){.res-head{height:150px}.res-star{width:56px;height:56px;margin-top:18px}.res-star.mid{width:72px;height:72px}.res-title{font-size:33px}}
+/* Online: account, weekly tournament and leaderboards */
+.account-btn{background:#fff;box-shadow:inset 0 -4px 0 #c9d3e6,0 4px 0 var(--ink);padding:9px}
+.account-btn[hidden]{display:none}
+.account-btn svg{width:100%;height:100%;display:block}
+.account-btn .avatar{width:100%;height:100%;font-size:18px;border:0}
+.weekly-banner{pointer-events:auto;margin-top:1.1vh;display:flex;align-items:center;gap:8px;padding:5px 16px 6px 8px;color:#fff;font-family:var(--title);background:linear-gradient(#ff9a3c,#e8501a);border:3px solid var(--ink);border-radius:14px;box-shadow:inset 0 -5px 0 #b8360c,inset 0 3px 0 #ffd0a0,0 4px 0 var(--ink);transform:rotate(-1.5deg);animation:pulse 1.2s ease-in-out infinite alternate}
+.weekly-banner .ico{width:26px;height:26px}
+.weekly-banner b{font-weight:400;font-size:17px;letter-spacing:.6px;text-shadow:var(--stroke)}
+.weekly-banner small{font-size:12px;letter-spacing:.6px;padding:2px 7px 3px;background:#1b1240aa;border-radius:8px;text-shadow:var(--stroke)}
+.weekly-banner:active{transform:translateY(3px) rotate(-1.5deg)}
+.google-btn{display:inline-flex;align-items:center;gap:10px;padding:7px 16px 7px 8px;font:800 15px Nunito,system-ui,sans-serif;color:#1f1f1f;background:#fff;border:3px solid var(--ink);border-radius:999px;box-shadow:0 4px 0 var(--ink)}
+.google-btn .g{display:grid;place-items:center;width:26px;height:26px}
+.google-btn .g svg{width:22px;height:22px}
+.google-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.res-online{display:flex;justify-content:center;gap:8px;margin-top:6px}
+.res-online:empty{display:none}
+.res-online .google-btn{font-size:13px;padding:4px 12px 4px 6px}.res-online .google-btn .g{width:20px;height:20px}.res-online .google-btn .g svg{width:17px;height:17px}
+.res-rank{display:flex;align-items:center;gap:4px;padding:2px 9px 3px 4px;font-family:var(--title);background:#ffffff1f;border-radius:10px}
+.res-rank .ico{width:18px;height:18px}.res-rank b{font-weight:400;font-size:16px;text-shadow:var(--stroke)}.res-rank small{font-size:10px;letter-spacing:.6px;color:#9fe8ff}
+.res-rank.wait{font-size:12px;letter-spacing:.8px;color:#c9d3f0;padding:3px 10px}
+.avatar{flex:none;display:grid;place-items:center;width:30px;height:30px;font-family:var(--title);font-size:16px;color:#fff;text-shadow:var(--stroke);border:2px solid var(--ink);border-radius:50%}
+.rank-tabs{flex-wrap:wrap}
+.week-info,.reward-banner{display:flex;align-items:center;gap:10px;padding:8px 12px;font-family:var(--title);background:linear-gradient(#ff9a3c,#e8501a);border:3px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink)}
+.week-info .ico,.reward-banner .ico{width:34px;height:34px}
+.week-info b,.reward-banner b{display:block;font-weight:400;font-size:17px;letter-spacing:.5px;text-shadow:var(--stroke)}
+.week-info span,.reward-banner span{display:block;font:800 11px Nunito,system-ui,sans-serif;text-shadow:0 1px 0 var(--ink)}
+.reward-banner{background:linear-gradient(#7ef08f,#2fbf4f);animation:stagePop .5s cubic-bezier(.3,1.7,.5,1)}
+.rank-list{display:flex;flex-direction:column;gap:5px}
+.rank-row{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 6px;background:#1b124066;border:3px solid var(--ink);border-radius:12px}
+.rank-row.top{background:#1b124099}
+.rank-row.me{background:linear-gradient(#ffe46b55,#ffc41444);border-color:#ffd23f}
+.rank-pos{flex:none;width:30px;text-align:center;font-family:var(--title);font-size:17px;text-shadow:var(--stroke)}
+.rank-pos svg{width:28px;height:28px;display:block;margin:0 auto}
+.rank-name{flex:1;min-width:0;font-family:var(--title);font-weight:400;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:var(--stroke)}
+.rank-row>.ico{width:22px;height:22px}
+.rank-score{font-family:var(--title);font-weight:400;font-size:17px;color:var(--yellow);text-shadow:var(--stroke)}
+.stage-row .star-trio .ico{width:18px;height:18px}.stage-row .star-trio .ico.mid{width:22px;height:22px;margin-bottom:3px}
+.rank-note{margin:4px 0;text-align:center;font-size:13px;font-weight:800;color:#dfe6ff}
+.rank-foot{display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:4px;text-align:center}
+.rank-foot small{font-size:11px;font-weight:800;color:#c9d3f0}
+.rank-foot .me{display:flex;align-items:center;gap:8px;font-family:var(--title)}
+.rank-foot .me b{font-weight:400;font-size:17px;text-shadow:var(--stroke)}
+.mini-btn{font-family:var(--title);font-size:12px;letter-spacing:.5px;color:#fff;text-shadow:var(--stroke);padding:3px 9px 5px;background:linear-gradient(#6fc1ff,#2f86ff);border:2px solid var(--ink);border-radius:9px;box-shadow:0 3px 0 var(--ink)}
+@media(max-height:720px){.weekly-banner{margin-top:.6vh;padding:3px 12px 4px 6px}.weekly-banner .ico{width:20px;height:20px}.weekly-banner b{font-size:14px}}
+.rank-tabs .tab{font-size:13px;padding:5px 8px 7px}.rank-tabs .tab .ico{width:16px;height:16px}

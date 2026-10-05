@@ -1,13 +1,17 @@
 'use strict';
 // Original procedural audio: no external recordings, downloads or dependencies.
 const gameSound = (() => {
-  let context, master, music, windGain, windFilter, windPan, whiteBuffer;
-  let enabled = false, lastUpdate = 0, nextNote = 0, step = 0;
+  let context, master, music, windGain, windFilter, windPan, whiteBuffer, drive;
+  let enabled = false, lastUpdate = 0, nextNote = 0, step = 0, duckUntil = 0;
   function init() {
     if (context) return;
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) throw new Error('Audio is not supported');
+    // iPhone: play through the silent switch like other games do.
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
     context = new AudioContext();
+    drive = new Float32Array(256);
+    for (let i = 0; i < 256; i++) drive[i] = Math.tanh((i / 127.5 - 1) * 2.6);
     master = context.createGain(); master.gain.value = 0;
     const limiter = context.createDynamicsCompressor();
     limiter.threshold.value = -14; limiter.ratio.value = 6;
@@ -62,6 +66,62 @@ const gameSound = (() => {
     src.connect(shape); shape.connect(gain); gain.connect(out);
     src.start(now, Math.random() * .5); src.stop(now + duration + .02);
     src.onended = () => { src.disconnect(); shape.disconnect(); gain.disconnect(); };
+  }
+  // Cartoon voices: a buzzy pitched source shaped by three vowel formant filters, one syllable at a time.
+  // A syllable is {c: onset consonant, v: vowel or two-vowel glide, d: seconds, p: pitch multipliers across
+  // it, end: coda consonant, g: gap after it, vol} or {fx, d} for a sound effect. The voice sets the pitch,
+  // size (formant scale; small characters sound higher), rate, swing (pitch excursion), vibrato, texture
+  // (plain, robot, growl, rasp or whisper), echo and volume.
+  const VOWELS = { a: [820, 1220, 2600], e: [520, 1850, 2550], i: [310, 2350, 3050], o: [500, 880, 2500], u: [350, 780, 2350] };
+  const ONSET = { w: 'u', y: 'i', l: [360, 1100, 2550], r: [420, 1150, 1650], m: [260, 950, 2250], n: [260, 1500, 2450], b: [260, 850, 2200], d: [260, 1650, 2550], g: [260, 1900, 2400] };
+  function voiceFx(kind, delay) {
+    if (kind === 'honk') { note(330, 300, .2, delay, .1, 'square'); note(415, 380, .2, delay, .07, 'square'); note(330, 300, .22, delay + .24, .1, 'square'); }
+    if (kind === 'zap') { noise(.25, { delay, filter: 'highpass', from: 2500, volume: .2 }); note(1600, 200, .25, delay, .05, 'sawtooth'); }
+    if (kind === 'swish') noise(.22, { delay, from: 800, to: 5000, q: 1.2, volume: .22 });
+  }
+  function speak(sylls, voice = {}, delay = 0) {
+    if (!running() || !sylls || !sylls.length) return 0;
+    const { pitch = 300, size = 1, rate = 1, swing = 1, vib = .02, vibRate = 5.5, texture = 'plain', echo = 0, volume = .6 } = voice;
+    const t0 = context.currentTime + delay + .01, nodes = [], make = n => (nodes.push(n), n);
+    const src = make(context.createOscillator()); src.type = texture === 'robot' ? 'square' : 'sawtooth';
+    const tilt = make(context.createBiquadFilter()); tilt.type = 'lowpass'; tilt.frequency.value = 5200 * size; tilt.Q.value = .4;
+    const voiced = make(context.createGain()), air = make(context.createBufferSource()), airGain = make(context.createGain()), mix = make(context.createGain()), amp = make(context.createGain());
+    const whisper = texture === 'whisper', baseAir = whisper ? .55 : .035;
+    voiced.gain.value = whisper ? .25 : 1; air.buffer = whiteBuffer; air.loop = true; airGain.gain.value = baseAir; amp.gain.value = 0;
+    src.connect(tilt); tilt.connect(voiced); voiced.connect(mix); air.connect(airGain); airGain.connect(mix);
+    const formants = [0, 1, 2].map(k => { const f = make(context.createBiquadFilter()), g = make(context.createGain()); f.type = 'bandpass'; f.Q.value = [6, 9, 10][k]; g.gain.value = [2, 3.2, 2][k]; mix.connect(f); f.connect(g); g.connect(amp); return f; });
+    let out = amp; const oscs = [src];
+    if (texture === 'robot') { const ring = make(context.createGain()), mod = make(context.createOscillator()); ring.gain.value = 0; mod.type = 'square'; mod.frequency.value = 72; mod.connect(ring.gain); amp.connect(ring); out = ring; oscs.push(mod); }
+    if (texture === 'growl' || texture === 'rasp') { const rasp = make(context.createGain()), lfo = make(context.createOscillator()), depth = make(context.createGain()), shaper = make(context.createWaveShaper()); rasp.gain.value = .6; lfo.frequency.value = texture === 'growl' ? 31 : 78; depth.gain.value = .5; lfo.connect(depth); depth.connect(rasp.gain); amp.connect(rasp); shaper.curve = drive; rasp.connect(shaper); out = shaper; oscs.push(lfo); }
+    const level = make(context.createGain()); level.gain.value = volume * .6 * (texture === 'robot' ? .62 : 1) * (1 - echo * .75); out.connect(level); level.connect(master);
+    if (echo) { const dl = make(context.createDelay(1)), fb = make(context.createGain()); dl.delayTime.value = .16; fb.gain.value = echo; level.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(master); }
+    const lfo = make(context.createOscillator()), vg = make(context.createGain()); lfo.frequency.value = vibRate; vg.gain.value = pitch * vib; lfo.connect(vg); vg.connect(src.frequency); oscs.push(lfo);
+    const F = v => (Array.isArray(v) ? v : VOWELS[v] || VOWELS.a).map(f => f * (Array.isArray(v) ? 1 : size)), P = m => pitch * (1 + (m - 1) * swing);
+    const robot = texture === 'robot';
+    let t = t0; src.frequency.setValueAtTime(P((sylls.find(s => s.p) || { p: [1] }).p[0]), t0);
+    for (const s of sylls) {
+      const d = (s.d || .15) / rate;
+      if (s.fx) { voiceFx(s.fx, t - context.currentTime); t += d; continue; }
+      const c = s.c || '', p = s.p || [1], vol = s.vol || 1, v1 = s.v[0], v2 = s.v[1] || s.v[0];
+      let start = t;
+      if (/^[ptk]/.test(c)) { noise(.025, { delay: t - context.currentTime, from: c[0] === 'k' ? 1800 : c[0] === 't' ? 3500 : 900, q: 1, volume: .12 }); start = t + .03 / rate; }
+      if (/^(s|sh|f|ch)/.test(c)) { noise(.08 / rate, { delay: t - context.currentTime, filter: 'highpass', from: c[0] === 'f' ? 2500 : 4500, volume: .12 }); start = t + .07 / rate; }
+      const end = start + d, glide = Math.min(.07 / rate, d * .4), on = ONSET[c[0]], from = on ? F(on) : F(v1);
+      formants.forEach((f, k) => { f.frequency.setValueAtTime(from[k], start); f.frequency.linearRampToValueAtTime(F(v1)[k], start + glide); if (v2 !== v1) f.frequency.linearRampToValueAtTime(F(v2)[k], end); });
+      if (c[0] === 'h') { airGain.gain.setValueAtTime(.75, start); airGain.gain.linearRampToValueAtTime(baseAir, start + .06 / rate); voiced.gain.setValueAtTime(whisper ? .1 : .15, start); voiced.gain.linearRampToValueAtTime(whisper ? .25 : 1, start + .05 / rate); }
+      p.forEach((m, k) => { const at = start + (p.length > 1 ? d * k / (p.length - 1) : 0); if (robot || k === 0) src.frequency.setValueAtTime(P(m), at); else src.frequency.linearRampToValueAtTime(P(m), at); });
+      amp.gain.setValueAtTime(0, start); amp.gain.linearRampToValueAtTime(vol, start + .015); amp.gain.setValueAtTime(vol, Math.max(start + .016, end - .04)); amp.gain.linearRampToValueAtTime(0, end);
+      if (s.end === 'f' || s.end === 's') noise(.12 / rate, { delay: end - context.currentTime - .02, filter: 'highpass', from: s.end === 'f' ? 2200 : 4500, volume: .1 });
+      if (s.end === 'r') { formants[2].frequency.linearRampToValueAtTime(1600 * size, end); }
+      if (s.end === 'p' || s.end === 't' || s.end === 'k') noise(.025, { delay: end - context.currentTime, from: 2500, volume: .1 });
+      t = end + (s.g === undefined ? .03 : s.g) / rate;
+    }
+    const stop = t + .05;
+    for (const o of oscs) { o.start(t0); o.stop(stop); }
+    air.start(t0, Math.random() * .5); air.stop(stop);
+    src.onended = () => setTimeout(() => nodes.forEach(n => n.disconnect()), echo ? 1500 : 50);
+    duckUntil = Math.max(duckUntil, stop);
+    return stop - context.currentTime;
   }
   const arpeggio = (notes, gap, volume, type = 'triangle') => notes.forEach((f, i) => note(f, f, .24, i * gap, volume, type));
   function effect(kind, level = 1) {
@@ -118,7 +178,7 @@ const gameSound = (() => {
     if (silent || now - lastUpdate < .05) return;
     lastUpdate = now;
     const playing = state === 'ready' || state === 'flying', flying = state === 'flying';
-    music.gain.setTargetAtTime(playing ? .9 : 0, now, .25);
+    music.gain.setTargetAtTime(playing ? (now < duckUntil ? .35 : .9) : 0, now, now < duckUntil ? .05 : .25);
     // Schedule slightly ahead so the beat stays steady between frames.
     if (playing) {
       if (nextNote < now) nextNote = now + .03;
@@ -131,5 +191,5 @@ const gameSound = (() => {
     windFilter.frequency.setTargetAtTime(650 + gust * 400, now, .08);
     if (windPan) windPan.pan.setTargetAtTime(Math.max(-.8, Math.min(.8, wind * 2)), now, .2);
   }
-  return { enable, effect, update };
+  return { enable, effect, update, speak };
 })();

@@ -6,22 +6,26 @@ rope and climb as high as you can.
 ## Files
 - index.html: page, menu, HUD, cards and game canvas
 - style.css: chunky arcade styling for desktop and mobile
-- sound.js: procedural music and sound effects (no audio files)
+- sound.js: procedural music, sound effects and the cartoon voice synthesiser (no audio files)
 - icons.js: hand-drawn cartoon SVG icons (buttons, stage badges, medals, power-ups)
 - stages.js: the six stages — backdrops, launch grounds, ledges, creatures and drawing helpers
 - skins.js: balloon skins sold in the store, with their card rarity, animations, selection poses, effects and trails
+- voices.js: each skin's voice and lines, plus creature and boss voices
 - bosses.js: stage bosses, their attacks, the versus splash and each skin's fatality
 - game.js: game loop, input, physics, power-ups, store, revives and saving
+- online.js: Google sign-in, cloud save, worldwide and weekly leaderboards and the weekly tournament
+- firebase-config.js: your Firebase project config (online play is off while it is empty)
+- firestore.rules: security rules to paste into Firebase
 
 ## Run locally
 Open index.html in a modern browser, or run `python -m http.server 8000` in the
 folder and open http://localhost:8000.
 
 ## Deploy
-Upload all eight files together to any static host, with index.html at the root.
+Upload all the files together to any static host, with index.html at the root.
 When you change a file, bump the ?v= number on its link in index.html so browsers
 fetch the new copy instead of a cached one.
-There is no build step, backend, API key or database. The Lilita One and Nunito
+There is no build step. Online high scores use Firebase (free plan) once you add a config; everything else runs in the browser. The Lilita One and Nunito
 fonts load from Google Fonts, with system fallbacks.
 
 ## Main menu
@@ -31,6 +35,8 @@ fonts load from Google Fonts, with system fallbacks.
   in the stage colours opens from the balloon and the stage badge spins in.
   The game goes full screen where the browser allows (not iPhone Safari).
 - The stage card shows your stars and high score for that stage.
+- The orange WEEKLY TOURNAMENT banner opens the high scores (it reads HIGH SCORES
+  while online play is off). The Google button at the top signs you in.
 - STORE sells balloon skins and extra lives; BOOSTS explains the power-ups.
 Your coins and lives are shown at the top. On wide screens the action stays in a
 centred column framed by side walls. All icons are cartoon SVGs in icons.js.
@@ -52,6 +58,20 @@ Every stage is endless, with its own best altitude and medals
 - 🌌 Deep Universe: nebulae, a spinning galaxy and 3D-looking planets and suns
   that turn, then shrink into the distance after you pass them.
 
+## Voices
+Every balloon has its own cartoon voice, made live by a small formant synthesiser
+(a buzzy pitched tone shaped into vowels), so there are no recordings to download:
+Classic is a cheerful kid, Gumball a giggly squeak, Funny Clown a goofy laugh with a honk,
+Toy Robot a ring-modulated robot, Watermelon a wobbly "wheee", Monster a growl, Ninja a
+whisper with a sword swish, Galaxy an echoing "ooo-wooo" and Golden King a deep royal "ho ho ho".
+Each one speaks when you cut the rope, fire a boost, smash or bonk something, lose your
+shield, earn a star, start a fatality, beat a boss, pop and revive, and says its
+catchphrase with its pose when you pick it in the store.
+Birds squawk, bats squeak, monkeys chatter and drones say "uh-oh" when you knock them out.
+Bosses laugh during the versus splash, pant while tired and cry "nooo" when finished.
+The music dips while someone talks. On iPhone, sound plays even with the silent switch on
+(Safari 17 and newer).
+
 ## Score and stars
 Every run scores points (STAR_SCORES and PTS in game.js):
 - 10 points per metre climbed
@@ -70,6 +90,32 @@ up on a framed plaque while the stars pop in one by one above an orange ribbon,
 a grass island. Your balloon celebrates by star count (big jumps and star eyes for 3
 stars, a worried look for none). From there you can revive, play again, open the store
 or go back to the menu. Each stage keeps its best score and most stars.
+
+## Online high scores
+With online play switched on:
+- Sign in with Google (the G button in the menu, the high scores screen or the results screen).
+- Your best score goes on the ALL TIME board and your best this week on the WEEKLY board.
+  The results screen shows your world and weekly rank after each run.
+- The weekly tournament runs Monday 00:00 to Sunday 23:59 UTC. The first time you sign in
+  after it ends you get coins for your final rank: 1st 1,000, 2nd 750, 3rd 500,
+  top 10 300, top 50 150, everyone else who played 50.
+- Your progress (coins, skins, lives, bests and stars) is saved to your account, so it
+  follows you to other devices. Skins and records merge; coins and lives come from the newer save.
+- The leaderboard shows your first name and last initial; RENAME picks another name.
+Without it the high scores screen shows your bests on this device.
+
+Switching it on (free Firebase plan, about 10 minutes):
+1. Go to https://console.firebase.google.com, sign in and create a project (Analytics can be off).
+2. Add a Web app (the </> button), give it a name and register it. Copy the firebaseConfig values.
+3. Build > Authentication > Get started > Sign-in method > Google > Enable > Save.
+   Then Authentication > Settings > Authorized domains > Add domain: nikezaxo.github.io
+4. Build > Firestore Database > Create database (production mode, any location).
+   Open its Rules tab, paste the contents of firestore.rules and Publish.
+5. Put the config into firebase-config.js, for example
+   `const FIREBASE_CONFIG={apiKey:'...',authDomain:'...',projectId:'...',appId:'...'};`
+   and publish. The config values are not secret; the rules protect the data.
+Scores are sent by the game itself, so the rules can check their shape and stop scores
+from going down, but a determined cheater could still post a fake score.
 
 ## Boss fights
 Every 5 minutes of flying (BOSS_INTERVAL in bosses.js; a BOSS timer counts down in the HUD) the stage boss arrives:
