@@ -9,8 +9,8 @@ rope and climb as high as you can.
 - sound.js: procedural music and sound effects (no audio files)
 - icons.js: hand-drawn cartoon SVG icons (buttons, stage badges, medals, power-ups)
 - stages.js: the six stages — backdrops, launch grounds, ledges, creatures and drawing helpers
-- skins.js: balloon skins sold in the store, with their animations, effects and trails
-- bosses.js: stage bosses, their attacks, the versus screen and each skin's fatality
+- skins.js: balloon skins sold in the store, with their card rarity, animations, selection poses, effects and trails
+- bosses.js: stage bosses, their attacks, the versus splash and each skin's fatality
 - game.js: game loop, input, physics, power-ups, store, revives and saving
 
 ## Run locally
@@ -30,6 +30,7 @@ fonts load from Google Fonts, with system fallbacks.
 - Press PLAY, or cut the balloon's rope, to launch. The menu flies away, an iris
   in the stage colours opens from the balloon and the stage badge spins in.
   The game goes full screen where the browser allows (not iPhone Safari).
+- The stage card shows your stars and high score for that stage.
 - STORE sells balloon skins and extra lives; BOOSTS explains the power-ups.
 Your coins and lives are shown at the top. On wide screens the action stays in a
 centred column framed by side walls. All icons are cartoon SVGs in icons.js.
@@ -51,11 +52,33 @@ Every stage is endless, with its own best altitude and medals
 - 🌌 Deep Universe: nebulae, a spinning galaxy and 3D-looking planets and suns
   that turn, then shrink into the distance after you pass them.
 
+## Score and stars
+Every run scores points (STAR_SCORES and PTS in game.js):
+- 10 points per metre climbed
+- 100 per coin (times the coin multiplier), 500 per perfect coin row
+- 200 per energy cell, 300 per power-up
+- 250 per smash or bonk, 500 per close call
+- 50,000 for defeating a boss
+
+A run earns 1 star at 20,000 points, 2 stars at 60,000 and 3 stars at 150,000. The
+HUD shows the score under the altitude, three stars that light up as you pass each
+target (a star flies from the balloon into the meter) and a bar towards the next star.
+
+When the balloon pops, an Angry Birds 2 style results screen opens: the score counts
+up on a framed plaque while the stars pop in one by one above an orange ribbon,
+"NEW HIGHSCORE!" stamps on when you beat your best, and the balloons you own stand on
+a grass island. Your balloon celebrates by star count (big jumps and star eyes for 3
+stars, a worried look for none). From there you can revive, play again, open the store
+or go back to the menu. Each stage keeps its best score and most stars.
+
 ## Boss fights
 Every 5 minutes of flying (BOSS_INTERVAL in bosses.js; a BOSS timer counts down in the HUD) the stage boss arrives:
 1. WARNING: an alarm sounds, ledges retract into the walls (cave walls thin out
    and only bounce you during the fight) and creatures flee.
-2. A versus screen slams in: your balloon against the boss.
+2. A versus splash in the style of an Angry Birds 2 poster: rays and focus lines in
+   the boss colours, the boss slams in from the top, your balloon rockets up with an
+   angry face, they clash in a white burst with a big red VS, and the boss name drops
+   in letter by letter.
 3. The boss drops in and attacks. Dodge its weapons; each attack and the passing
    time drain its stamina bar. Boosts and shields protect you as usual.
 4. At zero stamina the boss is TIRED (dizzy and sweating). Tap FATALITY (or press
@@ -101,17 +124,25 @@ boss; P or Escape pauses.
 - Smashing ledges or drones, or bonking creatures while boosted, earns a coin.
 
 ## Store
+- Skins are shown as Angry Birds style cards with light rays, coloured by rarity
+  (common teal, rare blue, epic purple, legendary orange). The picked skin sits on a
+  big card next to its details and buy/equip button; all skins are in the fanned row
+  of small cards below.
+- Picking a card plays that skin's own selection pose (tap the big card to replay it):
+  Classic – Heart Hug, Gumball – Bubble Pop, Funny Clown – Juggle & Honk, Toy Robot –
+  Robot Dance with laser eyes, Watermelon – Melon Twister, Monster – Monster Roar,
+  Ninja – Shadow Clones, Galaxy – Cosmic Warp, Golden King – King's Treasure.
 - Skins: Classic (free), Gumball, Funny Clown, Toy Robot, Watermelon, Monster,
   Ninja, Galaxy and Golden King. Each has its own colours, decorations that turn
   with the balloon, and some have their own face and accessories. In the store
-  every skin moves in its own style with its own effect (bouncing gumball with
+  every skin's card moves in its own style with its own effect (bouncing gumball with
   bubbles, wobbling clown with confetti, jerky robot with sparks, spinning
   melon with juice, growling monster with slime, dashing ninja with smoke,
   galaxy with orbiting stars, gleaming gold with glitter), and choosing one
   plays a burst. Each skin also leaves its own trail while flying.
 - Extra lives: after a pop, tap REVIVE to re-inflate where you were and keep
   climbing. You can hold up to 9 lives; you start with 1.
-Coins, skins, lives and bests are saved in the browser (localStorage).
+Coins, skins, lives, bests, high scores and stars are saved in the browser (localStorage).
 
 ## Gameplay details
 - Starting climb speed: 130 m/s (game-world units), scaled slightly per stage.
@@ -125,5 +156,7 @@ Coins, skins, lives and bests are saved in the browser (localStorage).
 ## Customize
 - stages.js: STAGES lists each stage's colours, speed and drawing functions.
 - game.js: generateCourse() controls ledge spacing, coins and power-ups;
-  spawnCritters() controls creatures; POWERS, MEDALS and LIFE_PRICE set the rules.
-- skins.js: add a skin to SKINS with its gores, decorations, face and price.
+  spawnCritters() controls creatures; POWERS, MEDALS, LIFE_PRICE, STAR_SCORES and
+  PTS set the rules.
+- skins.js: add a skin to SKINS with its gores, decorations, face, price and rarity,
+  and give it a selection pose in SKIN_POSES.
