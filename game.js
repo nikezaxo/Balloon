@@ -9,8 +9,10 @@ const POWERS={
  energy:{name:'ENERGY CELL',ico:'bolt',color:'#ffd23f',desc:'Collect 5 to charge the BOOST engine. Tap BOOST (or press B) for a cinematic rocket boost that smashes through everything.'},
  magnet:{name:'COIN MAGNET',ico:'magnet',color:'#ff4d5e',weight:2,desc:'Pulls nearby coins and energy cells to you for 8 seconds.'},
  shield:{name:'BUBBLE SHIELD',ico:'shield',color:'#44d9ff',weight:1.5,desc:'Absorbs one hit. Lasts up to 20 seconds.'},
- nitro:{name:'TURBO',ico:'flame',color:'#ff8a2a',weight:1,desc:'A 4-second rocket burst with a quick intro that smashes through obstacles.'}};
-const PICKUPS=['magnet','shield','nitro'];
+ nitro:{name:'TURBO',ico:'flame',color:'#ff8a2a',weight:1,desc:'A 4-second rocket burst with a quick intro that smashes through obstacles.'},
+ double:{name:'DOUBLE COINS',ico:'coin',color:'#ffb300',weight:1.5,desc:'Every coin counts double for 15 seconds, on top of your row multiplier.'}};
+const PICKUPS=['magnet','shield','nitro','double'];
+const DOUBLE_TIME=15;
 const MEDALS=[{at:1000,tone:'bronze',name:'BRONZE'},{at:2500,tone:'silver',name:'SILVER'},{at:5000,tone:'gold',name:'GOLD'}];
 const LIFE_PRICE=80,MAX_LIVES=9;
 // Score: 10 points per metre plus bonuses. A run earns 1, 2 or 3 stars at these score targets.
@@ -25,7 +27,7 @@ let SW=420,W=420,OX=0,H=700,dpr=1,state='menu',previousState='ready',alt=0,x=.5,
 // Game feel: camera shake, flashes, slow motion, popups, combos and a springy balloon with a face.
 let shake=0,flash=0,flashColor='#fff',timeScale=1,slowTimer=0,deathTimer=0,popups=[],rings=[],flyers=[],streaks=[],trailClock=0,streakClock=0,combo=0,comboTimer=0,bestCombo=0,nearMisses=0,smashes=0,squash=0,squashV=0,blink=0,nextBlink=2,mood='happy',moodTimer=0,danger=0,ropeCut=null,nextMilestone=1000,passedBest=false,medalsHit=0,eventsSeen=new Set(),grow=1,revives=0;
 // Power state. The showcase is the freeze-frame celebration when the boost engine fires.
-let energy=0,boost=null,speedMult=1,shield=0,magnet=0,invuln=0,showcase=null,powerCount=0,bonus=0,starsHit=0,starFlyers=[],bossKills=0;
+let energy=0,boost=null,speedMult=1,shield=0,magnet=0,doubler=0,invuln=0,showcase=null,powerCount=0,bonus=0,starsHit=0,starFlyers=[],bossKills=0;
 const runScore=()=>Math.floor(alt)*10+Math.round(bonus);
 let panelKind=null,storeTab='skins',storePick='classic',previews=[],skinPop={},poseSfx={},transition=null,swapFx=0,wantFullscreen=false;
 // Coin rows: 10 coins per row along the safe path; every 3 perfect rows in a row add +0.1 to the coin multiplier.
@@ -38,7 +40,7 @@ new ResizeObserver(resize).observe(canvas);
 const stageBest=()=>save.best[stage.id]||0;
 function reset(mode='ready'){state=mode;alt=0;x=.5;vx=0;target=null;pointer=null;obstacles=[];coins=[];critters=[];particles=[];leaves=[];flightTime=0;spin=0;wind=0;weatherNow=null;leafClock=0;coinCount=0;shownCoins=0;banked=0;nextObstacle=450;spawnIndex=0;keys.clear();boss=null;caveWallScale=1;nextBossTime=BOSS_INTERVAL;rewardCoins=[];coinCursor=330;rushCursor=0;rushCount=0;prevLedge={a:0,c:.5};rowId=0;rowCount=0;rowBreaks=0;rows=new Map();rowStreak=0;coinMult=1;bestMult=1;$('#versus').hidden=true;$('#boss-bar').hidden=true;$('#fatality').hidden=true;
  shake=0;flash=0;timeScale=1;slowTimer=0;deathTimer=0;popups=[];rings=[];flyers=[];streaks=[];combo=0;comboTimer=0;bestCombo=0;nearMisses=0;smashes=0;squash=0;squashV=0;mood='happy';moodTimer=0;danger=0;ropeCut=null;nextMilestone=1000;passedBest=false;medalsHit=0;eventsSeen=new Set();grow=1;revives=0;
- energy=0;boost=null;speedMult=1;shield=0;magnet=0;invuln=0;showcase=null;powerCount=0;bonus=0;starsHit=0;starFlyers=[];bossKills=0;$('#results').hidden=true;
+ energy=0;boost=null;speedMult=1;shield=0;magnet=0;doubler=0;invuln=0;showcase=null;powerCount=0;bonus=0;starsHit=0;starFlyers=[];bossKills=0;$('#results').hidden=true;
  generateCourse();$('#weather').textContent=stage.wind?'CALM AIR':stage.calm;$('#weather').classList.remove('gust');$('#hint').hidden=mode!=='ready';$('#menu').hidden=mode!=='menu';$('#menu').classList.remove('leaving');transition=null;$('#overlay').hidden=true;$('#panel').hidden=true;panelKind=null;$('#pause').innerHTML=icon('pause');$('#pause').setAttribute('aria-label','Pause game');$('#announce').replaceChildren();refreshMeta()}
 function refreshMeta(){const b=stageBest();$('#best').innerHTML=b?`${iconHTML('trophy')}BEST ${b.toLocaleString()} m`:'NO RECORD YET';$('#hint-stage').textContent=stage.name;$('#zone').textContent=stage.name;$('#hint-icon').innerHTML=icon(stage.icon);$('#zone-icon').innerHTML=icon(stage.icon);$('#menu-coins').textContent=save.coins.toLocaleString();$('#menu-gems').textContent=(save.gems||0).toLocaleString();$('#menu-lives').textContent=save.lives;updatePicker()}
 // Main menu stage picker: icon, name, best, medals and page dots for the selected stage.
@@ -324,6 +326,7 @@ function drawPickup(kind,cx,cy,r){const c=POWERS[kind].color;ctx.save();ctx.tran
  const g=ctx.createRadialGradient(-r*.3,-r*.35,r*.1,0,0,r);g.addColorStop(0,'#ffffff');g.addColorStop(.4,c);g.addColorStop(1,mixColor(c,INK,.35));ctx.fillStyle=g;ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.fill();ctx.stroke();
  drawSymbol(kind,r*.62);ctx.fillStyle='rgba(255,255,255,.75)';ctx.beginPath();ctx.ellipse(-r*.42,-r*.5,r*.2,r*.12,-.6,0,TAU);ctx.fill();ctx.restore()}
 function drawSymbol(kind,s){ctx.fillStyle='#fff';ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.beginPath();
+ if(kind==='double'){ctx.font=`${Math.round(s*1.5)}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineWidth=s*.42;ctx.strokeText('x2',0,s*.1);ctx.fillStyle='#fff6b0';ctx.fillText('x2',0,s*.1);return}
  if(kind==='magnet'){const r=s*.55,path=()=>{ctx.beginPath();ctx.moveTo(r,-s*.75);ctx.lineTo(r,0);ctx.arc(0,0,r,0,Math.PI);ctx.lineTo(-r,-s*.75)};ctx.lineCap='butt';path();ctx.lineWidth=s*.5+5;ctx.stroke();path();ctx.lineWidth=s*.5;ctx.strokeStyle='#fff';ctx.stroke();ctx.strokeStyle='#ff4d5e';for(const sx of [-r,r]){ctx.beginPath();ctx.moveTo(sx,-s*.75);ctx.lineTo(sx,-s*.42);ctx.stroke()}return}
  if(kind==='nitro'){ctx.moveTo(0,-s);ctx.bezierCurveTo(s*.9,-s*.2,s*.75,s*.9,0,s*.9);ctx.bezierCurveTo(-s*.75,s*.9,-s*.9,-s*.2,0,-s);ctx.fillStyle='#ffd23f';ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(0,-s*.2);ctx.bezierCurveTo(s*.4,s*.2,s*.35,s*.7,0,s*.7);ctx.bezierCurveTo(-s*.35,s*.7,-s*.4,s*.2,0,-s*.2);ctx.fillStyle='#fff';ctx.fill();return}
  if(kind==='shield'){ctx.moveTo(0,-s);ctx.lineTo(s*.8,-s*.65);ctx.lineTo(s*.7,s*.2);ctx.quadraticCurveTo(s*.5,s*.75,0,s);ctx.quadraticCurveTo(-s*.5,s*.75,-s*.7,s*.2);ctx.lineTo(-s*.8,-s*.65);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#44d9ff';ctx.beginPath();ctx.moveTo(0,-s*.65);ctx.lineTo(s*.5,-s*.42);ctx.lineTo(s*.42,s*.15);ctx.quadraticCurveTo(s*.3,s*.5,0,s*.68);ctx.closePath();ctx.fill();return}
@@ -336,27 +339,28 @@ function collectPickups(dt){for(const item of coins){if(item.collected)continue;
  if(item.row&&cy>balloonY()+46){item.collected=true;missRow(item.row);continue}
  if((magnet>0||(engineOn()&&item.rush))&&(item.kind==='coin'||item.kind==='energy')){const dx=x*W-cx,dy=balloonY()-cy;if(Math.hypot(dx,dy)<220){const k=Math.min(1,dt*6);item.x+=dx/W*k;item.a-=dy/worldScale*k;cx=item.x*W;cy=coinY(item)}}
  const dx=cx-x*W,dy=cy-balloonY();if((dx/43)**2+(dy/48)**2>=1)continue;item.collected=true;
- if(item.kind==='coin'){const r=rows.get(item.row);coinCount+=coinMult;bonus+=PTS.coin*coinMult;combo=comboTimer>0?combo+1:1;comboTimer=2.6;bestCombo=Math.max(bestCombo,combo);gameSound.effect('coin',r?r.got+1:item.rush?1+(rushCount++%12):1);
+ if(item.kind==='coin'){const r=rows.get(item.row),worth=coinMult*(doubler>0?2:1);coinCount+=worth;bonus+=PTS.coin*worth;combo=comboTimer>0?combo+1:1;comboTimer=2.6;bestCombo=Math.max(bestCombo,combo);gameSound.effect('coin',r?r.got+1:item.rush?1+(rushCount++%12):1);
   burst(cx,cy,12,{colors:['#ffd23f','#fff3a0','#fff'],speed:[80,240],size:[2,4],life:[.3,.6],world:true});burst(cx,cy,4,{type:'star',colors:['#fff6b0'],speed:[40,120],size:[5,8],life:[.5,.8],world:true});
-  rings.push({x:cx,y:cy,max:40,life:0,dur:.35,color:'#ffe680',width:4});if(!item.rush||rushCount%8===0)popup(cx,cy-24,item.rush?`COIN RUSH x${rushCount}`:coinMult>1?`+${coinMult.toFixed(1)}`:'+1',coinMult>1?'#ff9a3c':'#ffd23f',22);
-  flyers.push({x:cx,y:cy,age:0,value:coinMult});squashV+=3;if(moodTimer<=0||mood==='happy'){mood='joy';moodTimer=.6}
+  rings.push({x:cx,y:cy,max:40,life:0,dur:.35,color:'#ffe680',width:4});if(!item.rush||rushCount%8===0)popup(cx,cy-24,item.rush?`COIN RUSH x${rushCount}`:worth>1?`+${+worth.toFixed(1)}`:'+1',worth>1?'#ff9a3c':'#ffd23f',22);
+  flyers.push({x:cx,y:cy,age:0,value:worth});squashV+=3;if(moodTimer<=0||mood==='happy'){mood='joy';moodTimer=.6}
   if(r){r.got++;if(r.closed&&!r.broken&&r.got===r.total)rowComplete()}}
- else if(item.kind==='energy'){const was=energy;bonus+=PTS.energy;energy=Math.min(5,energy+1);gameSound.effect('energy');burst(cx,cy,10,{type:'star',colors:['#ffd23f','#fff'],speed:[60,180],size:[3,6],life:[.3,.6],world:true});popup(cx,cy-22,energy===was?'FULL!':`ENERGY ${energy}/5`,'#ffd23f',22);if(energy===5&&was<5)chargedUp()}
+ else if(item.kind==='energy'){const was=energy;bonus+=PTS.energy;if(was<4)announcer('energy');energy=Math.min(5,energy+1);gameSound.effect('energy');burst(cx,cy,10,{type:'star',colors:['#ffd23f','#fff'],speed:[60,180],size:[3,6],life:[.3,.6],world:true});popup(cx,cy-22,energy===was?'FULL!':`ENERGY ${energy}/5`,'#ffd23f',22);if(energy===5&&was<5)chargedUp()}
  else if(item.kind==='nitro'){bonus+=PTS.power;startTurbo()}
- else{const P=POWERS[item.kind];bonus+=PTS.power;applyPower(item.kind);popup(x*W,balloonY()-70,`${P.name}!`,P.color,28);squashV+=4;mood='joy';moodTimer=.8}}}
-function chargedUp(){gameSound.effect('charged');announce('BOOST READY!','TAP BOOST · B','record','bolt');bump($('#boost'))}
+ else{const P=POWERS[item.kind];bonus+=PTS.power;announcer(item.kind);applyPower(item.kind);popup(x*W,balloonY()-70,`${P.name}!`,P.color,28);squashV+=4;mood='joy';moodTimer=.8}}}
+function chargedUp(){gameSound.effect('charged');announcer('ready');announce('BOOST READY!','TAP BOOST · B','record','bolt');bump($('#boost'))}
 
 // ---- Power-ups ----
 const smashing=()=>engineOn()||invuln>0;
 // The engine boost is the one power with a cinematic intro: the action freezes and the balloon celebrates.
 // Turbo pickup: a quick mini intro in slow motion (no full freeze), then the rocket fires.
-function startTurbo(){sayVoice('boost',{force:true});showcase={kind:'nitro',age:0,dur:.7,mini:true};invuln=Math.max(invuln,1);mood='cool';moodTimer=1.6;popup(x*W,balloonY()-78,'TURBO!','#ff8a2a',40);gameSound.effect('boost');squash=.25;squashV=0;burst(x*W,balloonY(),16,{type:'star',colors:['#ff8a2a','#ffd23f','#fff'],speed:[120,300],size:[4,7],life:[.4,.7],drag:1.5})}
-function activateEngine(){if(state!=='flying'||showcase||energy<5)return;energy=0;sayVoice('boost',{force:true});showcase={kind:'energy',age:0,dur:1.15};mood='cool';moodTimer=2;announce('ENGINE BOOST','FULL POWER!','power','bolt');gameSound.effect('power');
+function startTurbo(){announcer('turbo');showcase={kind:'nitro',age:0,dur:.7,mini:true};invuln=Math.max(invuln,1);mood='cool';moodTimer=1.6;popup(x*W,balloonY()-78,'TURBO!','#ff8a2a',40);gameSound.effect('boost');squash=.25;squashV=0;burst(x*W,balloonY(),16,{type:'star',colors:['#ff8a2a','#ffd23f','#fff'],speed:[120,300],size:[4,7],life:[.4,.7],drag:1.5})}
+function activateEngine(){if(state!=='flying'||showcase||energy<5)return;energy=0;announcer('engine');showcase={kind:'energy',age:0,dur:1.15};mood='cool';moodTimer=2;announce('ENGINE BOOST','FULL POWER!','power','bolt');gameSound.effect('power');
  burst(x*W,balloonY(),26,{type:'star',colors:['#ffd23f','#fff','#ff8a2a'],speed:[80,260],size:[4,8],life:[.6,1.1],drag:1.5});confetti(24);squash=.3;squashV=0}
 function applyPower(kind){const P=POWERS[kind],bx=x*W,by=balloonY();powerCount++;
  if(kind==='magnet'){magnet=8;gameSound.effect('boost')}
  if(kind==='nitro'){boost={kind:'nitro',time:4,dur:4,mult:1.8};gameSound.effect('nitro')}
  if(kind==='shield'){shield=20;gameSound.effect('shield')}
+ if(kind==='double'){doubler=DOUBLE_TIME;gameSound.effect('charged');bump($('#coin-pill'))}
  if(kind==='energy'){boost={kind:'engine',time:3.5,dur:3.5,mult:1.75};gameSound.effect('nitro')}
  burst(bx,by,24,{colors:[P.color,'#fff'],speed:[150,420],size:[2,5],life:[.3,.6]});rings.push({x:bx,y:by,max:110,life:0,dur:.5,color:P.color,width:7});shake=Math.max(shake,kind==='energy'?12:6);flash=kind==='energy'?.3:.12;flashColor=P.color;squash=-.2}
 function breakShield(){shield=0;invuln=1.2;gameSound.effect('shieldbreak');sayVoice('oof',{force:true});const bx=x*W,by=balloonY();burst(bx,by,22,{type:'shard',colors:['#bff4ff','#44d9ff','#ffffff'],speed:[150,330],size:[5,9],life:[.5,.9],gravity:300});rings.push({x:bx,y:by,max:90,life:0,dur:.45,color:'#bff4ff',width:6});popup(bx,by-60,'SHIELD SAVED YOU!','#44d9ff',24);shake=Math.max(shake,12)}
@@ -446,7 +450,7 @@ function updateEffects(dt,real){shake*=Math.exp(-8*real);flash=Math.max(0,flash-
  updateBoss(dt,real);updateRewardCoins(real);const frozen=!!(boss&&boss.freeze),pdt=showcase||frozen?real:dt;
  squashV+=(-squash*170-squashV*11)*pdt;squash+=squashV*pdt;
  if((nextBlink-=pdt)<=0){blink=.13;nextBlink=rand(2,5)}blink-=pdt;moodTimer-=pdt;
- if(boost&&(boost.time-=dt)<=0)boost=null;if(shield>0&&(shield-=dt)<=0&&state==='flying')popup(x*W,balloonY()-60,'SHIELD OFF','#bff4ff',20);magnet=Math.max(0,magnet-dt);invuln=Math.max(0,invuln-dt);
+ if(boost&&(boost.time-=dt)<=0)boost=null;if(shield>0&&(shield-=dt)<=0&&state==='flying')popup(x*W,balloonY()-60,'SHIELD OFF','#bff4ff',20);magnet=Math.max(0,magnet-dt);if(doubler>0&&(doubler-=dt)<=0&&state==='flying')popup(x*W,balloonY()-60,'DOUBLE COINS OVER','#ffd23f',20);invuln=Math.max(0,invuln-dt);
  speedMult+=((boost?boost.mult:1)-speedMult)*Math.min(1,dt*3);
  danger=state==='flying'&&!smashing()?danger+(measureDanger()-danger)*Math.min(1,dt*10):danger*Math.exp(-6*pdt);
  if(state!=='dead'&&moodTimer<=0)mood=smashing()||shield>0?'cool':danger>.45?'scared':'happy';
@@ -468,11 +472,11 @@ function updateEffects(dt,real){shake*=Math.exp(-8*real);flash=Math.max(0,flash-
  for(const f of flyers){f.age+=real;if(f.age>=.55){f.done=true;shownCoins+=f.value||1;bump($('#coin-pill'))}}flyers=flyers.filter(f=>!f.done);
  for(const f of starFlyers){f.age+=real;if(f.age>=.8){f.done=true;bump($$('#star-meter .ico')[f.k]);gameSound.effect('milestone')}}starFlyers=starFlyers.filter(f=>!f.done)}
 function setText(id,value){if(hudCache[id]!==value){hudCache[id]=value;$(id).textContent=value}}
-function setChip(id,frac){const chip=$(id),on=frac>0;if(chip.hidden===on)chip.hidden=!on;if(on)chip.querySelector('b').style.width=(frac*100).toFixed(1)+'%'}
+function setChip(id,frac){const chip=$(id),on=frac>0;if(chip.hidden===on)chip.hidden=!on;if(on)chip.querySelector('i b').style.width=(frac*100).toFixed(1)+'%'}
 function updateHud(){setText('#coin-count',String(Math.floor(shownCoins)));setText('#mult-val',`x${coinMult.toFixed(1)}`);$('#mult').classList.toggle('hot',coinMult>1);$$('#mult .row-pips i').forEach((pip,k)=>pip.classList.toggle('on',k<rowStreak%3));setText('#boss-timer',state==='flying'&&!boss?`BOSS ${Math.floor(Math.max(0,nextBossTime-flightTime)/60)}:${String(Math.floor(Math.max(0,nextBossTime-flightTime)%60)).padStart(2,'0')}`:'');setText('#altitude',Math.floor(alt).toLocaleString());{const sc=runScore(),lit=starsHit-starFlyers.length,lo=STAR_SCORES[starsHit-1]||0,hi=STAR_SCORES[starsHit];setText('#score',sc.toLocaleString());if(hudCache.stars!==lit){hudCache.stars=lit;$$('#star-meter .ico').forEach((n,k)=>n.classList.toggle('on',k<lit))}const fill=hi?Math.min(1,(sc-lo)/(hi-lo)):1,fw=(fill*100).toFixed(1)+'%';if(hudCache.starFill!==fw){hudCache.starFill=fw;$('#star-fill').style.width=fw}}setText('#speed',(state==='flying'||state==='paused'&&previousState==='flying'?Math.round(flightSpeed(alt)*speedMult):0)+' m/s');
  shell.classList.toggle('ready',state==='ready'||(state==='paused'&&previousState==='ready'));shell.classList.toggle('in-menu',state==='menu');
  setChip('#chip-boost',boost?boost.time/boost.dur:0);if(boost){const ic=boost.kind==='nitro'?'flame':'bolt';if(hudCache.boostIcon!==ic){hudCache.boostIcon=ic;$('#chip-boost-icon').innerHTML=icon(ic)}$('#chip-boost').style.setProperty('--c',POWERS[boost.kind==='engine'?'energy':'nitro'].color)}
- setChip('#chip-shield',shield/20);setChip('#chip-magnet',magnet/8);
+ setChip('#chip-shield',shield/20);setChip('#chip-magnet',magnet/8);setChip('#chip-double',Math.max(0,doubler)/DOUBLE_TIME);$('#coin-pill').classList.toggle('doubled',doubler>0);
  const bp=boss?boss.phase:'',fighting=state!=='menu'&&['enter','fight','tired','fatality'].includes(bp),bar=$('#boss-bar');shell.classList.toggle('boss-fight',!!boss&&bp!=='done');if(bar.hidden===fighting)bar.hidden=!fighting;if(fighting){setText('#boss-name',bp==='tired'||bp==='fatality'?`${boss.def.name} · TIRED!`:boss.def.name);$('#boss-fill').style.width=Math.max(0,boss.stamina)+'%';bar.classList.toggle('tired',bp==='tired')}
  const fat=bp==='tired'&&state==='flying';if($('#fatality').hidden===fat)$('#fatality').hidden=!fat;
  const btn=$('#boost'),visible=(state==='flying'||state==='paused'&&previousState==='flying')&&!['versus','tired','fatality'].includes(bp),key=`${visible}|${energy}|${!!showcase}`;

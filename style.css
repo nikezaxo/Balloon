@@ -414,3 +414,6 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .gem-pill b{color:#ffd6f6}
 .buy.gem{background:linear-gradient(#ff9ae6,#c81f8f);box-shadow:inset 0 -3px 0 #8a106a,0 3px 0 var(--ink)}
 .buy.big.gem{box-shadow:inset 0 -4px 0 #8a106a,0 4px 0 var(--ink)}
+/* Double coins */
+.chip .x2{display:inline;width:auto;height:auto;background:none;font-family:var(--title);font-weight:400;font-size:15px;color:var(--yellow);text-shadow:var(--stroke)}
+.coin-pill.doubled{background:linear-gradient(#ff9a3c,#e05a00);animation:pulse .45s ease-in-out infinite alternate}
