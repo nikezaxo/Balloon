@@ -13,7 +13,9 @@ rope and climb as high as you can.
 - voices.js: each skin's voice and lines, plus creature and boss voices
 - bosses.js: stage bosses, their attacks, the versus splash and each skin's fatality
 - game.js: game loop, input, physics, power-ups, store, revives and saving
-- online.js: Google sign-in, cloud save, worldwide and weekly leaderboards and the weekly tournament
+- online.js: Google sign-in, cloud save, public profiles, worldwide and weekly leaderboards and the weekly tournament
+- cosmetics.js: profile avatars, avatar frames and the gold name, and the profile screen
+- clans.js: clans (create, find, join, requests, roles, settings) and player profile cards
 - firebase-config.js: your Firebase project config (online play is off while it is empty)
 - firestore.rules: security rules to paste into Firebase
 
@@ -35,8 +37,9 @@ fonts load from Google Fonts, with system fallbacks.
   in the stage colours opens from the balloon and the stage badge spins in.
   The game goes full screen where the browser allows (not iPhone Safari).
 - The stage card shows your stars and high score for that stage.
-- The orange WEEKLY TOURNAMENT banner opens the high scores (it reads HIGH SCORES
-  while online play is off). The Google button at the top signs you in.
+- Under the stage card: your avatar (opens your PROFILE), the orange WEEKLY TOURNAMENT
+  banner (high scores; it reads HIGH SCORES while online play is off) and the green CLAN
+  button. The Google button at the top signs you in, then shows your avatar.
 - STORE sells balloon skins and extra lives; BOOSTS explains the power-ups.
 Your coins and lives are shown at the top. On wide screens the action stays in a
 centred column framed by side walls. All icons are cartoon SVGs in icons.js.
@@ -117,12 +120,36 @@ Switching it on (free Firebase plan, about 10 minutes):
 3. Build > Authentication > Get started > Sign-in method > Google > Enable > Save.
    Then Authentication > Settings > Authorized domains > Add domain: nikezaxo.github.io
 4. Build > Firestore Database > Create database (production mode, any location).
-   Open its Rules tab, paste the contents of firestore.rules and Publish.
+   Open its Rules tab, paste the contents of firestore.rules and Publish. Publish it again
+   whenever firestore.rules changes (profiles and clans need the current version).
+   tools/rules.test.mjs tests the rules against the Firestore emulator.
 5. Put the config into firebase-config.js, for example
    `const FIREBASE_CONFIG={apiKey:'...',authDomain:'...',projectId:'...',appId:'...'};`
    and publish. The config values are not secret; the rules protect the data.
 Scores are sent by the game itself, so the rules can check their shape and stop scores
 from going down, but a determined cheater could still post a fake score.
+
+## Profiles, avatars and frames
+Open PROFILE to pick your avatar, its frame and your name colour. Six avatars (Sunny, Kitty,
+Bear, Froggy, Bot, Balloon) and four frames (Classic, Wood, Cloud, Leafy) are free. Animated
+ones cost gems: avatars Phoenix and Ghost (150), Alien (200), Dragon (250) and Lion King (300);
+frames Golden Laurel (200), Inferno and Rainbow (250), Thunder (300), Galaxy (350) and
+Diamond (400). A shimmering GOLD NAME costs 500 gems; the white name is free.
+When you are signed in, your avatar, frame, gold name and clan tag show to everyone: on the
+weekly and all-time boards, in clans and on your player card (tap any player to see theirs).
+
+## Clans
+- CREATE A CLAN costs 100 gems: pick a name, a 2 to 5 letter tag, a description, a badge,
+  a colour and whether it is open (anyone joins) or closed (players send a join request).
+- Find clans on the clan screen (top clans by trophies, or search by name) and JOIN or REQUEST.
+- Up to 30 members. Roles: the LEADER (founder) promotes members to ADMIN, demotes them,
+  kicks anyone and can MAKE LEADER another member. ADMINS accept or decline requests, kick
+  members and edit the description, badge, colour and open setting. Everyone can leave; a
+  leader who leaves hands the clan to an admin (or the best member), and a leader alone can
+  disband it.
+- Clan trophies add up members' best scores when they join plus every new personal best
+  they set while in the clan. Your clan tag shows before your name everywhere.
+These features need the updated firestore.rules published in Firebase (see Online high scores).
 
 ## Boss fights
 Every 5 minutes of flying (BOSS_INTERVAL in bosses.js; a BOSS timer counts down in the HUD) the stage boss arrives:
