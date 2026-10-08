@@ -111,7 +111,7 @@ const ATTACKS={
 function startBoss(){const def=BOSSES[stage.id]||BOSSES.sky,level=save.bossWins&&save.bossWins[stage.id]?Math.min(3,save.bossWins[stage.id]):0;
  boss={def,phase:'clear',age:0,animT:0,clock:0,x:W/2,y:-220,scale:Math.min(1,W/430),stamina:100,shots:[],timers:[],cool:1.2,last:-1,attack:0,level,sp:.85+.07*level,pace:1,wind:null,fatal:null,hidden:false,freeze:false};
  for(const o of obstacles)if(o.leaving===undefined)o.leaving=0;for(const h of critters){if(h.dormant)h.gone=true;else knock(h,critterPos(h))}critters=critters.filter(h=>!h.gone);
- closeCoinRow();announce('WARNING!','BOSS INCOMING','power','skull');gameSound.effect('siren');shake=Math.max(shake,6)}
+ closeCoinRow();announce('WARNING!','BOSS INCOMING','power','skull');announcer('boss');gameSound.effect('siren');shake=Math.max(shake,6)}
 function setPhase(p){boss.phase=p;boss.age=0}
 // Versus splash in the style of an Angry Birds 2 poster: rays and focus lines, the boss slams in from the
 // top, your balloon rockets up to meet it, they clash in a burst, then the boss name drops in letter by letter.
@@ -186,7 +186,7 @@ function updateShots(b,dt){const bx=x*W,by=balloonY()-5,br=14;
 // A boss shot reached the balloon: boosts shrug it off, a shield absorbs it, otherwise the balloon pops.
 function bossHit(s){if(smashing()){if(s.kind==='orb'||s.kind==='faller'){s.dead=true;burst(s.x,s.y,8,{colors:['#fff','#ffd23f'],speed:[80,220],life:[.2,.4]})}else s.hit=true;return}
  if(shield>0){breakShield();if(s.kind==='orb'||s.kind==='faller')s.dead=true;else s.hit=true;return}finish()}
-function startFatality(){if(!boss||boss.phase!=='tired'||state!=='flying')return;const def=FATALITIES[save.skin]||FATALITIES.classic;setPhase('fatality');boss.fatal={def,p:0,pose:{},balloon:null,fired:new Set(),at(th,fn){if(this.p>=th&&!this.fired.has(th)){this.fired.add(th);fn()}}};announce(def.name,'FATALITY!','fatal','skull');gameSound.effect('fatality');sayVoice('fatality',{force:true});bossVoice('defeat',1.4);shake=Math.max(shake,8)}
+function startFatality(){if(!boss||boss.phase!=='tired'||state!=='flying')return;const def=FATALITIES[save.skin]||FATALITIES.classic;setPhase('fatality');boss.fatal={def,p:0,pose:{},balloon:null,fired:new Set(),at(th,fn){if(this.p>=th&&!this.fired.has(th)){this.fired.add(th);fn()}}};announce(def.name,'FATALITY!','fatal','skull');gameSound.effect('fatality');announcer('fatality');sayVoice('fatality',{force:true,delay:1.1});bossVoice('defeat',1.4);shake=Math.max(shake,8)}
 function bossDefeated(){const b=boss,reward=500+100*b.level+(save.skin==='gold'?100:0);spawnRewardCoins(b,reward);bonus+=PTS.boss;bossKills++;popup(W/2,H*.5,`+${PTS.boss.toLocaleString()}`,'#fff',40);
  save.bossWins=save.bossWins||{};save.bossWins[stage.id]=(save.bossWins[stage.id]||0)+1;persist();
  announce('BOSS DEFEATED!',`+${reward} COINS`,'record','trophy');confetti(50);gameSound.effect('record');sayVoice('win',{force:true,delay:.3});b.hidden=true;b.shots=[];setPhase('done')}

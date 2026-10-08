@@ -72,6 +72,10 @@ ffmpeg: chipmunk pitch shifts, growls, a robot filter, chorus and echo, each cha
 with its own settings. Only the clips for your skin and the stage boss load, in the
 background, once sound is on. Until a clip has loaded, or if it can't load, a small
 synthesised cartoon voice is used instead (also used for birds, bats, monkeys and drones).
+A deep, dark announcer (an octave-dropped voice with distortion and a cavernous echo,
+over a booming sting) calls out power-ups instead of the balloon: "Energy!", "Boost ready!",
+"Engine boost!", "Turbo!", "Coin magnet!", "Shield!", "Double coins!", plus "Boss incoming!"
+and "Fatality!". Its clips are in audio/voices/announcer (tools/make_announcer.py).
 The music dips while someone talks. On iPhone, sound plays even with the silent switch on
 (Safari 17 and newer).
 
@@ -172,7 +176,9 @@ boss; P or Escape pauses.
   power with a cinematic intro — the action freezes, rays spin and the balloon
   zooms in with sunglasses — then a rocket engine smashes through everything for
   3.5 seconds.
-- Rare power-ups (in every eighth gap between coin rows): coin magnet, bubble shield and turbo.
+- Rare power-ups (in every eighth gap between coin rows): coin magnet, bubble shield, turbo and
+  DOUBLE COINS (every coin counts twice for 15 seconds, on top of the row multiplier; the coin
+  counter glows and an x2 timer shows in the HUD).
   Turbo plays a quick mini intro in slow motion, then rockets you up.
 - Smashing ledges or drones, or bonking creatures while boosted, earns a coin.
 

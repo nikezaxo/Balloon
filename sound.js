@@ -153,6 +153,8 @@ const gameSound = (() => {
     if (kind === 'star') { const k = Math.pow(2, Math.min(level, 2) * 4 / 12); arpeggio([784 * k, 988 * k, 1175 * k, 1568 * k], .05, .045, 'square'); note(2093 * k, 2093 * k, .5, .2, .03, 'triangle'); noise(.35, { filter: 'highpass', from: 6000, volume: .08 }); }
     if (kind === 'tick') note(1500, 1500, .03, 0, .02, 'square');
     if (kind === 'stamp') { noise(.3, { filter: 'lowpass', from: 1200, to: 200, volume: .4 }); note(160, 60, .25, 0, .2, 'square'); arpeggio([1046.5, 1318.5, 1568, 2093, 2637], .05, .035, 'square'); }
+    // Ominous sting under the announcer: a deep boom, a dark rumble and a dissonant metallic ring.
+    if (kind === 'sting') { note(72, 30, 1.3, 0, .28, 'sine'); noise(1.1, { filter: 'lowpass', from: 700, to: 90, q: .7, volume: .3 }); note(220, 214, 1, .02, .028, 'sawtooth'); note(233, 226, 1, .02, .028, 'sawtooth'); note(110, 108, 1.2, 0, .05, 'triangle'); }
     if (kind === 'warn') { note(880, 880, .08, 0, .035, 'square'); note(880, 880, .08, .14, .035, 'square'); }
   }
   // A bouncy pentatonic loop; drums join once the balloon is flying.
