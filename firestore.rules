@@ -65,11 +65,33 @@ service cloud.firestore {
         && request.resource.data.save is string && request.resource.data.save.size() < 20000
         && request.resource.data.at == request.time;
     }
+    // Per-stage numbers on a profile (high scores, stars): only stage ids as keys, whole numbers up to max.
+    function stageNum(m, k, max) {
+      return !(k in m) || (m[k] is int && m[k] >= 0 && m[k] <= max);
+    }
+    function validStages(m, max) {
+      return m is map && m.keys().hasOnly(['sky', 'jungle', 'cave', 'factory', 'space', 'universe'])
+        && stageNum(m, 'sky', max) && stageNum(m, 'jungle', max) && stageNum(m, 'cave', max)
+        && stageNum(m, 'factory', max) && stageNum(m, 'space', max) && stageNum(m, 'universe', max);
+    }
+    // Player card stats; all optional so profiles from older versions stay valid.
+    function validStats(d) {
+      return (!('scores' in d) || validStages(d.scores, 100000000))
+        && (!('stars' in d) || validStages(d.stars, 3))
+        && (!('bosses' in d) || (d.bosses is int && d.bosses >= 0 && d.bosses <= 1000000))
+        && (!('seasonId' in d) || (d.seasonId is string && d.seasonId.matches('^S[0-9]{1,4}$')))
+        && (!('sp' in d) || (d.sp is int && d.sp >= 0 && d.sp <= 10000000))
+        && (!('legend' in d) || d.legend is bool)
+        && (!('hist' in d) || shortText(d.hist, 200))
+        && (!('items' in d) || (d.items is int && d.items >= 0 && d.items <= 100));
+    }
     // Public profiles: anyone can look, only the player writes.
     match /profiles/{uid} {
       allow read: if true;
       allow write: if owner(uid)
-        && request.resource.data.keys().hasOnly(['name', 'avatar', 'frame', 'gold', 'clanId', 'clanTag', 'clanName', 'best', 'skin', 'at'])
+        && request.resource.data.keys().hasOnly(['name', 'avatar', 'frame', 'gold', 'clanId', 'clanTag', 'clanName', 'best', 'skin', 'at',
+          'scores', 'stars', 'bosses', 'seasonId', 'sp', 'legend', 'hist', 'items'])
+        && validStats(request.resource.data)
         && validName(request.resource.data.name) && validLook(request.resource.data)
         && shortText(request.resource.data.clanId, 40) && shortText(request.resource.data.clanTag, 5)
         && shortText(request.resource.data.clanName, 20) && shortText(request.resource.data.skin, 12)

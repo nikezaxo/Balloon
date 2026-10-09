@@ -78,5 +78,16 @@ await t('other season entry denied', assertFails(setDoc(doc(db('bob'), 'seasons/
 await t('bad season id denied', assertFails(setDoc(doc(A, 'seasons/2026/players/alice'), sp('Alice', 5))));
 await t('extra season field denied', assertFails(setDoc(doc(A, 'seasons/S2/players/alice'), sp('Alice', 5, { legend: true }))));
 await t('anyone reads season ranking', assertSucceeds(getDocs(query(collection(anon, 'seasons/S1/players'), orderBy('sp', 'desc'), limit(5)))));
+// Player card stats on profiles
+const statsProf = (extra = {}) => ({ name: 'Alice', ...look, clanId: '', clanTag: '', clanName: '', best: 5000, skin: 'classic', at: serverTimestamp(), ...extra });
+const stats = { scores: { sky: 5000, cave: 1200 }, stars: { sky: 3, cave: 1 }, bosses: 14, seasonId: 'S1', sp: 2400, legend: false, hist: 'S1:3:2400', items: 2 };
+await t('profile with stats', assertSucceeds(setDoc(doc(A, 'profiles/alice'), statsProf(stats))));
+await t('profile without stats still ok', assertSucceeds(setDoc(doc(A, 'profiles/alice'), statsProf())));
+await t('unknown stage in scores denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, scores: { moon: 5 } }))));
+await t('four stars denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, stars: { sky: 4 } }))));
+await t('text score denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, scores: { sky: 'lots' } }))));
+await t('long season history denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, hist: 'x'.repeat(201) }))));
+await t('bad season id denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, seasonId: 'winter' }))));
+await t('anyone reads profiles', assertSucceeds(getDoc(doc(anon, 'profiles/alice'))));
 console.log(`${pass} passed, ${fail} failed`);
 await env.cleanup(); process.exit(fail ? 1 : 0);

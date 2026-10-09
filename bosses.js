@@ -1,9 +1,10 @@
 'use strict';
-// Stage bosses. Every BOSS_INTERVAL seconds of flying the ledges retract, creatures flee, a versus screen plays and
-// the stage's boss attacks with its own weapons. Attacks and time drain its stamina; once it is tired
-// the player finishes it with the equipped skin's fatality.
-const BOSS_INTERVAL=300,FATALITY_TIME=2.8,VERSUS_TIME=3.2;
-let boss=null,nextBossTime=BOSS_INTERVAL,bossBuf=null,rewardCoins=[],rewardSound=0;
+// Stage bosses. After BOSS_FIRST seconds of flying, then BOSS_GAP seconds after each boss is beaten, the ledges
+// retract, creatures flee, a versus screen plays and the stage's boss attacks with its own weapons. Attacks and
+// time drain its stamina; below half it gets enraged (faster, with combo attacks), and once it is tired the player
+// finishes it with the equipped skin's fatality. Every boss beaten in the run makes the next one tougher.
+const BOSS_FIRST=100,BOSS_GAP=80,FATALITY_TIME=2.8,VERSUS_TIME=3.2;
+let boss=null,nextBossTime=BOSS_FIRST,bossBuf=null,rewardCoins=[],rewardSound=0;
 const easeIn=k=>k*k,easeOut=k=>1-(1-k)*(1-k);
 
 // ---------- Boss art (drawn around 0,0, roughly ±120 wide) ----------
@@ -108,8 +109,10 @@ const ATTACKS={
  ring(b){ringShot(b,'cosmic');later(b,1.2,()=>ringShot(b,'cosmic'));return 15}};
 
 // ---------- Fight flow ----------
-function startBoss(){const def=BOSSES[stage.id]||BOSSES.sky,level=save.bossWins&&save.bossWins[stage.id]?Math.min(3,save.bossWins[stage.id]):0;
- boss={def,phase:'clear',age:0,animT:0,clock:0,x:W/2,y:-220,scale:Math.min(1,W/430),stamina:100,shots:[],timers:[],cool:1.2,last:-1,attack:0,level,sp:.85+.07*level,pace:1,wind:null,fatal:null,hidden:false,freeze:false};
+// Difficulty: tier is how many bosses this run has beaten (up to 11), level how often this stage's boss was beaten
+// before (up to 3). sp speeds up shots and attacks, tough scales the stamina each attack costs, drain is stamina per second.
+function startBoss(){const def=BOSSES[stage.id]||BOSSES.sky,level=save.bossWins&&save.bossWins[stage.id]?Math.min(3,save.bossWins[stage.id]):0,tier=Math.min(11,bossKills);
+ boss={def,phase:'clear',age:0,animT:0,clock:0,x:W/2,y:-220,scale:Math.min(1,W/430),stamina:100,shots:[],timers:[],cool:1.2,last:-1,attack:0,level,tier,sp:Math.min(1.6,.95+.055*tier+.03*level),tough:.36-.01*tier,drain:.8-.02*tier,combo:Math.min(.8,.35+.04*tier),rage:false,pace:1,wind:null,fatal:null,hidden:false,freeze:false};
  for(const o of obstacles)if(o.leaving===undefined)o.leaving=0;for(const h of critters){if(h.dormant)h.gone=true;else knock(h,critterPos(h))}critters=critters.filter(h=>!h.gone);
  closeCoinRow();announce('WARNING!','BOSS INCOMING','power','skull');announcer('boss');gameSound.effect('siren');shake=Math.max(shake,6)}
 function setPhase(p){boss.phase=p;boss.age=0}
@@ -154,6 +157,7 @@ function renderVersus(){const b=boss,V=b.vs;if(!V)return;const cv=$('#vs-canvas'
  const fl=Math.max(age<.2?1-age/.2:0,age>.74&&age<.95?1-(age-.74)/.21:0,exit>0?Math.min(1,exit*1.6)*.85:0);if(fl>0){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=fl;ctx.fillStyle='#fff';ctx.fillRect(0,0,SW,H);ctx.globalAlpha=1}
  ctx=main}
 function bossPace(){return boss?boss.pace:1}
+function pickAttack(b){let k;do k=Math.floor(Math.random()*b.def.attacks.length);while(k===b.last&&b.def.attacks.length>1);b.last=k;return k}
 function updateBoss(dt,real){caveWallScale+=((boss&&boss.phase!=='done'?.15:1)-caveWallScale)*Math.min(1,real*1.5);if(!boss||state==='dead')return;const b=boss;b.animT+=real;b.attack=Math.max(0,b.attack-real*1.4);if(b.wind&&(b.wind.time-=dt)<=0)b.wind=null;
  const target=b.phase==='clear'||b.phase==='done'?1:.35;b.pace+=(target-b.pace)*Math.min(1,real*2);
  for(const o of obstacles)if(o.leaving!==undefined)o.leaving+=real;obstacles=obstacles.filter(o=>o.leaving===undefined||o.leaving<.6);
@@ -164,7 +168,10 @@ function updateBoss(dt,real){caveWallScale+=((boss&&boss.phase!=='done'?.15:1)-c
  if(b.phase==='enter'){b.age+=dt;b.clock+=dt;const k=Math.min(1,b.age/1.1);b.x=homeX;b.y=-220+(homeY+220)*easeOut(k);if(k>=1){setPhase('fight');announce('FIGHT!','','go');gameSound.effect('roar');shake=Math.max(shake,14)}return}
  if(b.phase==='fight'){b.clock+=dt;b.x+=(homeX-b.x)*Math.min(1,dt*3);b.y+=(homeY-b.y)*Math.min(1,dt*3);
   for(const tm of b.timers)if(b.clock>=tm.at){tm.done=true;tm.fn()}b.timers=b.timers.filter(tm=>!tm.done);
-  b.stamina-=dt*2.2;if((b.cool-=dt)<=0&&b.stamina>0){let k;do k=Math.floor(Math.random()*b.def.attacks.length);while(k===b.last&&b.def.attacks.length>1);b.last=k;b.stamina-=ATTACKS[b.def.attacks[k]](b);b.attack=1;b.cool=rand(3,3.6)/b.sp}
+  b.stamina-=dt*b.drain;if(!b.rage&&b.stamina<50){b.rage=true;b.sp*=1.15;announce('ENRAGED!','IT GETS FASTER','power','skull');gameSound.effect('roar');bossVoice('taunt');shake=Math.max(shake,12)}
+  if((b.cool-=dt)<=0&&b.stamina>0){const k=pickAttack(b);b.stamina-=ATTACKS[b.def.attacks[k]](b)*b.tough;b.attack=1;b.cool=rand(3,3.6)/b.sp*(b.rage?.75:1);
+   // Enraged bosses chain a second, different attack.
+   if(b.rage&&Math.random()<b.combo)later(b,.85,()=>{if(boss===b&&b.phase==='fight'){ATTACKS[b.def.attacks[pickAttack(b)]](b);b.attack=1}})}
   if(b.stamina<=0&&!b.timers.length){b.stamina=0;setPhase('tired');for(const s of b.shots)burst(s.x||s.cx||x*W,s.y||s.cy||0,4,{type:'puff',colors:['#ffffff'],speed:[20,60],size:[5,9],life:[.3,.5]});b.shots=[];b.wind=null;announce('TIRED!','TAP FATALITY!','fatal','skull');gameSound.effect('charged')}}
  if(b.phase==='tired'){if((b.pant=(b.pant===undefined?.6:b.pant)-real)<=0){b.pant=2.8;bossVoice('tired')}b.clock+=dt*.3;b.x+=(W/2-b.x)*Math.min(1,dt*2);b.y+=(Math.max(H*.33,200*b.scale+95)+Math.sin(b.animT*2)*6-b.y)*Math.min(1,dt*2)}
  if(b.phase==='fatality'){b.age+=real;const f=b.fatal;f.p=Math.min(1,b.age/FATALITY_TIME);f.pose={};f.balloon=null;f.def.pose(f.p,b,f);if(f.p>=1)bossDefeated()}
@@ -190,7 +197,7 @@ function startFatality(){if(!boss||boss.phase!=='tired'||state!=='flying')return
 function bossDefeated(){const b=boss,reward=500+100*b.level+(save.skin==='gold'?100:0);spawnRewardCoins(b,reward);bonus+=PTS.boss;bossKills++;tally('bosses');popup(W/2,H*.5,`+${PTS.boss.toLocaleString()}`,'#fff',40);
  save.bossWins=save.bossWins||{};save.bossWins[stage.id]=(save.bossWins[stage.id]||0)+1;persist();
  announce('BOSS DEFEATED!',`+${reward} COINS`,'record','trophy');confetti(50);gameSound.effect('record');sayVoice('win',{force:true,delay:.3});b.hidden=true;b.shots=[];setPhase('done')}
-function endBoss(){boss=null;nextBossTime=flightTime+BOSS_INTERVAL;nextObstacle=alt+H/worldScale*.95;prevLedge={a:nextObstacle-300,c:.5};coinCursor=Math.max(coinCursor,nextObstacle-260)}
+function endBoss(){boss=null;nextBossTime=flightTime+BOSS_GAP;nextObstacle=alt+H/worldScale*.95;prevLedge={a:nextObstacle-300,c:.5};coinCursor=Math.max(coinCursor,nextObstacle-260)}
 // Boss reward: coins burst out across the screen, hang for a moment, then all fly into the balloon.
 function spawnRewardCoins(b,n){const cx=b.x,cy=Math.max(60,b.y);for(let i=0;i<n;i++){const a=rand(0,TAU),sp=rand(60,560);rewardCoins.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,age:0,hold:rand(.7,1.3),phase:rand(0,TAU)})}}
 function updateRewardCoins(real){if(!rewardCoins.length)return;const bx=x*W,by=balloonY()-5;let got=0;

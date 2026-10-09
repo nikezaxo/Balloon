@@ -5,7 +5,8 @@
 //   leaders/{uid}                best score ever      {name, score, stage, skin, at}
 //   weekly/{week}/leaders/{uid}  best score that week {name, score, stage, skin, at}; weeks run Monday to Sunday UTC
 //   players/{uid}                cloud save           {save, at}
-//   profiles/{uid}               public profile       {name, avatar, frame, gold, clanId, clanTag, clanName, best, skin, at}
+//   profiles/{uid}               public profile       {name, avatar, frame, gold, clanId, clanTag, clanName, best, skin, at,
+//                                                     scores, stars, bosses, seasonId, sp, legend, hist, items} (stats for player cards)
 //   clans/{id}, clans/{id}/members/{uid}, clans/{id}/requests/{uid}   clans (see clans.js)
 //   seasons/{S#}/players/{uid}   season points      {name, sp, avatar, frame, gold, clan, at}; seasons are months (see season.js)
 const online=(()=>{
@@ -34,7 +35,7 @@ const online=(()=>{
  const ref=(...path)=>fb.F.doc(fb.db,...path);
  async function signedIn(){const {F}=fb,uid=user.uid;
   const cloud=await F.getDoc(ref('players',uid));if(cloud.exists()){try{mergeSave(JSON.parse(cloud.data().save))}catch{}}pushSave();
-  await loadBests();await verifyClan().catch(e=>console.warn('Clan check failed',e));if(typeof seasonCheck==='function')seasonCheck();seasonPush(true);
+  await loadBests();await verifyClan().catch(e=>console.warn('Clan check failed',e));if(typeof seasonCheck==='function')seasonCheck();seasonPush();
   // Scores made on this device before signing in still count for the all-time board.
   let top=0,topStage=save.lastStage;for(const [id,v] of Object.entries(save.scores||{}))if(v>top){top=v;topStage=id}
   if(top>best.all){best.all=top;await putEntry(['leaders',uid],entry(top,topStage,save.skin)).catch(()=>{})}
@@ -61,7 +62,7 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
  async function submit(score,stageId,skin){if(!user||!fb)return null;const uid=user.uid,week=weekId(),jobs=[];if(best.weekId!==week){best.week=0;best.weekId=week}
   if(score>best.all){best.all=score;jobs.push(putEntry(['leaders',uid],entry(score,stageId,skin)))}
   if(score>best.week){best.week=score;jobs.push(putEntry(['weekly',week,'leaders',uid],entry(score,stageId,skin)))}
-  await Promise.all(jobs.map(j=>j.catch(e=>console.warn('Score not saved',e))));if(jobs.length){publish();if(typeof clanBest==='function')clanBest(best.all).catch(()=>{})}
+  await Promise.all(jobs.map(j=>j.catch(e=>console.warn('Score not saved',e))));publish();if(jobs.length&&typeof clanBest==='function')clanBest(best.all).catch(()=>{})
   const [all,wk]=await Promise.all([rankOf(['leaders'],best.all),rankOf(['weekly',week,'leaders'],best.week)]);return {all,week:wk,allBest:best.all,weekBest:best.week}}
  async function rankOf(path,score){if(!score)return null;try{const snap=await fb.F.getCountFromServer(fb.F.query(fb.F.collection(fb.db,...path),fb.F.where('score','>',score)));return snap.data().count+1}catch{return null}}
  async function top(board){if(!fb)return [];const path=board==='week'?['weekly',weekId(),'leaders']:['leaders'],snap=await fb.F.getDocs(fb.F.query(fb.F.collection(fb.db,...path),fb.F.orderBy('score','desc'),fb.F.limit(TOP)));return snap.docs.map(d=>({uid:d.id,...d.data()}))}
@@ -74,19 +75,31 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
  // and the clan member card are refreshed with the same look.
  function publish(){if(!user||!fb)return;clearTimeout(publishTimer);publishTimer=setTimeout(publishNow,800)}
  async function publishNow(){if(!user||!fb)return;clearTimeout(publishTimer);const uid=user.uid,lk=myLook(),cl=save.clan,jobs=[];
-  jobs.push(fb.F.setDoc(ref('profiles',uid),{name:displayName(),avatar:lk.avatar,frame:lk.frame,gold:lk.gold,clanId:cl?cl.id:'',clanTag:cl?cl.tag:'',clanName:cl?cl.name:'',best:Math.floor(best.all||0),skin:String(save.skin).slice(0,12),at:fb.F.serverTimestamp()}));
+  // Older rules only accept the basic profile, so a rejected profile is retried without the stats.
+  const basic={name:displayName(),avatar:lk.avatar,frame:lk.frame,gold:lk.gold,clanId:cl?cl.id:'',clanTag:cl?cl.tag:'',clanName:cl?cl.name:'',best:Math.floor(best.all||0),skin:String(save.skin).slice(0,12),at:fb.F.serverTimestamp()};
+  jobs.push(fb.F.setDoc(ref('profiles',uid),{...basic,...profileStats()}).catch(err=>fb.F.setDoc(ref('profiles',uid),basic).catch(()=>{throw err})));
   if(best.all)jobs.push(putEntry(['leaders',uid],entry(best.all,save.lastStage,save.skin)));if(best.week&&best.weekId===weekId())jobs.push(putEntry(['weekly',best.weekId,'leaders',uid],entry(best.week,save.lastStage,save.skin)));
   if(cl)jobs.push(fb.F.updateDoc(ref('clans',cl.id,'members',uid),{name:displayName(),avatar:lk.avatar,frame:lk.frame,gold:lk.gold}));
-  jobs.push(seasonPush(true));await Promise.all(jobs.map(j=>j.catch(e=>console.warn('Profile not saved',e))))}
+  jobs.push(seasonPush());await Promise.all(jobs.map(j=>j.catch(e=>console.warn('Profile not saved',e))))}
  // Season ranking: each player's season points with their look; a count query finds a player's place.
  let seasonTimer=0,seasonSent='';
- function seasonSync(){if(!user||!fb)return;clearTimeout(seasonTimer);seasonTimer=setTimeout(()=>seasonPush(false),1500)}
- async function seasonPush(force){if(!user||!fb||typeof seasonState!=='function')return;const s=seasonState(),key=s.id+':'+s.sp;if(!s.sp||(!force&&seasonSent===key))return;const lk=myLook();
-  try{await fb.F.setDoc(ref('seasons',s.id,'players',user.uid),{name:displayName(),sp:Math.floor(s.sp),avatar:lk.avatar,frame:lk.frame,gold:lk.gold,clan:save.clan?save.clan.tag:'',at:fb.F.serverTimestamp()});seasonSent=key}
+ // New season points refresh the profile too (publishNow then pushes the season entry).
+ function seasonSync(){if(!user||!fb)return;clearTimeout(seasonTimer);seasonTimer=setTimeout(publishNow,1500)}
+ // Writes the season entry only when the points, name or look changed since the last write; a player past
+ // Diamond I also checks whether they are in the top 1,000 (Star Legend).
+ async function seasonPush(){if(!user||!fb||typeof seasonState!=='function')return;const s=seasonState(),lk=myLook(),doc={name:displayName(),sp:Math.floor(s.sp),avatar:lk.avatar,frame:lk.frame,gold:lk.gold,clan:save.clan?save.clan.tag:''},key=s.id+JSON.stringify(doc);if(!s.sp)return;
+  if(seasonSent!==key)try{await fb.F.setDoc(ref('seasons',s.id,'players',user.uid),{...doc,at:fb.F.serverTimestamp()});seasonSent=key}
   catch(e){console.warn('Season points not saved',e);return}
   if(s.sp>=LEGEND_MIN){const r=await seasonRank(s.id,s.sp);if(r!==null)seasonLegend(r<=LEGEND_TOP,s.id)}else if(s.legend)seasonLegend(false,s.id)}
  async function seasonTop(id){if(!fb)return [];const snap=await fb.F.getDocs(fb.F.query(fb.F.collection(fb.db,'seasons',id,'players'),fb.F.orderBy('sp','desc'),fb.F.limit(TOP)));return snap.docs.map(d=>({uid:d.id,...d.data()}))}
  async function seasonRank(id,sp){if(!fb||!sp)return null;try{const snap=await fb.F.getCountFromServer(fb.F.query(fb.F.collection(fb.db,'seasons',id,'players'),fb.F.where('sp','>',sp)));return snap.data().count+1}catch{return null}}
+ // Public stats for player cards: stage high scores and stars, bosses beaten, this season's points and rank,
+ // past season finishes (id:tier:points) and how many season reward items the player owns.
+ function profileStats(){const per=(o,max)=>{const m={};for(const s of STAGES){const v=Math.floor(Number((o||{})[s.id])||0);if(v>0)m[s.id]=Math.min(max,v)}return m},s=typeof seasonState==='function'?seasonState():null;
+  return {scores:per(save.scores,1e8),stars:per(save.stars,3),bosses:Math.min(1e6,Object.values(save.bossWins||{}).reduce((a,v)=>a+(Math.floor(v)||0),0)),seasonId:s?s.id:'S1',sp:s?Math.min(1e7,Math.floor(s.sp)):0,legend:!!(s&&s.legend),
+   hist:(save.seasonHistory||[]).slice(-8).map(h=>`${h.id}:${h.ti}:${h.sp}`).join(',').slice(0,200),items:Math.min(100,save.skins.filter(id=>SKINS[id]&&SKINS[id].season).length+myCos().own.filter(id=>(AVATARS[id]||FRAMES[id]||{}).season).length)}}
+ // The signed-in player's own card, straight from this device.
+ function myCard(){const cl=save.clan;return {name:displayName(),...myLook(),clanTag:cl?cl.tag:'',clanName:cl?cl.name:'',best:Math.max(best.all||0,...Object.values(save.scores||{})),skin:save.skin,...profileStats()}}
  // Current looks for a list of players, read from their public profiles (30 per query, cached for a minute).
  const lookCache=new Map();
  async function looks(uids){if(!fb)return {};const now=Date.now(),need=[...new Set(uids)].filter(u=>u&&(!lookCache.has(u)||now-lookCache.get(u).t>60000));
@@ -99,7 +112,7 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
   if(save.clan){const [m,c]=await Promise.all([fb.F.getDoc(ref('clans',save.clan.id,'members',uid)),fb.F.getDoc(ref('clans',save.clan.id))]);if(!m.exists()||!c.exists()){save.clan=null}else{const d=c.data();save.clan={id:save.clan.id,name:d.name,tag:d.tag,role:m.data().role}}changedClan=true}
   if(save.clanReq&&!save.clan){const id=save.clanReq.id,[m,r,c]=await Promise.all([fb.F.getDoc(ref('clans',id,'members',uid)),fb.F.getDoc(ref('clans',id,'requests',uid)),fb.F.getDoc(ref('clans',id))]);if(m.exists()&&c.exists()){const d=c.data();save.clan={id,name:d.name,tag:d.tag,role:m.data().role};save.clanReq=null}else if(!r.exists()||!c.exists())save.clanReq=null;changedClan=true}
   if(changedClan){persist();refreshMeta()}}
- return {configured,start,signIn,signOut,submit,top,saved,rename,seasonSync,seasonTop,seasonRank,timeLeft,weekId,displayName,REWARDS,publish,publishNow,getProfile,looks,verifyClan,get api(){return fb&&user?{F:fb.F,db:fb.db,ref,uid:user.uid}:null},get status(){return status},get user(){return user},get best(){return best},get reward(){return reward},takeReward(){const r=reward;reward=null;return r}};
+ return {configured,start,signIn,signOut,submit,top,saved,rename,seasonSync,seasonTop,seasonRank,myCard,timeLeft,weekId,displayName,REWARDS,publish,publishNow,getProfile,looks,verifyClan,get api(){return fb&&user?{F:fb.F,db:fb.db,ref,uid:user.uid}:null},get status(){return status},get user(){return user},get best(){return best},get reward(){return reward},takeReward(){const r=reward;reward=null;return r}};
 })();
 
 // ---- High score screens ----
@@ -129,7 +142,7 @@ function renderRanks(){const list=$('#panel-list'),on=online.configured();$('#pa
  const foot=el('div','rank-foot');if(online.user){const me=el('div','me'),lk=myLook();me.append(avatarEl(lk,32),nameEl(online.displayName(),lk.gold,save.clan&&save.clan.tag,''));const edit=el('button','mini-btn','RENAME');edit.onclick=()=>{const n=prompt('Leaderboard name (up to 16 letters)',online.displayName());if(n!==null)online.rename(n).then(()=>renderRanks())};const out=el('button','mini-btn','SIGN OUT');out.onclick=()=>online.signOut();me.append(edit,out);foot.append(me,el('small','','Your first name and last initial show on the leaderboard unless you rename yourself.'))}else foot.append(googleButton(),el('small','','Sign in to post your scores, save your progress and join the weekly tournament.'));list.append(foot);
  const req=++ranksReq,board=ranksTab;
  Promise.resolve(online.start()).then(()=>online.top(board)).then(rows=>{if(req!==ranksReq||panelKind!=='ranks')return;box.replaceChildren();if(!rows.length){box.append(el('p','rank-note',board==='week'?'No scores yet this week. Be the first!':'No scores yet. Be the first!'));return}
-  const uid=online.user&&online.user.uid;rows.forEach((e,i)=>{const row=el('div','rank-row'+(e.uid===uid?' me':'')+(i<3?' top':'')),pos=el('span','rank-pos');if(i<3)pos.innerHTML=icon('medal',['gold','silver','bronze'][i]);else pos.textContent=i+1;const st=STAGES.find(s=>s.id===e.stage),si=el('span','ico');si.innerHTML=st?icon(st.icon):'';const lk=e.uid===uid?{...myLook(),name:online.displayName(),clan:save.clan&&save.clan.tag}:e;row.dataset.uid=e.uid;row.append(pos,avatarEl(lk,32),nameEl(lk.name||e.name,lk.gold,lk.clan),si,el('b','rank-score',(e.score||0).toLocaleString()));row.onclick=()=>showProfile(e.uid);box.append(row)});
+  const uid=online.user&&online.user.uid;rows.forEach((e,i)=>{const row=el('div','rank-row'+(e.uid===uid?' me':'')+(i<3?' top':'')),pos=el('span','rank-pos');if(i<3)pos.innerHTML=icon('medal',['gold','silver','bronze'][i]);else pos.textContent=i+1;const st=STAGES.find(s=>s.id===e.stage),si=el('span','ico');si.innerHTML=st?icon(st.icon):'';const lk=e.uid===uid?{...myLook(),name:online.displayName(),clan:save.clan&&save.clan.tag}:e;row.dataset.uid=e.uid;row.append(pos,avatarEl(lk,32),nameEl(lk.name||e.name,lk.gold,lk.clan),si,el('b','rank-score',(e.score||0).toLocaleString()));row.onclick=()=>showProfile(e.uid,{name:e.name,avatar:e.avatar,frame:e.frame,gold:e.gold,clanTag:e.clan,best:e.score,skin:e.skin});box.append(row)});
   // Swap in each player's current avatar, frame, gold name and clan tag from their profile.
   online.looks(rows.map(e=>e.uid).filter(u=>u!==uid)).then(map=>{if(req!==ranksReq)return;for(const row of box.querySelectorAll('.rank-row[data-uid]')){const p=map[row.dataset.uid];if(!p)continue;const cv=row.querySelector('canvas'),nm=row.querySelector('.rank-name');if(cv)cv.replaceWith(avatarEl(p,32));if(nm)nm.replaceWith(nameEl(p.name,p.gold,p.clanTag))}}).catch(()=>{});
   const myBest=board==='week'?online.best.week:online.best.all;if(uid&&myBest&&!rows.some(e=>e.uid===uid)){const row=el('div','rank-row me'),pos=el('span','rank-pos','…'),lk=myLook();row.append(pos,avatarEl(lk,32),nameEl(online.displayName(),lk.gold,save.clan&&save.clan.tag),el('span','ico'),el('b','rank-score',myBest.toLocaleString()));box.append(row)}})
