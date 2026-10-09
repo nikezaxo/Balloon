@@ -187,7 +187,7 @@ function updateShots(b,dt){const bx=x*W,by=balloonY()-5,br=14;
 function bossHit(s){if(smashing()){if(s.kind==='orb'||s.kind==='faller'){s.dead=true;burst(s.x,s.y,8,{colors:['#fff','#ffd23f'],speed:[80,220],life:[.2,.4]})}else s.hit=true;return}
  if(shield>0){breakShield();if(s.kind==='orb'||s.kind==='faller')s.dead=true;else s.hit=true;return}finish()}
 function startFatality(){if(!boss||boss.phase!=='tired'||state!=='flying')return;const def=FATALITIES[save.skin]||FATALITIES.classic;setPhase('fatality');boss.fatal={def,p:0,pose:{},balloon:null,fired:new Set(),at(th,fn){if(this.p>=th&&!this.fired.has(th)){this.fired.add(th);fn()}}};announce(def.name,'FATALITY!','fatal','skull');gameSound.effect('fatality');announcer('fatality');sayVoice('fatality',{force:true,delay:1.1});bossVoice('defeat',1.4);shake=Math.max(shake,8)}
-function bossDefeated(){const b=boss,reward=500+100*b.level+(save.skin==='gold'?100:0);spawnRewardCoins(b,reward);bonus+=PTS.boss;bossKills++;popup(W/2,H*.5,`+${PTS.boss.toLocaleString()}`,'#fff',40);
+function bossDefeated(){const b=boss,reward=500+100*b.level+(save.skin==='gold'?100:0);spawnRewardCoins(b,reward);bonus+=PTS.boss;bossKills++;tally('bosses');popup(W/2,H*.5,`+${PTS.boss.toLocaleString()}`,'#fff',40);
  save.bossWins=save.bossWins||{};save.bossWins[stage.id]=(save.bossWins[stage.id]||0)+1;persist();
  announce('BOSS DEFEATED!',`+${reward} COINS`,'record','trophy');confetti(50);gameSound.effect('record');sayVoice('win',{force:true,delay:.3});b.hidden=true;b.shots=[];setPhase('done')}
 function endBoss(){boss=null;nextBossTime=flightTime+BOSS_INTERVAL;nextObstacle=alt+H/worldScale*.95;prevLedge={a:nextObstacle-300,c:.5};coinCursor=Math.max(coinCursor,nextObstacle-260)}
@@ -282,3 +282,6 @@ const FATALITIES={
    f.at(.72,()=>{burst(b.x,b.y,44,{type:'shard',colors:['#ffd23f','#ffe680','#c98a00'],speed:[150,420],size:[6,12],life:[.8,1.3],gravity:500});burst(b.x,b.y,18,{type:'star',colors:['#fff','#ffe680'],speed:[100,300],size:[5,9],life:[.5,1]});popup(b.x,b.y-70,'SHATTER!','#ffd23f',56);shake=Math.max(shake,20);flash=.5;flashColor='#ffe680';gameSound.effect('boom')})},
   draw(p,b,f){const bx=x*W,by=balloonY()-52;if(p>.05&&p<.42){const w=14+Math.sin(p*60)*3;ctx.save();ctx.lineCap='round';ctx.strokeStyle='rgba(255,210,63,.4)';ctx.lineWidth=w*2.2;line(bx,by,b.x,b.y);ctx.strokeStyle='#ffe680';ctx.lineWidth=w;line(bx,by,b.x,b.y);ctx.strokeStyle='#fff';ctx.lineWidth=w*.3;line(bx,by,b.x,b.y);ctx.fillStyle='#fff';for(let i=0;i<5;i++){const q=(p*4+i/5)%1;star(bx+(b.x-bx)*q+Math.sin(i*3)*10,by+(b.y-by)*q,5,2,4);ctx.fill()}ctx.restore()}
    if(p>=.45&&p<.72){const k=(p-.45)/.27;ctx.save();ctx.strokeStyle=INK;ctx.lineWidth=3;for(let i=0;i<5;i++){let cx=b.x,cy=b.y;ctx.beginPath();ctx.moveTo(cx,cy);const a=i*1.26+.3;for(let j=1;j<=4&&j/4<=k+.01;j++){cx+=Math.cos(a+(j%2?.4:-.4))*24*b.scale;cy+=Math.sin(a+(j%2?.4:-.4))*24*b.scale;ctx.lineTo(cx,cy)}ctx.stroke()}ctx.restore()}}}};
+// Season skins borrow the fatality of the skin they grew out of, under their own name.
+FATALITIES.prism={...FATALITIES.diamond,name:'RAINBOW SHATTER'};
+FATALITIES.starlight={...FATALITIES.galaxy,name:'SUPERNOVA'};

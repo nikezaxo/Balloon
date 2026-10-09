@@ -1,7 +1,7 @@
 # Rebuilds audio/voices/: speaks every line with the open-source Kokoro model (kokoro-onnx), then gives each
 # character its cartoon voice with ffmpeg (rubberband pitch shift, growl, robot, chorus, echo).
 # Usage: pip install kokoro-onnx soundfile; download kokoro-v1.0.int8.onnx and voices-v1.0.bin from the
-# kokoro-onnx releases into this folder; run: python make_voices.py ../audio/voices
+# kokoro-onnx releases into this folder; run: python make_voices.py ../audio/voices [only these characters]
 # Keep the lines here in sync with VOICE_LINES in voices.js.
 # Generates cartoon voice clips: Kokoro speech, then per-character ffmpeg processing.
 import json, os, subprocess, sys
@@ -24,6 +24,8 @@ CHARS = {
  'dragon':  ('am_fenrir', 1.05, 0.8, 'tremolo=f=28:d=0.3,asoftclip=type=tanh,aecho=0.8:0.5:70:0.2'),
  'unicorn': ('af_kore', 1.1, 1.52, 'chorus=0.6:0.9:40|55:0.3|0.25:0.3|0.4:3|2'),
  'diamond': ('bf_emma', 1.05, 1.12, 'flanger=delay=2:depth=2:speed=0.4'),
+ 'prism':   ('af_nova', 1.08, 1.3, 'aphaser=type=t:speed=0.7,chorus=0.6:0.9:35|50:0.3|0.25:0.3|0.4:2.5|1.8'),
+ 'starlight': ('bm_fable', 0.95, 0.9, 'chorus=0.5:0.9:50|70:0.35|0.3:0.25|0.35:1.5|1,aecho=0.8:0.6:150:0.18'),
  'boss_sky':      ('am_fenrir', 0.95, 0.7, 'aecho=0.8:0.6:110:0.16,lowpass=f=4500'),
  'boss_jungle':   ('am_onyx', 0.95, 0.66, 'tremolo=f=30:d=0.4,asoftclip=type=tanh,lowpass=f=3000'),
  'boss_cave':     ('bf_isabella', 1.05, 1.3, 'flanger=delay=3:depth=4:speed=1.5,aecho=0.8:0.5:80:0.14'),
@@ -45,6 +47,8 @@ L = {
  'dragon':  ["I am the dragon! Roar!","Spread your wings!","Dragon fire!",["Burn!","Roasted!"],"Grr! My scales!","Shiny! Mine!","Dragon breath!","Bow to the dragon!","My fire... is out...","Rise from the ashes!"],
  'unicorn': ["Hello, sparkles!","Rainbow, go!","Sparkle speed!",["Magic poke!","Sparkle bonk!"],"Eek! My mane!","So sparkly!","Rainbow blast!","Magic always wins!","My rainbow... faded...","Sparkles are back!"],
  'diamond': ["Shine bright, like a diamond.","Brilliant!","Crystal rush!",["Shatter!","Too hard for you!"],"Hey! A scratch!","Flawless!","Diamond storm!","Unbreakable!","Cracked...","Polished and perfect!"],
+ 'prism':   ["Prism power! Taste the rainbow light!","Light speed!","Full spectrum!",["Rainbow beam!","Blinded by the light!"],"Hey! My facets!","Pure light!","Rainbow shatter!","Light always wins!","My light... is fading...","Shining again!"],
+ 'starlight': ["I am the Star Legend!","Rise, starlight!","Supernova!",["Starfall!","Bow to the legend!"],"You dare touch a legend?","Another star. Of course.","Supernova strike!","Legends never lose!","Even legends... fall...","A legend never dies!"],
 }
 BOSS = {'sky':"Feel the thunder! Ha ha ha!",'jungle':"You dare enter my jungle?",'cave':"Welcome to my cave, little balloon!",'factory':"Target acquired. Prepare to be crushed.",'space':"Earthling! Surrender now!",'universe':"I will swallow your stars!"}
 MOOD_SPEED = {'hit':1.12,'oof':1.1,'fatality':1.05,'die':0.85,'tired':0.8}
@@ -68,7 +72,9 @@ def make(char, ev, i, text):
     subprocess.run(['ffmpeg','-y','-loglevel','error','-i',mid,'-ac','1','-ar','24000','-c:a','libmp3lame','-b:a','40k',out], check=True)
     os.remove(mid)
     os.remove(tmp); return out
+ONLY = set(sys.argv[2:])
 for char, texts in L.items():
+    if ONLY and char not in ONLY: continue
     lines[char] = {}
     for ev, t in zip(EV, texts):
         variants = t if isinstance(t, list) else [t]
@@ -76,9 +82,10 @@ for char, texts in L.items():
         for i, txt in enumerate(variants):
             make(char, ev, i, txt); lines[char][ev].append(txt)
     print(char, flush=True)
-for st, taunt in BOSS.items():
+for st, taunt in ({} if ONLY else BOSS).items():
     c = 'boss_'+st; lines['boss-'+st] = {}
     for ev, txt in [('taunt',taunt),('tired',"I need... a break..."),('defeat',"Nooo! Impossible!")]:
         make(c, ev, 0, txt); lines['boss-'+st][ev] = [txt]
     print(c, flush=True)
-json.dump(lines, open(os.path.join(OUT,'lines.json'),'w'), indent=0)
+if not ONLY: json.dump(lines, open(os.path.join(OUT,'lines.json'),'w'), indent=0)
+else: print(json.dumps(lines, separators=(',',':')))

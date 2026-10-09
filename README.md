@@ -16,6 +16,7 @@ rope and climb as high as you can.
 - online.js: Google sign-in, cloud save, public profiles, worldwide and weekly leaderboards and the weekly tournament
 - cosmetics.js: profile avatars, avatar frames and the gold name, and the profile screen
 - clans.js: clans (create, find, join, requests, roles, settings) and player profile cards
+- season.js: monthly seasons, ranks, season points, daily and season tasks, rewards and the Season and Tasks screens
 - firebase-config.js: your Firebase project config (online play is off while it is empty)
 - firestore.rules: security rules to paste into Firebase
 
@@ -40,6 +41,8 @@ fonts load from Google Fonts, with system fallbacks.
 - Under the stage card: your avatar (opens your PROFILE), the orange WEEKLY TOURNAMENT
   banner (high scores; it reads HIGH SCORES while online play is off) and the green CLAN
   button. The Google button at the top signs you in, then shows your avatar.
+- Below that: TASKS (today's progress, with a red dot when a reward is ready to claim) and
+  your SEASON rank badge with your season points.
 - STORE sells balloon skins and extra lives; BOOSTS explains the power-ups.
 Your coins and lives are shown at the top. On wide screens the action stays in a
 centred column framed by side walls. All icons are cartoon SVGs in icons.js.
@@ -66,13 +69,15 @@ Every balloon has its own cartoon voice and says short English lines in a funny,
 way: when you pick it in the store, cut the rope, boost, hit something, lose your shield, earn
 a star, start a fatality, beat a boss, pop and revive. Examples: Classic "Wheee! Here we go!",
 Gumball (chipmunk squeak) "Hee hee! I'm Gumball!", Toy Robot "Turbo mode, activated!",
-Monster (deep growl) "Mega chomp!", Golden King "Long live the king!". Bosses have a taunt,
+Monster (deep growl) "Mega chomp!", Golden King "Long live the king!", Starlight "I am the
+Star Legend!". Bosses have a taunt,
 a tired line and "Nooo! Impossible!". The words also pop up as a bubble above the balloon.
 
 The lines are pre-made clips in audio/voices/<character>/ (about 1.5 MB, mp3). They were
 spoken by the open-source Kokoro speech model and then turned into cartoon voices with
 ffmpeg: chipmunk pitch shifts, growls, a robot filter, chorus and echo, each character
-with its own settings. Only the clips for your skin and the stage boss load, in the
+with its own settings (tools/make_voices.py; add character names after the output folder to
+remake only those). Only the clips for your skin and the stage boss load, in the
 background, once sound is on. Until a clip has loaded, or if it can't load, a small
 synthesised cartoon voice is used instead (also used for birds, bats, monkeys and drones).
 A deep, dark announcer (an octave-dropped voice with distortion and a cavernous echo,
@@ -121,7 +126,7 @@ Switching it on (free Firebase plan, about 10 minutes):
    Then Authentication > Settings > Authorized domains > Add domain: nikezaxo.github.io
 4. Build > Firestore Database > Create database (production mode, any location).
    Open its Rules tab, paste the contents of firestore.rules and Publish. Publish it again
-   whenever firestore.rules changes (profiles and clans need the current version).
+   whenever firestore.rules changes (profiles, clans and seasons need the current version).
    tools/rules.test.mjs tests the rules against the Firestore emulator.
 5. Put the config into firebase-config.js, for example
    `const FIREBASE_CONFIG={apiKey:'...',authDomain:'...',projectId:'...',appId:'...'};`
@@ -135,10 +140,56 @@ Bear, Froggy, Bot, Balloon) and four frames (Classic, Wood, Cloud, Leafy) are fr
 ones cost gems: avatars Phoenix and Ghost (150), Alien (200), Dragon (250) and Lion King (300);
 frames Golden Laurel (200), Inferno and Rainbow (250), Thunder (300), Galaxy (350) and
 Diamond (400). A shimmering GOLD NAME costs 500 gems; the white name is free.
+Season frames (Bronze, Silver, Gold, Titanium and Diamond Season, Star Legend) and avatars
+(Golden Eagle, Mech Pilot, Crystal Fox, Star Legend) are only won at the end of a season.
 Tap any gem item (or the gold name) to try it on: your big avatar shows it animated with a
 PREVIEW badge and a BUY button, before you spend anything.
 When you are signed in, your avatar, frame, gold name and clan tag show to everyone: on the
 weekly and all-time boards (read from each player's profile, so they always show the newest look), in clans and on your player card (tap any player to see theirs).
+
+## Seasons and ranks
+A season is one calendar month (UTC); Season 1 is October 2026. Every run earns SEASON
+POINTS (SP): 1 per 1,000 score (up to 150), 5 per star and 25 per boss defeated. Tasks add
+more. SP never go down during a season and start again from zero in the next one.
+- Ranks, lowest to highest: METAL, BRONZE, SILVER, GOLD, TITANIUM and DIAMOND, each with
+  classes V, IV, III, II and I (Metal V is the start, Diamond I needs 7,750 SP). Each class
+  needs more points the higher the tier (Metal 100 SP per class up to Diamond 500).
+- STAR LEGEND, the final rank, is only for the global top 1,000: past Diamond I (8,250 SP)
+  and in the season's top 1,000 players.
+- Reaching a new class pays coins right away (25 in Metal up to 160 in Diamond); reaching a
+  new tier also pays gems (3, 5, 8, 12 and 20), and becoming a Star Legend pays 500 coins and
+  30 gems.
+- END-OF-SEASON REWARDS go to everyone who scored that season, by the tier they finished in,
+  and include the special items of every tier below:
+
+  | Final rank | Coins | Gems | Special items |
+  |---|---|---|---|
+  | Metal | 200 | 3 | |
+  | Bronze | 400 | 8 | Bronze Season frame |
+  | Silver | 700 | 15 | Silver Season frame |
+  | Gold | 1,000 | 25 | Gold Season frame, Golden Eagle avatar |
+  | Titanium | 1,500 | 40 | Titanium Season frame, Mech Pilot avatar |
+  | Diamond | 2,500 | 60 | Diamond Season frame, Crystal Fox avatar, PRISM balloon skin |
+  | Star Legend | 4,000 | 120 | Star Legend frame and avatar, STARLIGHT balloon skin |
+
+  Season items can't be bought: they show a trophy in the profile and store, and you can
+  still try them on to see them.
+- The SEASON screen shows your rank badge, points and progress, and a THIS SEASON / LAST
+  SEASON toggle with the global ranking of either season (avatars, names and rank badges),
+  plus the REWARDS list. After a season ends, the next time you open the game it shows your
+  final rank and pays the rewards (a Star Legend's final place is checked online).
+- When signed in, your season points are saved to seasons/{S#}/players/{uid} in Firestore.
+
+## Tasks
+- DAILY: three tasks a day (the same for everyone, new at midnight UTC), such as flying a
+  distance in one run, collecting coins, perfect coin rows, engine boosts, smashes, close
+  calls, stars, power-ups, runs or defeating a boss. Each pays coins and SP (some gems), and
+  finishing all three pays a bonus of 100 coins, 50 SP and 2 gems.
+- SEASON: ten big goals for the whole season (50 runs, 150,000 m in total, 3,000 coins,
+  100 perfect rows, 30 engine boosts, 60 stars, 3 bosses, 10,000 m in one run, 20 daily tasks,
+  300 smashes) worth 200 to 300 SP plus coins or gems.
+- Progress counts while you fly ("TASK DONE!" pops up) and on the results screen, which also
+  shows the SP the run earned and any rank up. Open TASKS and tap CLAIM to collect.
 
 ## Clans
 - CREATE A CLAN costs 100 gems: pick a name, a 2 to 5 letter tag, a description, a badge,
@@ -151,7 +202,7 @@ weekly and all-time boards (read from each player's profile, so they always show
   disband it.
 - Clan trophies add up members' best scores when they join plus every new personal best
   they set while in the clan. Your clan tag shows before your name everywhere.
-These features need the updated firestore.rules published in Firebase (see Online high scores).
+These features, and the season ranking, need the updated firestore.rules published in Firebase (see Online high scores).
 
 ## Boss fights
 Every 5 minutes of flying (BOSS_INTERVAL in bosses.js; a BOSS timer counts down in the HUD) the stage boss arrives:
@@ -226,7 +277,10 @@ boss; P or Escape pauses.
   Ninja, Galaxy and Golden King for coins, and three MYTHIC skins sold only for gems:
   Fire Dragon (30 gems, Dragon Fire pose, Dragon Breath fatality), Rainbow Unicorn
   (50 gems, Rainbow Dash, Rainbow Blast) and Diamond (80 gems, Crystal Shine, Diamond Storm).
-- Gems are won in the weekly tournament's top 10 and shown next to your coins. Each has its own colours, decorations that turn
+- Two SEASON skins are never sold, only won as end-of-season rewards: PRISM (Diamond: rainbow
+  crystal, Rainbow Flash pose, rainbow crystal trail) and STARLIGHT (Star Legend: night-sky
+  balloon with a halo of stars, Supernova pose, starlight trail). Both have their own voice.
+- Gems are won in the weekly tournament's top 10, from tasks and from seasons, and shown next to your coins. Each has its own colours, decorations that turn
   with the balloon, and some have their own face and accessories. In the store
   every skin's card moves in its own style with its own effect (bouncing gumball with
   bubbles, wobbling clown with confetti, jerky robot with sparks, spinning

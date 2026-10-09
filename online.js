@@ -7,6 +7,7 @@
 //   players/{uid}                cloud save           {save, at}
 //   profiles/{uid}               public profile       {name, avatar, frame, gold, clanId, clanTag, clanName, best, skin, at}
 //   clans/{id}, clans/{id}/members/{uid}, clans/{id}/requests/{uid}   clans (see clans.js)
+//   seasons/{S#}/players/{uid}   season points      {name, sp, avatar, frame, gold, clan, at}; seasons are months (see season.js)
 const online=(()=>{
  const SDK='https://www.gstatic.com/firebasejs/12.19.0/',TOP=50;
  // Weekly tournament prizes by final rank: [rank, coins, gems]. Gems only go to the top 10.
@@ -21,7 +22,7 @@ const online=(()=>{
  const clean=s=>String(s||'').replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim().slice(0,16);
  // First name and last initial unless the player picked a nickname.
  function displayName(){if(save.nick)return clean(save.nick)||'Player';const parts=clean(user&&user.displayName).split(' ').filter(Boolean);return parts.length?clean(parts[0]+(parts.length>1?` ${parts[parts.length-1][0]}.`:'')):'Player'}
- function changed(){refreshOnline()}
+ function changed(){refreshOnline();if((status==='out'||status==='error')&&typeof seasonCheck==='function')seasonCheck()}
  function start(){if(!configured()||loading)return loading;status='loading';
   loading=(async()=>{try{const [A,U,F]=await Promise.all(['firebase-app','firebase-auth','firebase-firestore'].map(n=>import(SDK+n+'.js')));const app=A.initializeApp(FIREBASE_CONFIG);fb={U,F,auth:U.getAuth(app),db:F.getFirestore(app)};status='out';
    U.onAuthStateChanged(fb.auth,u=>{user=u;status=u?'in':'out';best.all=0;best.week=0;best.weekId='';changed();if(u)signedIn().catch(e=>console.warn('Online sync failed',e))});U.getRedirectResult(fb.auth).catch(()=>{})}
@@ -33,7 +34,7 @@ const online=(()=>{
  const ref=(...path)=>fb.F.doc(fb.db,...path);
  async function signedIn(){const {F}=fb,uid=user.uid;
   const cloud=await F.getDoc(ref('players',uid));if(cloud.exists()){try{mergeSave(JSON.parse(cloud.data().save))}catch{}}pushSave();
-  await loadBests();await verifyClan().catch(e=>console.warn('Clan check failed',e));
+  await loadBests();await verifyClan().catch(e=>console.warn('Clan check failed',e));if(typeof seasonCheck==='function')seasonCheck();seasonPush(true);
   // Scores made on this device before signing in still count for the all-time board.
   let top=0,topStage=save.lastStage;for(const [id,v] of Object.entries(save.scores||{}))if(v>top){top=v;topStage=id}
   if(top>best.all){best.all=top;await putEntry(['leaders',uid],entry(top,topStage,save.skin)).catch(()=>{})}
@@ -52,6 +53,7 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
   const cc=cloud.cos;if(cc&&typeof cc==='object'){const c=myCos();c.own=[...new Set([...c.own,...(Array.isArray(cc.own)?cc.own:[])])].filter(id=>AVATARS[id]||FRAMES[id]);c.goldOwned=c.goldOwned||!!cc.goldOwned;if((cloud.updated||0)>=(save.updated||0)){if(AVATARS[cc.avatar])c.avatar=cc.avatar;if(FRAMES[cc.frame])c.frame=cc.frame;c.gold=!!cc.gold}}
   if((cloud.updated||0)>(save.updated||0)){if(cloud.clan&&typeof cloud.clan==='object')save.clan=cloud.clan;if(cloud.clanReq&&typeof cloud.clanReq==='object')save.clanReq=cloud.clanReq}
   save.weeklyClaimed=[...new Set([...(save.weeklyClaimed||[]),...(Array.isArray(cloud.weeklyClaimed)?cloud.weeklyClaimed:[])])].slice(-12);if(!save.nick&&cloud.nick)save.nick=clean(cloud.nick);
+  if(typeof mergeSeason==='function')try{mergeSeason(cloud)}catch(e){console.warn('Season merge failed',e)}
   try{localStorage.setItem('skybound-save',JSON.stringify(save))}catch{}refreshMeta()}
  function saved(){if(!user)return;clearTimeout(saveTimer);saveTimer=setTimeout(pushSave,3000)}
  function pushSave(){if(!user||!fb)return;fb.F.setDoc(ref('players',user.uid),{save:JSON.stringify(save),at:fb.F.serverTimestamp()}).catch(()=>{})}
@@ -75,7 +77,16 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
   jobs.push(fb.F.setDoc(ref('profiles',uid),{name:displayName(),avatar:lk.avatar,frame:lk.frame,gold:lk.gold,clanId:cl?cl.id:'',clanTag:cl?cl.tag:'',clanName:cl?cl.name:'',best:Math.floor(best.all||0),skin:String(save.skin).slice(0,12),at:fb.F.serverTimestamp()}));
   if(best.all)jobs.push(putEntry(['leaders',uid],entry(best.all,save.lastStage,save.skin)));if(best.week&&best.weekId===weekId())jobs.push(putEntry(['weekly',best.weekId,'leaders',uid],entry(best.week,save.lastStage,save.skin)));
   if(cl)jobs.push(fb.F.updateDoc(ref('clans',cl.id,'members',uid),{name:displayName(),avatar:lk.avatar,frame:lk.frame,gold:lk.gold}));
-  await Promise.all(jobs.map(j=>j.catch(e=>console.warn('Profile not saved',e))))}
+  jobs.push(seasonPush(true));await Promise.all(jobs.map(j=>j.catch(e=>console.warn('Profile not saved',e))))}
+ // Season ranking: each player's season points with their look; a count query finds a player's place.
+ let seasonTimer=0,seasonSent='';
+ function seasonSync(){if(!user||!fb)return;clearTimeout(seasonTimer);seasonTimer=setTimeout(()=>seasonPush(false),1500)}
+ async function seasonPush(force){if(!user||!fb||typeof seasonState!=='function')return;const s=seasonState(),key=s.id+':'+s.sp;if(!s.sp||(!force&&seasonSent===key))return;const lk=myLook();
+  try{await fb.F.setDoc(ref('seasons',s.id,'players',user.uid),{name:displayName(),sp:Math.floor(s.sp),avatar:lk.avatar,frame:lk.frame,gold:lk.gold,clan:save.clan?save.clan.tag:'',at:fb.F.serverTimestamp()});seasonSent=key}
+  catch(e){console.warn('Season points not saved',e);return}
+  if(s.sp>=LEGEND_MIN){const r=await seasonRank(s.id,s.sp);if(r!==null)seasonLegend(r<=LEGEND_TOP,s.id)}else if(s.legend)seasonLegend(false,s.id)}
+ async function seasonTop(id){if(!fb)return [];const snap=await fb.F.getDocs(fb.F.query(fb.F.collection(fb.db,'seasons',id,'players'),fb.F.orderBy('sp','desc'),fb.F.limit(TOP)));return snap.docs.map(d=>({uid:d.id,...d.data()}))}
+ async function seasonRank(id,sp){if(!fb||!sp)return null;try{const snap=await fb.F.getCountFromServer(fb.F.query(fb.F.collection(fb.db,'seasons',id,'players'),fb.F.where('sp','>',sp)));return snap.data().count+1}catch{return null}}
  // Current looks for a list of players, read from their public profiles (30 per query, cached for a minute).
  const lookCache=new Map();
  async function looks(uids){if(!fb)return {};const now=Date.now(),need=[...new Set(uids)].filter(u=>u&&(!lookCache.has(u)||now-lookCache.get(u).t>60000));
@@ -88,7 +99,7 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
   if(save.clan){const [m,c]=await Promise.all([fb.F.getDoc(ref('clans',save.clan.id,'members',uid)),fb.F.getDoc(ref('clans',save.clan.id))]);if(!m.exists()||!c.exists()){save.clan=null}else{const d=c.data();save.clan={id:save.clan.id,name:d.name,tag:d.tag,role:m.data().role}}changedClan=true}
   if(save.clanReq&&!save.clan){const id=save.clanReq.id,[m,r,c]=await Promise.all([fb.F.getDoc(ref('clans',id,'members',uid)),fb.F.getDoc(ref('clans',id,'requests',uid)),fb.F.getDoc(ref('clans',id))]);if(m.exists()&&c.exists()){const d=c.data();save.clan={id,name:d.name,tag:d.tag,role:m.data().role};save.clanReq=null}else if(!r.exists()||!c.exists())save.clanReq=null;changedClan=true}
   if(changedClan){persist();refreshMeta()}}
- return {configured,start,signIn,signOut,submit,top,saved,rename,timeLeft,weekId,displayName,REWARDS,publish,publishNow,getProfile,looks,verifyClan,get api(){return fb&&user?{F:fb.F,db:fb.db,ref,uid:user.uid}:null},get status(){return status},get user(){return user},get best(){return best},get reward(){return reward},takeReward(){const r=reward;reward=null;return r}};
+ return {configured,start,signIn,signOut,submit,top,saved,rename,seasonSync,seasonTop,seasonRank,timeLeft,weekId,displayName,REWARDS,publish,publishNow,getProfile,looks,verifyClan,get api(){return fb&&user?{F:fb.F,db:fb.db,ref,uid:user.uid}:null},get status(){return status},get user(){return user},get best(){return best},get reward(){return reward},takeReward(){const r=reward;reward=null;return r}};
 })();
 
 // ---- High score screens ----
