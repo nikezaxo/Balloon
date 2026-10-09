@@ -70,10 +70,12 @@ way: when you pick it in the store, cut the rope, boost, hit something, lose you
 a star, start a fatality, beat a boss, pop and revive. Examples: Classic "Wheee! Here we go!",
 Gumball (chipmunk squeak) "Hee hee! I'm Gumball!", Toy Robot "Turbo mode, activated!",
 Monster (deep growl) "Mega chomp!", Golden King "Long live the king!", Starlight "I am the
-Star Legend!". Bosses have a taunt,
+Star Legend!", Sly Fox "Nobody suspects the fox.", Grumpy Wolf "Don't make me huff and puff.".
+The four talking characters (Sleepy Dog, Chick Trio, Sly Fox, Grumpy Wolf) have two or three lines
+for each moment plus eight "chat" lines they say on their own while flying. Bosses have a taunt,
 a tired line and "Nooo! Impossible!". The words also pop up as a bubble above the balloon.
 
-The lines are pre-made clips in audio/voices/<character>/ (about 1.5 MB, mp3). They were
+The lines are pre-made clips in audio/voices/<character>/ (about 3 MB, mp3). They were
 spoken by the open-source Kokoro speech model and then turned into cartoon voices with
 ffmpeg: chipmunk pitch shifts, growls, a robot filter, chorus and echo, each character
 with its own settings (tools/make_voices.py; add character names after the output folder to
@@ -288,11 +290,19 @@ boss; P or Escape pauses.
 - Picking a card plays that skin's own selection pose (tap the big card to replay it):
   Classic – Heart Hug, Gumball – Bubble Pop, Funny Clown – Juggle & Honk, Toy Robot –
   Robot Dance with laser eyes, Watermelon – Melon Twister, Monster – Monster Roar,
-  Ninja – Shadow Clones, Galaxy – Cosmic Warp, Golden King – King's Treasure.
+  Ninja – Shadow Clones, Galaxy – Cosmic Warp, Golden King – King's Treasure, Sleepy Dog –
+  Nap Time, Chick Trio – Chick Parade, Sly Fox – Sneaky Scheme, Grumpy Wolf – Huff and Puff.
 - Skins: Classic (free), Gumball, Funny Clown, Toy Robot, Watermelon, Monster,
   Ninja, Galaxy and Golden King for coins, and three MYTHIC skins sold only for gems:
   Fire Dragon (30 gems, Dragon Fire pose, Dragon Breath fatality), Rainbow Unicorn
   (50 gems, Rainbow Dash, Rainbow Blast) and Diamond (80 gems, Crystal Shine, Diamond Storm).
+- Four TALKING CHARACTERS for coins, original characters each with 35 voice lines: Sleepy Dog
+  (350: floppy ears, eye patch and nightcap; trails Zzz, bones and puffs; Sleepy Slam fatality),
+  Chick Trio (450: a chick balloon with two baby chicks flying beside it; feathers, music notes
+  and seeds; Peck Peck Peck), Sly Fox (600: pointy ears, white muzzle, whiskers and a bushy tail;
+  feathers; Feather Frenzy) and Grumpy Wolf (800: ragged ears, heavy brows and fangs; wind puffs
+  and blown leaves; Big Bad Blow). Besides their lines for every moment, they chat on their own
+  every 13 to 22 seconds while flying (not during boss fights), with a speech bubble.
 - Two SEASON skins are never sold, only won as end-of-season rewards: PRISM (Diamond: rainbow
   crystal, Rainbow Flash pose, rainbow crystal trail) and STARLIGHT (Star Legend: night-sky
   balloon with a halo of stars, Supernova pose, starlight trail). Both have their own voice.

@@ -240,7 +240,7 @@ function drawBalloonBody(skin,turn,face,blinking){const gores=skin.gores;
   const gore=Math.floor((((mo+turn)%TAU+TAU)%TAU)/(TAU/(gores.length>2?gores.length*2:10)));
   ctx.fillStyle=gores[gore%gores.length][light>.62?0:light>.28?1:2];
   ctx.beginPath();[vertex(lat,lon),vertex(lat+Math.PI/rows,lon),vertex(lat+Math.PI/rows,lon+Math.PI/cols),vertex(lat,lon+Math.PI/cols)].forEach((v,i)=>i?ctx.lineTo(v.x,v.y):ctx.moveTo(v.x,v.y));ctx.closePath();ctx.fill();ctx.strokeStyle=ctx.fillStyle;ctx.lineWidth=1;ctx.stroke()}
- skinDots(skin,turn);ctx.restore();
+ skinDots(skin,turn);skinPatch(skin);ctx.restore();
  ctx.fillStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.ellipse(-14,-21,skin.gloss?6:4.5,skin.gloss?11:8.5,.5,0,TAU);ctx.fill();ctx.beginPath();ctx.arc(-7,-31,2.3,0,TAU);ctx.fill();
  drawFace(face,skin,blinking);
  ctx.strokeStyle=INK;ctx.lineWidth=3.5;ctx.lineJoin='round';ctx.stroke(BALLOON);
@@ -259,9 +259,20 @@ function drawFace(m,skin,blinking){const lx=clamp(vx*2.2+(state==='ready'||state
  else for(const s of [-1,1]){const big=skin.face==='goofy'&&s<0?1.3:1,ew=(skin.face==='ninja'?6.5:scared?7:6)*big,eh=(skin.face==='ninja'?4.5:scared?9:7.5)*open*big;ctx.fillStyle='#fff';ctx.lineWidth=2.2;ctx.beginPath();ctx.ellipse(s*9+lx*.4,-8,ew,eh,0,0,TAU);ctx.fill();ctx.stroke();
   if(open>.5){ctx.fillStyle=INK;ctx.beginPath();ctx.ellipse(s*9+lx,-7+ly,(scared?2.6:3.2)*big,Math.min(eh*.6,(scared?3.4:4.2)*big),0,0,TAU);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s*9+lx+1.2,-9+ly,1.2,0,TAU);ctx.fill()}
   if(m==='scared'){ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(s*4,-19);ctx.lineTo(s*13,-21);ctx.stroke()}}
+ // Character faces: half-closed lids for the sly fox (slanted) and the sleepy dog, heavy brows for the grumpy wolf.
+ if((skin.face==='sly'||skin.face==='sleepy')&&!scared&&open>.5&&m!=='joy'){const lid=skin.face==='sleepy'?(m==='angry'?.35:.6):.42,tilt=skin.face==='sly'?1.8:0;ctx.fillStyle=skin.gores[0][1];ctx.strokeStyle=INK;ctx.lineWidth=2.2;
+  for(const s of [-1,1]){const ex=s*9+lx*.4,y=-15.5+15*lid,outer=y-tilt,inner=y+tilt,hw=6*Math.sqrt(Math.max(0,1-((y+8)/7.5)**2))+.6;ctx.save();ctx.beginPath();ctx.ellipse(ex,-8,6,7.5,0,0,TAU);ctx.clip();ctx.beginPath();ctx.moveTo(ex-8,-17);ctx.lineTo(ex+8,-17);ctx.lineTo(ex+8,s<0?inner:outer);ctx.lineTo(ex-8,s<0?outer:inner);ctx.closePath();ctx.fill();ctx.restore();
+   ctx.beginPath();ctx.moveTo(ex-hw,s<0?outer:inner);ctx.lineTo(ex+hw,s<0?inner:outer);ctx.stroke()}}
+ if(skin.face==='grump'&&m!=='angry'&&!scared){ctx.strokeStyle=INK;ctx.lineWidth=5;for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*16,-19);ctx.lineTo(s*4,-15.5);ctx.stroke()}}
+ if(skin.face==='chick'){const ox=lx*.3,openBeak=m==='joy'||scared||m==='angry';if(m==='angry'){ctx.strokeStyle=INK;ctx.lineWidth=4;for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*15,-19);ctx.lineTo(s*4,-14);ctx.stroke()}}
+  ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.fillStyle='#ff9a1a';ctx.beginPath();ctx.moveTo(ox-6.5,0);ctx.lineTo(ox+6.5,0);ctx.lineTo(ox,openBeak?4.5:7.5);ctx.closePath();ctx.fill();ctx.stroke();
+  if(openBeak){ctx.fillStyle='#e0700a';ctx.beginPath();ctx.moveTo(ox-5,6.5);ctx.lineTo(ox+5,6.5);ctx.lineTo(ox,m==='wow'?13:11);ctx.closePath();ctx.fill();ctx.stroke()}return}
  if(m==='angry'){ctx.strokeStyle=INK;ctx.lineWidth=4.5;ctx.lineCap='round';if(skin.face==='monster'){ctx.beginPath();ctx.moveTo(-13,-24);ctx.lineTo(0,-17);ctx.lineTo(13,-24);ctx.stroke()}else for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*17,-20);ctx.lineTo(s*3,-14);ctx.stroke()}
   ctx.fillStyle='#fff';ctx.lineWidth=2.2;ctx.beginPath();ctx.roundRect(-8,2,16,8,3.5);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(-8,6);ctx.lineTo(8,6);ctx.moveTo(-3,2);ctx.lineTo(-3,10);ctx.moveTo(3,2);ctx.lineTo(3,10);ctx.stroke();return}
  ctx.lineWidth=2.3;ctx.fillStyle='#7a1030';
+ if(skin.face==='sly'&&!scared&&m!=='joy'){ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(lx*.3-7,3);ctx.quadraticCurveTo(lx*.3,7.5,lx*.3+8,0);ctx.stroke();return}
+ if(skin.face==='grump'&&!scared){const ox=lx*.3;ctx.beginPath();ctx.moveTo(ox-8,3);ctx.quadraticCurveTo(ox,m==='joy'?14:9,ox+8,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.lineWidth=1.5;for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(ox+s*6.6,3.3);ctx.lineTo(ox+s*4.4,7.8);ctx.lineTo(ox+s*2.4,3.6);ctx.closePath();ctx.fill();ctx.stroke()}return}
+ if(skin.face==='sleepy'&&!scared&&m!=='joy'){ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(lx*.3-4,5);ctx.quadraticCurveTo(lx*.3,7,lx*.3+4,5);ctx.stroke();return}
  if(scared){ctx.beginPath();ctx.ellipse(lx*.3,6,3.4,m==='wow'?5:3.8,0,0,TAU);ctx.fill();ctx.stroke()}
  else if(m==='joy'){ctx.beginPath();ctx.moveTo(-6,2);ctx.quadraticCurveTo(lx*.3,14,6,2);ctx.closePath();ctx.fill();ctx.stroke()}
  else{ctx.beginPath();ctx.arc(lx*.3,1,5,.18*Math.PI,.82*Math.PI);ctx.stroke()}
@@ -445,7 +456,7 @@ function draw(){ctx.save();const amount=calm?shake*.3:shake;if(amount>.4)ctx.tra
  ctx.restore();drawSides();ctx.restore();
  drawFlyers();drawStarFlyers();drawVignette();if(transition)drawIris();if(swapFx>0){ctx.globalAlpha=swapFx*.55;ctx.fillStyle=stage.top;ctx.fillRect(0,0,SW,H);ctx.globalAlpha=1}if(flash>0){ctx.globalAlpha=Math.min(1,flash);ctx.fillStyle=flashColor;ctx.fillRect(0,0,SW,H);ctx.globalAlpha=1}}
 function update(dt){t+=dt;spin+=dt*(.65+Math.abs(wind)*3+Math.abs(vx));if(state!=='flying')return;
- flightTime+=dt;generateCourse();coinRush();updateWeather(dt);updateCritters(dt);if(boss&&boss.wind)wind+=boss.wind.dir*.32;if(!boss&&flightTime>=nextBossTime)startBoss();
+ flightTime+=dt;if(typeof chatter==='function')chatter(dt);generateCourse();coinRush();updateWeather(dt);updateCritters(dt);if(boss&&boss.wind)wind+=boss.wind.dir*.32;if(!boss&&flightTime>=nextBossTime)startBoss();
  const direction=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0);let desired=direction*.75;if(target!==null)desired=clamp((target-x)*10,-1.8,1.8);vx+=(desired+wind-vx)*Math.min(1,dt*(target!==null?9:4));x+=vx*dt;x=clamp(x,(radius+5)/W,1-(radius+5)/W);
  // Up and down: between the HUD and the bottom of the screen; during a boss fight it stays below the boss.
  const top=(boss&&boss.phase!=='done'?H*.44:Math.max(H*.25,190))-camY(),bottom=H*.86-camY(),vdir=(keys.has('arrowdown')||keys.has('s')?1:0)-(keys.has('arrowup')||keys.has('w')?1:0);
