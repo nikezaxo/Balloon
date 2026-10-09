@@ -135,8 +135,10 @@ Bear, Froggy, Bot, Balloon) and four frames (Classic, Wood, Cloud, Leafy) are fr
 ones cost gems: avatars Phoenix and Ghost (150), Alien (200), Dragon (250) and Lion King (300);
 frames Golden Laurel (200), Inferno and Rainbow (250), Thunder (300), Galaxy (350) and
 Diamond (400). A shimmering GOLD NAME costs 500 gems; the white name is free.
+Tap any gem item (or the gold name) to try it on: your big avatar shows it animated with a
+PREVIEW badge and a BUY button, before you spend anything.
 When you are signed in, your avatar, frame, gold name and clan tag show to everyone: on the
-weekly and all-time boards, in clans and on your player card (tap any player to see theirs).
+weekly and all-time boards (read from each player's profile, so they always show the newest look), in clans and on your player card (tap any player to see theirs).
 
 ## Clans
 - CREATE A CLAN costs 100 gems: pick a name, a 2 to 5 letter tag, a description, a badge,
@@ -184,9 +186,11 @@ Monster – Mega Chomp, Ninja – Shadow Slash, Galaxy – Black Hole,
 Golden King – Midas Touch.
 
 ## Controls
-Touch/mouse: swipe across the rope to launch, then hold and drag to steer.
-Keyboard: Space plays/launches; Left/Right arrows or A/D steer; B, W, Up or
-Shift fires the boost engine; F, Space or Enter performs a fatality on a tired
+Touch/mouse: swipe across the rope to launch, then put a finger anywhere and drag: the
+balloon follows your finger's movement in every direction (left, right, up and down), so your
+finger never covers it. It stays below the HUD, above the bottom edge, and below the boss
+during a boss fight. Flying higher on the screen reaches things sooner.
+Keyboard: Space plays/launches; arrow keys or WASD move; B, E or Shift fires the boost engine; F, Space or Enter performs a fatality on a tired
 boss; P or Escape pauses.
 
 ## Coins, power-ups and boost
