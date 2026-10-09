@@ -69,5 +69,14 @@ await t('clan gone', snap.exists() ? Promise.reject(new Error('still exists')) :
 // Saves stay private
 await t('own save', assertSucceeds(setDoc(doc(A, 'players/alice'), { save: '{}', at: serverTimestamp() })));
 await t('read other save denied', assertFails(getDoc(doc(db('bob'), 'players/alice'))));
+// Season ranking
+const sp = (name, n, extra = {}) => ({ name, sp: n, ...look, clan: '', at: serverTimestamp(), ...extra });
+await t('own season entry', assertSucceeds(setDoc(doc(A, 'seasons/S1/players/alice'), sp('Alice', 900))));
+await t('season points go up', assertSucceeds(setDoc(doc(A, 'seasons/S1/players/alice'), sp('Alice', 1200))));
+await t('season points down denied', assertFails(setDoc(doc(A, 'seasons/S1/players/alice'), sp('Alice', 100))));
+await t('other season entry denied', assertFails(setDoc(doc(db('bob'), 'seasons/S1/players/alice'), sp('Bob', 5))));
+await t('bad season id denied', assertFails(setDoc(doc(A, 'seasons/2026/players/alice'), sp('Alice', 5))));
+await t('extra season field denied', assertFails(setDoc(doc(A, 'seasons/S2/players/alice'), sp('Alice', 5, { legend: true }))));
+await t('anyone reads season ranking', assertSucceeds(getDocs(query(collection(anon, 'seasons/S1/players'), orderBy('sp', 'desc'), limit(5)))));
 console.log(`${pass} passed, ${fail} failed`);
 await env.cleanup(); process.exit(fail ? 1 : 0);

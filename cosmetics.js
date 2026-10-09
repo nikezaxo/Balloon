@@ -12,7 +12,12 @@ const AVATARS={
  ghost:{name:'Ghost',gems:150,anim:true,bg:['#4a3a9a','#0c0626']},
  alien:{name:'Alien',gems:200,anim:true,bg:['#1f5a3a','#020a10']},
  dragon:{name:'Dragon',gems:250,anim:true,bg:['#7a2aa8','#1a0626']},
- lion:{name:'Lion King',gems:300,anim:true,bg:['#fff1a0','#e08a00']}};
+ lion:{name:'Lion King',gems:300,anim:true,bg:['#fff1a0','#e08a00']},
+ // Season rewards: never sold, won by finishing a season in that tier or higher.
+ eagle:{name:'Golden Eagle',season:'gold',anim:true,bg:['#fff3a0','#c98a00']},
+ pilot:{name:'Mech Pilot',season:'titanium',anim:true,bg:['#bff4ff','#1f5a6e']},
+ fox:{name:'Crystal Fox',season:'diamond',anim:true,bg:['#e8fbff','#2a7ad8']},
+ legend:{name:'Star Legend',season:'legend',anim:true,bg:['#c49aff','#2a0e5e']}};
 const FRAMES={
  basic:{name:'Classic',price:0},
  wood:{name:'Wood',price:0},
@@ -23,12 +28,20 @@ const FRAMES={
  rainbow:{name:'Rainbow',gems:250,anim:true},
  electric:{name:'Thunder',gems:300,anim:true},
  galaxy:{name:'Galaxy',gems:350,anim:true},
- diamond:{name:'Diamond',gems:400,anim:true}};
+ diamond:{name:'Diamond',gems:400,anim:true},
+ sBronze:{name:'Bronze Season',season:'bronze',anim:true},
+ sSilver:{name:'Silver Season',season:'silver',anim:true},
+ sGold:{name:'Gold Season',season:'gold',anim:true},
+ sTitan:{name:'Titanium Season',season:'titanium',anim:true},
+ sDiamond:{name:'Diamond Season',season:'diamond',anim:true},
+ legend:{name:'Star Legend',season:'legend',anim:true}};
+const SEASON_NAMES={bronze:'BRONZE',silver:'SILVER',gold:'GOLD',titanium:'TITANIUM',diamond:'DIAMOND',legend:'STAR LEGEND'};
+const seasonGoal=tier=>tier==='legend'?'Season reward: finish a season as a STAR LEGEND to win it.':`Season reward: finish a season in ${SEASON_NAMES[tier]} or higher to win it.`;
 const GOLD_NAME_PRICE=500,CLAN_PRICE=100;
 const myCos=()=>{const c=save.cos||(save.cos={own:[],avatar:'sunny',frame:'basic',gold:false,goldOwned:false});c.own=c.own||[];return c};
 // The look other players see: avatar, frame and whether the name is gold.
 const myLook=()=>{const c=myCos();return {avatar:AVATARS[c.avatar]?c.avatar:'sunny',frame:FRAMES[c.frame]?c.frame:'basic',gold:!!(c.gold&&c.goldOwned)}};
-const ownsCos=id=>{const item=AVATARS[id]||FRAMES[id];return !!item&&(!item.gems||myCos().own.includes(id))};
+const ownsCos=id=>{const item=AVATARS[id]||FRAMES[id];return !!item&&((!item.gems&&!item.season)||myCos().own.includes(id))};
 
 function face(eyeY,{eye=4.5,gap=10,smile=true,blink=false}={}){ctx.fillStyle=INK;for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*gap,eyeY,eye*.8,blink?.8:eye,0,0,TAU);ctx.fill();if(!blink){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s*gap+1.3,eyeY-1.6,1.4,0,TAU);ctx.fill();ctx.fillStyle=INK}}
  if(smile){ctx.strokeStyle=INK;ctx.lineWidth=2.6;ctx.lineCap='round';ctx.beginPath();ctx.arc(0,eyeY+5,7,.2*Math.PI,.8*Math.PI);ctx.stroke()}}
@@ -56,7 +69,23 @@ const AVATAR_ART={
   const g=.6+.4*Math.sin(t*4);for(const s of [-1,1]){ctx.fillStyle=`rgba(255,220,60,${g})`;ctx.beginPath();ctx.ellipse(s*8,-5,5,3.5,s*.3,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle=INK;ctx.fillRect(s*8-.8,-8,1.6,6)}},
  lion(t){for(let i=0;i<14;i++){const a=i*TAU/14,w=1+.08*Math.sin(t*3+i);ctx.fillStyle=i%2?'#c25a00':'#e07a10';ctx.beginPath();ctx.ellipse(Math.cos(a)*20*w,Math.sin(a)*20*w+3,9,13,a+Math.PI/2,0,TAU);ctx.fill();ctx.stroke()}
   blob(0,4,17,'#ffc44d');ctx.fillStyle='#fff3d0';ctx.beginPath();ctx.ellipse(0,11,9,6,0,0,TAU);ctx.fill();face(1,{gap:7,eye:3,smile:false});ctx.fillStyle=INK;ctx.beginPath();ctx.moveTo(-3,7);ctx.lineTo(3,7);ctx.lineTo(0,10);ctx.closePath();ctx.fill();
-  ctx.save();ctx.translate(0,-17);ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.moveTo(-11,4);ctx.lineTo(-13,-8);ctx.lineTo(-5,-2);ctx.lineTo(0,-11);ctx.lineTo(5,-2);ctx.lineTo(13,-8);ctx.lineTo(11,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();const sp=Math.max(0,Math.sin(t*2.5));ctx.globalAlpha=sp;ctx.fillStyle='#fff';star(9,-24,5*sp,1.2,4);ctx.fill();ctx.globalAlpha=1}};
+  ctx.save();ctx.translate(0,-17);ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.moveTo(-11,4);ctx.lineTo(-13,-8);ctx.lineTo(-5,-2);ctx.lineTo(0,-11);ctx.lineTo(5,-2);ctx.lineTo(13,-8);ctx.lineTo(11,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();const sp=Math.max(0,Math.sin(t*2.5));ctx.globalAlpha=sp;ctx.fillStyle='#fff';star(9,-24,5*sp,1.2,4);ctx.fill();ctx.globalAlpha=1},
+ eagle(t){const f=Math.sin(t*5)*.3;for(const s of [-1,1]){ctx.save();ctx.translate(s*14,8);ctx.rotate(s*(.5+f));ctx.fillStyle='#a8641a';ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(s*14,-14,s*26,-6);ctx.lineTo(s*22,0);ctx.lineTo(s*26,4);ctx.lineTo(s*20,8);ctx.lineTo(s*22,12);ctx.quadraticCurveTo(s*10,12,0,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}
+  blob(0,14,15,'#b8701e');ctx.fillStyle='#fff8e8';ctx.beginPath();ctx.ellipse(0,-4,17,16,0,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.moveTo(-6,0);ctx.quadraticCurveTo(0,-4,8,0);ctx.quadraticCurveTo(10,8,3,12);ctx.quadraticCurveTo(4,6,-6,4);ctx.closePath();ctx.fill();ctx.stroke();
+  for(const s of [-1,1]){ctx.fillStyle=INK;ctx.beginPath();ctx.arc(s*7,-7,2.8,0,TAU);ctx.fill();ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(s*12,-14);ctx.lineTo(s*3,-10);ctx.stroke()}ctx.lineWidth=2.5;
+  const sp=Math.max(0,Math.sin(t*2.2));ctx.globalAlpha=sp;ctx.fillStyle='#fff';star(-12,-20,5*sp,1.2,4);ctx.fill();ctx.globalAlpha=1},
+ pilot(t){ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(14,-20);ctx.lineTo(19,-30);ctx.stroke();blob(19,-31,3.2,Math.sin(t*6)>0?'#ff4d5e':'#7ef08f');
+  ctx.fillStyle='#5fb8c8';ctx.beginPath();ctx.arc(0,0,23,Math.PI*1.05,Math.PI*1.95);ctx.lineTo(23,14);ctx.quadraticCurveTo(0,26,-23,14);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#d8fbff';for(const s of [-1,1]){ctx.beginPath();ctx.roundRect(s*22-(s>0?0:6),-4,6,14,3);ctx.fill();ctx.stroke()}
+  ctx.fillStyle='#14324a';ctx.beginPath();ctx.roundRect(-17,-10,34,15,7);ctx.fill();ctx.stroke();ctx.save();ctx.beginPath();ctx.roundRect(-17,-10,34,15,7);ctx.clip();const g=((t*.7)%1.6-.3)*50-25;ctx.fillStyle='rgba(160,240,255,.55)';ctx.beginPath();ctx.moveTo(g,-10);ctx.lineTo(g+8,-10);ctx.lineTo(g-2,5);ctx.lineTo(g-10,5);ctx.closePath();ctx.fill();ctx.restore();
+  ctx.fillStyle='#5ff0ff';for(const s of [-1,1]){ctx.beginPath();ctx.arc(s*7,-3,2.6+Math.sin(t*4)*.5,0,TAU);ctx.fill()}ctx.fillStyle='#1f5a6e';ctx.fillRect(-8,12,16,3)},
+ fox(t){for(const s of [-1,1]){ctx.fillStyle='#bff0ff';ctx.beginPath();ctx.moveTo(s*6,-14);ctx.lineTo(s*22,-30);ctx.lineTo(s*21,-6);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ffd6f5';ctx.beginPath();ctx.moveTo(s*10,-14);ctx.lineTo(s*19,-24);ctx.lineTo(s*18,-11);ctx.closePath();ctx.fill()}
+  ctx.fillStyle='#8adfff';ctx.beginPath();ctx.moveTo(-23,-8);ctx.quadraticCurveTo(-22,-20,0,-20);ctx.quadraticCurveTo(22,-20,23,-8);ctx.quadraticCurveTo(20,10,0,20);ctx.quadraticCurveTo(-20,10,-23,-8);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#ffffff';ctx.beginPath();ctx.moveTo(-12,4);ctx.quadraticCurveTo(0,0,12,4);ctx.quadraticCurveTo(6,16,0,20);ctx.quadraticCurveTo(-6,16,-12,4);ctx.fill();ctx.strokeStyle='rgba(42,122,216,.5)';ctx.lineWidth=1.2;for(const [a,b,c,d] of [[-23,-8,-8,-2],[23,-8,8,-2],[0,-20,0,-8]]){ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke()}ctx.strokeStyle=INK;ctx.lineWidth=2.5;
+  const blink=(t%3)<.12;for(const s of [-1,1]){ctx.fillStyle=INK;ctx.beginPath();ctx.ellipse(s*8,-5,3,blink?.8:4,s*.3,0,TAU);ctx.fill()}blob(0,12,2.6,INK);
+  const sp=Math.max(0,Math.sin(t*2.6));ctx.globalAlpha=sp;ctx.fillStyle='#fff';star(14,-16,6*sp,1.4,4);ctx.fill();ctx.globalAlpha=1},
+ legend(t){ctx.save();ctx.rotate(t*.4);for(let i=0;i<12;i++){ctx.rotate(TAU/12);ctx.fillStyle=i%2?'rgba(255,230,128,.5)':'rgba(255,255,255,.35)';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(40,-4);ctx.lineTo(40,4);ctx.closePath();ctx.fill()}ctx.restore();
+  const p=1+.06*Math.sin(t*3);ctx.save();ctx.scale(p,p);ctx.fillStyle='#ffe680';star(0,4,24,11,5);ctx.fill();ctx.stroke();ctx.restore();face(3,{gap:6,eye:3});cheeks(9,10);
+  ctx.save();ctx.translate(0,-21);ctx.fillStyle='#c46aff';ctx.beginPath();ctx.moveTo(-9,4);ctx.lineTo(-11,-6);ctx.lineTo(-4,-1);ctx.lineTo(0,-9);ctx.lineTo(4,-1);ctx.lineTo(11,-6);ctx.lineTo(9,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}};
 // Frame art around the disc.
 const FRAME_ART={
  basic(){frameRing('#ffffff','#dfe6f5')},
@@ -70,10 +99,24 @@ const FRAME_ART={
  electric(t){frameRing('#3d7bff','#14246a');ctx.strokeStyle='#bff4ff';ctx.lineWidth=2.2;ctx.lineCap='round';const seed=Math.floor(t*14);for(let k=0;k<3;k++){const a0=hash(seed*3.1+k)*TAU;ctx.beginPath();for(let j=0;j<=6;j++){const a=a0+j*.12,r=41.5+(hash(seed+k*7+j)-.5)*12;j?ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r):ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.stroke()}frameGlow('#5ff0ff',.35+.25*Math.sin(t*9))},
  galaxy(t){frameRing('#3a1a7a','#0c0626');ctx.fillStyle='#fff';for(let i=0;i<10;i++){const a=t*.6+i*TAU/10,tw=.4+.6*Math.abs(Math.sin(t*3+i));ctx.globalAlpha=tw;star(Math.cos(a)*42,Math.sin(a)*42,2.5+tw*2,.8,4);ctx.fill()}ctx.globalAlpha=1;const a=-t*1.1;blob(Math.cos(a)*42,Math.sin(a)*42,4.5,'#ff9a3c');ctx.strokeStyle='#ffd8a0';ctx.lineWidth=1.4;ctx.beginPath();ctx.ellipse(Math.cos(a)*42,Math.sin(a)*42,8,2.5,.4,0,TAU);ctx.stroke()},
  diamond(t){const g=ctx.createLinearGradient(-48,-48,48,48);g.addColorStop(0,'#ffffff');g.addColorStop(.5,'#9fe6ff');g.addColorStop(1,'#3aa8e0');frameRingFill(g);ctx.strokeStyle='rgba(27,18,64,.45)';ctx.lineWidth=1.2;for(let i=0;i<16;i++){const a=i*TAU/16;ctx.beginPath();ctx.moveTo(Math.cos(a)*35.5,Math.sin(a)*35.5);ctx.lineTo(Math.cos(a+TAU/32)*47.5,Math.sin(a+TAU/32)*47.5);ctx.stroke()}
-  const a=t*1.8;ctx.save();ctx.globalAlpha=.85;ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,41.5,a,a+.5);ctx.stroke();ctx.restore();ctx.fillStyle='#fff';star(Math.cos(a+.25)*41.5,Math.sin(a+.25)*41.5,6,1.4,4);ctx.fill()}};
+  const a=t*1.8;ctx.save();ctx.globalAlpha=.85;ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,41.5,a,a+.5);ctx.stroke();ctx.restore();ctx.fillStyle='#fff';star(Math.cos(a+.25)*41.5,Math.sin(a+.25)*41.5,6,1.4,4);ctx.fill()},
+ // Season frames: the tier's metal with its badge at the bottom; the higher the tier, the more it moves.
+ sBronze(t){frameRing('#ffd0a0','#8a4a1a');ctx.fillStyle='#ffe0c0';for(let i=0;i<8;i++){const a=i*TAU/8+TAU/16;blob(Math.cos(a)*41.5,Math.sin(a)*41.5,2,'#ffe0c0')}frameShine(t,'rgba(255,240,220,.7)');seasonBadge('#c8783a','#6e3a14')},
+ sSilver(t){frameRing('#ffffff','#6a7a98');for(let k=0;k<2;k++){const a=t*1.2+k*Math.PI;ctx.fillStyle='#fff';star(Math.cos(a)*41.5,Math.sin(a)*41.5,5,1.4,4);ctx.fill();ctx.stroke()}frameShine(t,'rgba(255,255,255,.8)');seasonBadge('#c4d0e4','#6a7a98')},
+ sGold(t){const f=Math.sin(t*4)*.12;for(const s of [-1,1]){ctx.save();ctx.translate(s*44,-6);ctx.rotate(s*(-.2+f));ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(s*10,-14,s*6,-24);ctx.quadraticCurveTo(s*2,-12,-s*4,-6);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}
+  frameRing('#fff3a0','#b87a00');ctx.fillStyle='#fff';for(let i=0;i<5;i++){const a=-Math.PI/2+(i-2)*.5,tw=.5+.5*Math.sin(t*4+i);ctx.globalAlpha=tw;star(Math.cos(a)*41.5,Math.sin(a)*41.5,3+tw*2,1,4);ctx.fill()}ctx.globalAlpha=1;seasonBadge('#ffc414','#b87a00')},
+ sTitan(t){frameRing('#d8fbff','#1f5a6e');frameGlow('#5fe8ff',.25+.2*Math.sin(t*3));ctx.lineWidth=1.4;for(let i=0;i<6;i++){const a=i*TAU/6+t*.3;ctx.save();ctx.translate(Math.cos(a)*41.5,Math.sin(a)*41.5);ctx.rotate(a);ctx.fillStyle='#bff4ff';ctx.beginPath();for(let k=0;k<6;k++)ctx.lineTo(Math.cos(k*TAU/6)*4,Math.sin(k*TAU/6)*4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}ctx.lineWidth=2.5;seasonBadge('#5fb8c8','#1f5a6e')},
+ sDiamond(t){const g=ctx.createLinearGradient(-48,-48,48,48);g.addColorStop(0,'#ffffff');g.addColorStop(.5,'#7fe0ff');g.addColorStop(1,'#2a7ad8');frameRingFill(g);ctx.strokeStyle='rgba(27,18,64,.4)';ctx.lineWidth=1.2;for(let i=0;i<20;i++){const a=i*TAU/20;ctx.beginPath();ctx.moveTo(Math.cos(a)*35.5,Math.sin(a)*35.5);ctx.lineTo(Math.cos(a+TAU/40)*47.5,Math.sin(a+TAU/40)*47.5);ctx.stroke()}ctx.strokeStyle=INK;ctx.lineWidth=2.5;
+  for(let i=0;i<4;i++){const a=i*TAU/4-Math.PI/4,tw=.6+.4*Math.sin(t*3+i);ctx.save();ctx.translate(Math.cos(a)*42,Math.sin(a)*42);ctx.rotate(a);ctx.fillStyle='#e8fbff';ctx.beginPath();ctx.moveTo(0,-6*tw-2);ctx.lineTo(4,0);ctx.lineTo(0,6*tw+2);ctx.lineTo(-4,0);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}frameShine(t*1.4,'rgba(255,255,255,.9)');seasonBadge('#7fe0ff','#2a7ad8')},
+ legend(t){const g=ctx.createConicGradient?ctx.createConicGradient(t*1.2,0,0):null;if(g){['#c46aff','#ffe680','#ff7ad9','#7a3cff','#ffe680','#c46aff'].forEach((c,i,a)=>g.addColorStop(i/(a.length-1),c));frameRingFill(g)}else frameRing('#ffe680','#7a3cff');
+  ctx.fillStyle='#fff';for(let i=0;i<8;i++){const a=-t*.8+i*TAU/8,tw=.4+.6*Math.abs(Math.sin(t*3+i));ctx.globalAlpha=tw;star(Math.cos(a)*41.5,Math.sin(a)*41.5,2+tw*3,1,4);ctx.fill()}ctx.globalAlpha=1;frameGlow('#ffe680',.2+.15*Math.sin(t*4));
+  ctx.save();ctx.translate(0,-46);ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.moveTo(-11,5);ctx.lineTo(-13,-7);ctx.lineTo(-5,-1);ctx.lineTo(0,-10);ctx.lineTo(5,-1);ctx.lineTo(13,-7);ctx.lineTo(11,5);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();seasonBadge('#c46aff','#3a1580',true)}};
 function frameRingPath(){ctx.beginPath();ctx.arc(0,0,48,0,TAU);ctx.arc(0,0,35,0,TAU,true)}
 function frameRingFill(fill){frameRingPath();ctx.fillStyle=fill;ctx.fill('evenodd');ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,48,0,TAU);ctx.stroke();ctx.beginPath();ctx.arc(0,0,35,0,TAU);ctx.stroke()}
 function frameRing(a,b,alpha=1){const g=ctx.createLinearGradient(0,-48,0,48);g.addColorStop(0,a);g.addColorStop(1,b);ctx.save();ctx.globalAlpha=alpha;frameRingFill(g);ctx.restore();ctx.save();ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,44,-2.6,-1.4);ctx.stroke();ctx.restore()}
+// A gleam running round the ring, and the little tier shield at the bottom of season frames.
+function frameShine(t,color){const a=t*1.6;ctx.save();ctx.strokeStyle=color;ctx.lineWidth=4;ctx.lineCap='round';ctx.beginPath();ctx.arc(0,0,41.5,a,a+.45);ctx.stroke();ctx.restore()}
+function seasonBadge(a,b,starred=false){ctx.save();ctx.translate(0,44);const g=ctx.createLinearGradient(0,-9,0,10);g.addColorStop(0,a);g.addColorStop(1,b);ctx.fillStyle=g;ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-9);ctx.lineTo(9,-6);ctx.lineTo(9,1);ctx.quadraticCurveTo(8,7,0,11);ctx.quadraticCurveTo(-8,7,-9,1);ctx.lineTo(-9,-6);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#fff';star(0,0,starred?5.5:4.5,starred?2.2:1.8,5);ctx.fill();ctx.restore()}
 function frameGlow(color,alpha){ctx.save();ctx.globalAlpha=Math.max(0,alpha);ctx.strokeStyle=color;ctx.lineWidth=8;ctx.beginPath();ctx.arc(0,0,41.5,0,TAU);ctx.stroke();ctx.restore()}
 // Draw an avatar with its frame into a 2D context at the given pixel size.
 function paintAvatar(c,px,look,t){const main=ctx,a=AVATARS[look.avatar]||AVATARS.sunny,f=FRAME_ART[look.frame]||FRAME_ART.basic,k=px/100;ctx=c;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,px,px);c.setTransform(k,0,0,k,px/2,px/2);c.lineJoin='round';c.lineCap='round';
@@ -94,7 +137,8 @@ let profileTab='avatars',cosPreview=null;
 function renderProfile(){const list=$('#panel-list'),c=myCos(),look=myLook(),scroll=list.scrollTop,pv=cosPreview,shown={...look,...(pv?pv.look:{})};$('#panel-title').textContent='PROFILE';list.replaceChildren();
  const head=el('div','profile-head'+(pv?' previewing':'')),info=el('div','profile-info'),big=el('div','profile-big');big.append(avatarEl(shown,pv?110:92,'big'));if(pv)big.append(el('span','preview-tag','PREVIEW'));head.append(big);
  const name=typeof online!=='undefined'?online.displayName():'Player';info.append(nameEl(name,shown.gold,save.clan&&save.clan.tag,'profile-name'));
- if(pv){info.append(el('small','profile-note',`${pv.name} · ${pv.price} GEMS`));const buy=el('button','buy big gem');buy.innerHTML=`BUY ${iconHTML('gem')}${pv.price}`;buy.onclick=()=>{if((save.gems||0)<pv.price){buy.classList.remove('nope');void buy.offsetWidth;buy.classList.add('nope');gameSound.effect('warn');buy.innerHTML=`NEED ${iconHTML('gem')}${pv.price-(save.gems||0)}`;return}save.gems-=pv.price;pv.apply();cosPreview=null;gameSound.effect('buy');confetti(24);cosChanged()};
+ if(pv&&pv.season){info.append(el('small','profile-note',pv.name),el('small','profile-note',seasonGoal(pv.tier)));const back=el('button','mini-btn','STOP PREVIEW');back.onclick=()=>{cosPreview=null;renderProfile()};info.append(back)}
+ else if(pv){info.append(el('small','profile-note',`${pv.name} · ${pv.price} GEMS`));const buy=el('button','buy big gem');buy.innerHTML=`BUY ${iconHTML('gem')}${pv.price}`;buy.onclick=()=>{if((save.gems||0)<pv.price){buy.classList.remove('nope');void buy.offsetWidth;buy.classList.add('nope');gameSound.effect('warn');buy.innerHTML=`NEED ${iconHTML('gem')}${pv.price-(save.gems||0)}`;return}save.gems-=pv.price;pv.apply();cosPreview=null;gameSound.effect('buy');confetti(24);cosChanged()};
   const back=el('button','mini-btn','STOP PREVIEW');back.onclick=()=>{cosPreview=null;renderProfile()};info.append(buy,back)}
  else{const bestAll=Math.max(0,...Object.values(save.scores||{})),stars=Object.values(save.stars||{}).reduce((a,b)=>a+b,0);info.append(el('small','',`BEST ${bestAll.toLocaleString()} · ${stars} STARS`));if(save.clan)info.append(el('small','profile-clan',`CLAN: ${save.clan.name}`));
   if(typeof online!=='undefined'&&online.configured()){if(online.user){const rn=el('button','mini-btn','RENAME');rn.onclick=()=>{const n=prompt('Your name (up to 16 letters)',online.displayName());if(n!==null)online.rename(n).then(renderProfile)};info.append(rn)}else info.append(el('small','profile-note','Sign in so other players can see your look.'))}}
@@ -105,12 +149,12 @@ function renderProfile(){const list=$('#panel-list'),c=myCos(),look=myLook(),scr
    card.onclick=()=>{if(!owned){cosPreview={id:'goldname',name:'GOLD NAME',price:GOLD_NAME_PRICE,look:{gold:true},apply(){c.goldOwned=true;c.gold=true}};gameSound.effect('on');renderProfile();list.scrollTop=0;return}cosPreview=null;gameSound.effect('on');c.gold=gold;cosChanged()};box.append(card)}
   list.append(box,el('p','rank-note','A gold name shines on the leaderboards, in your clan and on your profile. Tap it to try it on.'));list.scrollTop=scroll;return}
  const cat=profileTab==='avatars'?AVATARS:FRAMES,grid=el('div','cos-grid');
- for(const [id,item] of Object.entries(cat)){const owned=ownsCos(id),on=(profileTab==='avatars'?look.avatar:look.frame)===id&&!pv,trying=pv&&pv.id===id,card=el('button','cos-card'+(on?' on':'')+(owned?'':' locked')+(item.anim?' anim':'')+(trying?' trying':''));
-  card.append(avatarEl(profileTab==='avatars'?{avatar:id,frame:look.frame}:{avatar:look.avatar,frame:id},64),el('small','',item.name),priceTag(item.gems||0,owned,on,trying));
-  card.onclick=()=>{const isAvatar=profileTab==='avatars';if(!owned){cosPreview={id,name:item.name.toUpperCase(),price:item.gems,look:isAvatar?{avatar:id}:{frame:id},apply(){c.own.push(id);if(isAvatar)c.avatar=id;else c.frame=id}};gameSound.effect('on');renderProfile();list.scrollTop=0;return}
+ for(const [id,item] of Object.entries(cat)){const owned=ownsCos(id),on=(profileTab==='avatars'?look.avatar:look.frame)===id&&!pv,trying=pv&&pv.id===id,card=el('button','cos-card'+(on?' on':'')+(owned?'':' locked')+(item.anim?' anim':'')+(item.season?' season':'')+(trying?' trying':''));
+  card.append(avatarEl(profileTab==='avatars'?{avatar:id,frame:look.frame}:{avatar:look.avatar,frame:id},64),el('small','',item.name),priceTag(item.gems||0,owned,on,trying,item.season));
+  card.onclick=()=>{const isAvatar=profileTab==='avatars';if(!owned){cosPreview={id,name:item.name.toUpperCase(),price:item.gems,season:item.season&&SEASON_NAMES[item.season],tier:item.season,look:isAvatar?{avatar:id}:{frame:id},apply(){c.own.push(id);if(isAvatar)c.avatar=id;else c.frame=id}};gameSound.effect('on');renderProfile();list.scrollTop=0;return}
    cosPreview=null;gameSound.effect('on');if(isAvatar)c.avatar=id;else c.frame=id;cosChanged()};grid.append(card)}
- list.append(grid,el('p','rank-note','Tap any gem item to try it on. Gems come from finishing in the weekly tournament top 10.'));list.scrollTop=scroll}
-function priceTag(gems,owned,on,trying){const s=el('span','cos-price'+(on?' on':owned?' own':'')+(trying?' trying':''));if(on)s.textContent='IN USE';else if(owned)s.textContent=gems?'OWNED':'FREE';else if(trying)s.textContent='TRYING ON';else s.innerHTML=iconHTML('gem')+gems;return s}
+ list.append(grid,el('p','rank-note','Tap any gem item to try it on. Gems come from the weekly top 10, tasks and seasons. Trophy items are season rewards: finish a season in that rank to win them.'));list.scrollTop=scroll}
+function priceTag(gems,owned,on,trying,season){const s=el('span','cos-price'+(on?' on':owned?' own':'')+(trying?' trying':'')+(season&&!owned?' season':''));if(on)s.textContent='IN USE';else if(owned)s.textContent=gems||season?'OWNED':'FREE';else if(trying)s.textContent='TRYING ON';else if(season)s.innerHTML=iconHTML('trophy')+SEASON_NAMES[season];else s.innerHTML=iconHTML('gem')+gems;return s}
 function cosShort(card,need){card.classList.remove('nope');void card.offsetWidth;card.classList.add('nope');gameSound.effect('warn');const p=card.querySelector('.cos-price');if(p){const old=p.innerHTML;p.innerHTML=`NEED ${iconHTML('gem')}${need-(save.gems||0)}`;setTimeout(()=>{if(p.isConnected)p.innerHTML=old},1200)}}
 function cosChanged(){persist();refreshMeta();renderProfile();if(typeof online!=='undefined')online.publish();if(typeof refreshOnline==='function')refreshOnline(false)}
 refreshMeta();

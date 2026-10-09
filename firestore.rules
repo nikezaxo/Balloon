@@ -43,6 +43,20 @@ service cloud.firestore {
       allow update: if owner(uid) && validEntry(request.resource.data)
         && request.resource.data.score >= resource.data.score;
     }
+    // Season ranking: one entry per player per monthly season; season points never go down.
+    function validSeason(d) {
+      return d.keys().hasOnly(['name', 'sp', 'avatar', 'frame', 'gold', 'clan', 'at'])
+        && validName(d.name)
+        && d.sp is int && d.sp >= 0 && d.sp <= 10000000
+        && validLook(d) && shortText(d.clan, 5)
+        && d.at == request.time;
+    }
+    match /seasons/{season}/players/{uid} {
+      allow read: if true;
+      allow create: if owner(uid) && season.matches('^S[0-9]{1,4}$') && validSeason(request.resource.data);
+      allow update: if owner(uid) && validSeason(request.resource.data)
+        && request.resource.data.sp >= resource.data.sp;
+    }
     // Cloud saves are private to their owner.
     match /players/{uid} {
       allow read: if owner(uid);

@@ -495,3 +495,63 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .mine-head{cursor:pointer}
 .res-online canvas{align-self:center}
 .reward-banner canvas{order:-1}
+/* Seasons and tasks */
+.event-row{pointer-events:auto;display:flex;gap:8px;margin-top:.9vh}
+.event-pill{position:relative;display:flex;align-items:center;gap:6px;padding:3px 12px 4px 5px;color:#fff;font-family:var(--title);border:3px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink)}
+.event-pill.tasks{background:linear-gradient(#6fc1ff,#2f86ff)}
+.event-pill.season{background:linear-gradient(#b48cff,#6a35ef)}
+.event-pill:active{transform:translateY(3px)}
+.ev-ico{width:30px;height:30px}.ev-ico svg{width:100%;height:100%;display:block;overflow:visible}
+.ev-emblem{display:grid;place-items:center;width:34px;height:34px}
+.ev-text{display:flex;flex-direction:column;align-items:flex-start;line-height:1}
+.ev-text b{font-weight:400;font-size:15px;letter-spacing:.4px;text-shadow:var(--stroke);white-space:nowrap}
+.ev-text small{margin-top:2px;font-size:11px;letter-spacing:.5px;padding:1px 6px 2px;background:#1b1240aa;border-radius:7px;text-shadow:var(--stroke);white-space:nowrap}
+.red-dot[hidden]{display:none}
+.red-dot{position:absolute;top:-8px;right:-8px;min-width:22px;height:22px;padding:0 5px;display:grid;place-items:center;font-size:13px;background:linear-gradient(#ff7a85,#e0203c);border:2px solid var(--ink);border-radius:11px;text-shadow:var(--stroke);animation:dotPulse 1.2s ease-in-out infinite}
+@keyframes dotPulse{50%{transform:scale(1.15)}}
+.emblem{display:inline-grid;flex:none;place-items:center}
+.emblem svg{width:100%;height:100%;display:block;overflow:visible;filter:drop-shadow(0 2px 0 #1b124088)}
+.emblem .em-rays{animation:emSpin 6s linear infinite}
+@keyframes emSpin{to{transform:rotate(360deg)}}
+.rank-label{display:inline-block;font-family:var(--title);font-size:18px;letter-spacing:.5px;text-shadow:var(--stroke),0 3px 0 var(--ink)}
+.rank-label.t-metal{color:#dfe6f5}.rank-label.t-bronze{color:#ffb070}.rank-label.t-silver{color:#f2f6ff}.rank-label.t-gold{color:#ffd23f}.rank-label.t-titanium{color:#8ff0ff}.rank-label.t-diamond{color:#bff4ff}
+.rank-label.t-legend{background:linear-gradient(100deg,#fff6c4,#ffd23f 25%,#ffb0f0 50%,#e0c0ff 70%,#fff6c4);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(1px 0 0 #1b1240) drop-shadow(-1px 0 0 #1b1240) drop-shadow(0 -1px 0 #1b1240) drop-shadow(0 2px 0 #1b1240);animation:goldShine 2.4s linear infinite}
+.season-card{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#1b124099;background:radial-gradient(circle at 18% 50%,color-mix(in srgb,var(--tc,#9aa6bd) 55%,transparent),#1b124099 70%);border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink)}
+.season-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.season-sp{font-family:var(--title);font-weight:400;font-size:22px;color:var(--yellow);text-shadow:var(--stroke)}
+.season-info small{font-size:11px;font-weight:800;color:#dfe6ff}
+.task-row{display:flex;align-items:center;gap:9px;padding:7px 9px;background:#1b124066;border:3px solid var(--ink);border-radius:13px}
+.task-row.done{opacity:.6}
+.task-row.bonus{background:linear-gradient(#ff9ae655,#c81f8f44);border-color:#ff9ae6}
+.task-ico{flex:none;width:30px;height:30px}.task-ico svg{width:100%;height:100%;display:block;overflow:visible}
+.task-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.task-mid b{font-family:var(--title);font-weight:400;font-size:14px;line-height:1.1;text-shadow:var(--stroke)}
+.task-mid small{font-size:11px;font-weight:800;color:#c9d3f0}
+.task-bar{display:block;height:9px;background:#1b1240;border:2px solid var(--ink);border-radius:6px;overflow:hidden}
+.task-bar s{display:block;height:100%;background:linear-gradient(#7ef08f,#2fbf4f);border-radius:4px}
+.task-end{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.task-reward{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px}
+.task-reward>span{display:flex;align-items:center;gap:2px;font-family:var(--title);font-size:12px;padding:1px 6px 2px 3px;background:#1b1240aa;border-radius:7px;text-shadow:var(--stroke)}
+.task-reward .ico{width:14px;height:14px}
+.task-reward>.sp{color:#c9a8ff;padding:1px 6px 2px}
+.task-claimed{font-family:var(--title);font-size:12px;color:#7ef08f;text-shadow:var(--stroke)}
+.tier-row{display:flex;align-items:center;gap:10px;padding:6px 10px;background:#1b124066;border:3px solid var(--ink);border-radius:13px}
+.tier-row.me{border-color:var(--yellow);box-shadow:0 0 0 2px var(--yellow)}
+.tier-mid{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.tier-mid small{font-size:10px;font-weight:800;letter-spacing:.4px;color:#c9d3f0}
+.tier-mid .task-reward{justify-content:flex-start}
+.tier-items{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tier-skin{font-family:var(--title);font-size:11px;padding:1px 6px 2px;background:linear-gradient(#b48cff,#6a35ef);border:2px solid var(--ink);border-radius:7px;text-shadow:var(--stroke)}
+.season-reward{background:linear-gradient(#b48cff,#6a35ef)}
+.reward-banner .emblem{order:-1}
+.res-season{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;margin-top:6px;font-family:var(--title)}
+.res-season b{display:inline;font-size:18px;color:#c9a8ff}
+.res-season small{display:inline;font-size:12px;letter-spacing:.5px;color:#dfe6ff}
+.res-chip{font-size:12px;padding:1px 8px 2px;background:linear-gradient(#7ef08f,#2fbf4f);border:2px solid var(--ink);border-radius:8px;text-shadow:var(--stroke)}
+.res-chip.up{background:linear-gradient(#ffe46b,#ffc414)}
+.buy.season,.cos-price.season{background:linear-gradient(#b48cff,#6a35ef);box-shadow:inset 0 -3px 0 #4a1fb0,0 3px 0 var(--ink)}
+.cos-price.season{box-shadow:none}
+.cos-card.season{background:radial-gradient(circle at 50% 35%,#b48cff55,#1b124066 70%)}
+.feat-info .season-note{font-size:11px;font-weight:800;color:#c9a8ff}
+@media(max-height:720px){.event-row{margin-top:.5vh}.event-pill{padding:2px 10px 3px 4px}.ev-ico{width:24px;height:24px}.ev-emblem{width:28px;height:28px}.ev-text b{font-size:13px}.ev-text small{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.red-dot,.emblem .em-rays,.rank-label.t-legend{animation:none}}
