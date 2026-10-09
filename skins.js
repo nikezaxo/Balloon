@@ -141,3 +141,50 @@ const SKIN_POSES={
    back(){const k=bell(rain);if(k>0){ctx.save();ctx.translate(0,-5);ctx.rotate(s*.8);ctx.globalAlpha=k*.5;ctx.fillStyle='#fff3a0';for(let i=0;i<12;i++){ctx.rotate(TAU/12);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(110,-11);ctx.lineTo(110,11);ctx.closePath();ctx.fill()}ctx.restore()}},
    front(){if(toss<1){ctx.save();ctx.translate(0,-44-bell(toss)*70);ctx.rotate(toss*TAU*2);ctx.translate(0,44);skinExtras({extras:['crown']});ctx.restore()}
     if(rain>0&&rain<1)for(let i=0;i<12;i++){const q=(rain*1.7+hash(i*3.3))%1,cx=(hash(i*1.9)-.5)*130,cy=-95+q*180;ctx.globalAlpha=Math.min(1,(1-rain)*4);drawCoin(cx,cy,6,s*8+i,false)}}}}}};
+
+// Signature trails: what each balloon leaves behind in flight (the engine boost's fire replaces it while it
+// burns). Each tick emits from every emitter; chance thins out the extras. The store cards preview them too.
+const RAINBOW=['#ff4d5e','#ff9a1a','#ffd23f','#4fd36b','#44d9ff','#a273ff'];
+const SKIN_TRAILS={
+ classic:[{type:'heart',colors:['#ff4d6d','#ff8aa8'],size:[3.5,5.5],vy:[25,55],life:[.8,1.1],chance:.55},{type:'puff',colors:['#ffffff'],size:[4,6],vy:[15,30],life:[.7,.9]}],
+ gumball:[{type:'bubble',colors:['#ff9ad5','#ffc6e6','#ffffff'],size:[3,6.5],vy:[10,30],life:[1,1.3]}],
+ clown:[{type:'confetti',colors:RAINBOW,size:[5,8],vy:[20,50],life:[.8,1.1],vr:[-8,8]},{type:'ball',colors:['#ff3b3b','#ffd23f','#44d9ff'],size:[2.5,4],vy:[30,70],gravity:150,chance:.3}],
+ toy:[{type:'gear',colors:['#c9d3e6','#9aa6bd'],size:[3.5,5.5],vy:[30,60],vr:[-6,6],life:[.8,1]},{type:'bolt',colors:['#5ff0ff','#ffd23f'],size:[3,5],life:[.25,.4],vr:[-2,2],chance:.35},{type:'smoke',colors:['#5f6b85'],size:[4,6],chance:.4}],
+ melon:[{type:'seed',colors:['#1b1240'],size:[3,5],vy:[30,60],gravity:120,vr:[-6,6]},{type:'drop',colors:['#ff5a7a','#ff8aa0'],size:[3,4.5],vy:[20,50],gravity:160,chance:.6}],
+ monster:[{type:'slime',colors:['#7ad83f','#b6ff7a'],size:[3,5],vy:[40,80],gravity:120},{type:'stink',colors:['#9be85a'],size:[5,8],vr:[-3,3],chance:.5}],
+ ninja:[{type:'smoke',colors:['#4a4a63','#2c2c40','#6b6b88'],size:[5,8],vy:[10,30],life:[.9,1.2]},{type:'shuriken',colors:['#dfe6f5'],size:[3.5,5],vx:[-120,120],vy:[20,60],vr:[14,20],life:[.6,.8],chance:.08}],
+ galaxy:[{type:'glow',colors:['#a273ff','#4d7bff','#ff7ad9'],size:[7,11],vy:[10,25],life:[.9,1.2]},{type:'star',colors:['#ffffff','#ffe680'],size:[2.5,4.5],chance:.6}],
+ gold:[{type:'coin',colors:['#ffd23f'],size:[3,4.5],vy:[40,80],gravity:180,vr:[8,14],chance:.45},{type:'star',colors:['#ffd23f','#fff6b0'],size:[3,5]}],
+ dragon:[{type:'flame',colors:['#ffd23f'],size:[4,7],vy:[20,45],life:[.5,.7]},{type:'spark',colors:['#ff8a2a','#ffd23f'],size:[1.5,2.5],vx:[-60,60],vy:[40,90],chance:.4}],
+ unicorn:[{type:'band',colors:RAINBOW,size:[4,4],vx:[0,0],vy:[0,0],life:[.75,.75],still:true},{type:'star',colors:RAINBOW,size:[3,5],chance:.4}],
+ diamond:[{type:'crystal',colors:['#ffffff','#c9f6ff','#9fe6ff'],size:[3,5],vy:[20,50],vr:[-5,5],life:[.8,1.1]},{type:'star',colors:['#ffffff'],size:[2.5,4],life:[.3,.5],chance:.4}]};
+const between=(r,d)=>r?r[0]+Math.random()*(r[1]-r[0]):d;
+function emitTrail(id,bx,by){for(const e of SKIN_TRAILS[id]||SKIN_TRAILS.classic){if(e.chance!==undefined&&Math.random()>e.chance)continue;
+ particles.push({type:e.type,back:true,world:true,x:bx+(e.still?0:(Math.random()-.5)*8),y:by,vx:between(e.vx,(Math.random()-.5)*32),vy:between(e.vy,10+Math.random()*20)*.8,life:0,max:between(e.life,.8)*1.25,size:between(e.size,4)*1.5,color:e.colors[Math.floor(Math.random()*e.colors.length)],gravity:e.gravity||0,drag:1,rot:Math.random()*TAU,vr:between(e.vr,(Math.random()-.5)*6)})}}
+// One particle shape at the origin; k is its age from 0 to 1.
+function drawPart(type,sz,color,k,rot){ctx.lineJoin='round';ctx.lineCap='round';
+ if(type==='puff'){ctx.globalAlpha=(1-k)*.6;ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,sz*(1+k*1.4),0,TAU);ctx.fill()}
+ else if(type==='smoke'){ctx.globalAlpha=(1-k)*.55;ctx.fillStyle=color;for(const [ox,oy,r] of [[-.5,0,.8],[.5,-.2,.7],[0,-.5,.9]]){ctx.beginPath();ctx.arc(ox*sz*(1+k),oy*sz*(1+k),sz*r*(1+k*1.6),0,TAU);ctx.fill()}}
+ else if(type==='stink'){ctx.globalAlpha=(1-k)*.45;ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,0,sz*(1+k*1.5),0,TAU);ctx.fill();ctx.globalAlpha=(1-k)*.8;ctx.strokeStyle='#4f8f1d';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(0,0,sz*.6*(1+k),rot,rot+3.6);ctx.stroke()}
+ else if(type==='star'){ctx.globalAlpha=1-k;ctx.rotate(rot);ctx.fillStyle=color;star(0,0,sz*(1-k*.5),sz*.4*(1-k*.5),4);ctx.fill()}
+ else if(type==='bubble'){ctx.globalAlpha=k>.8?(1-k)/.2:1;ctx.fillStyle='rgba(255,230,245,.3)';ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(0,0,sz,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-sz*.35,-sz*.35,sz*.28,0,TAU);ctx.fill()}
+ else if(type==='seed'){ctx.globalAlpha=1-k;ctx.rotate(rot);ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,sz*.45,sz*.75,0,0,TAU);ctx.fill()}
+ else if(type==='drop'){ctx.globalAlpha=1-k;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,-sz*1.3);ctx.quadraticCurveTo(sz,0,0,sz*.8);ctx.quadraticCurveTo(-sz,0,0,-sz*1.3);ctx.fill();ctx.fillStyle='rgba(255,255,255,.7)';ctx.beginPath();ctx.arc(-sz*.25,-sz*.1,sz*.22,0,TAU);ctx.fill()}
+ else if(type==='slime'){ctx.globalAlpha=1-k;ctx.fillStyle=color;ctx.strokeStyle=INK;ctx.lineWidth=1.4;ctx.beginPath();ctx.ellipse(0,0,sz*.7,sz*(1+k),0,0,TAU);ctx.fill();ctx.stroke()}
+ else if(type==='heart'){ctx.globalAlpha=1-k*k;ctx.rotate(rot*.2);ctx.fillStyle=color;heart(sz);ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=1.5;ctx.stroke()}
+ else if(type==='confetti'){ctx.rotate(rot);ctx.scale(Math.cos(rot*3),1);ctx.globalAlpha=k>.7?(1-k)/.3:1;ctx.fillStyle=color;ctx.fillRect(-sz/2,-sz/4,sz,sz/2)}
+ else if(type==='ball'){ctx.globalAlpha=1-k*k;ctx.fillStyle=color;ctx.strokeStyle=INK;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(0,0,sz,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle='rgba(255,255,255,.7)';ctx.beginPath();ctx.arc(-sz*.3,-sz*.3,sz*.3,0,TAU);ctx.fill()}
+ else if(type==='gear'){ctx.globalAlpha=1-k*k;ctx.rotate(rot);ctx.fillStyle=color;ctx.strokeStyle=INK;ctx.lineWidth=1.2;ctx.beginPath();for(let i=0;i<16;i++){const a=i*TAU/16,r=i%2?sz:sz*.72;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle=INK;ctx.beginPath();ctx.arc(0,0,sz*.28,0,TAU);ctx.fill()}
+ else if(type==='bolt'){ctx.globalAlpha=1-k;ctx.rotate(rot);ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-sz,-sz*1.2);ctx.lineTo(sz*.3,-sz*.2);ctx.lineTo(-sz*.3,sz*.2);ctx.lineTo(sz,sz*1.2);ctx.stroke()}
+ else if(type==='shuriken'){ctx.globalAlpha=k>.7?(1-k)/.3:1;ctx.rotate(rot);ctx.fillStyle=color;ctx.strokeStyle=INK;ctx.lineWidth=1.2;star(0,0,sz*1.3,sz*.35,4);ctx.fill();ctx.stroke();ctx.fillStyle=INK;ctx.beginPath();ctx.arc(0,0,sz*.22,0,TAU);ctx.fill()}
+ else if(type==='glow'){ctx.globalAlpha=(1-k)*.7;ctx.globalCompositeOperation='lighter';const r=sz*(1+k),g=ctx.createRadialGradient(0,0,0,0,0,r);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.fill();ctx.globalCompositeOperation='source-over'}
+ else if(type==='coin'){ctx.globalAlpha=1-k*k;const w=Math.max(.15,Math.abs(Math.cos(rot)));ctx.fillStyle='#ffcf2e';ctx.strokeStyle='#a86a00';ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(0,0,sz*w,sz,0,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle='#fff6c2';ctx.beginPath();ctx.ellipse(-sz*.25*w,-sz*.3,sz*.25*w,sz*.3,0,0,TAU);ctx.fill()}
+ else if(type==='flame'){const c=k<.3?'#fff6b0':k<.55?'#ffb020':k<.75?'#ff5a1f':'#5a4a5a';ctx.globalAlpha=k<.75?1:(1-k)/.25*.6;ctx.fillStyle=c;const r=sz*(k<.75?1-k*.4:1+k);ctx.beginPath();ctx.moveTo(0,r*1.5);ctx.quadraticCurveTo(r,0,0,-r);ctx.quadraticCurveTo(-r,0,0,r*1.5);ctx.fill()}
+ else if(type==='band'){ctx.globalAlpha=(1-k)*.85;const n=RAINBOW.length,w=sz*.9;RAINBOW.forEach((c,i)=>{ctx.fillStyle=c;ctx.fillRect((i-n/2)*w,-5,w+.5,10)})}
+ else if(type==='crystal'){ctx.globalAlpha=k>.7?(1-k)/.3:1;ctx.rotate(rot);ctx.fillStyle=color;ctx.strokeStyle='#3aa8e0';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(0,-sz*1.4);ctx.lineTo(sz*.8,0);ctx.lineTo(0,sz*1.4);ctx.lineTo(-sz*.8,0);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='rgba(255,255,255,.85)';ctx.beginPath();ctx.moveTo(0,-sz*1.4);ctx.lineTo(sz*.25,-sz*.2);ctx.lineTo(-sz*.3,0);ctx.closePath();ctx.fill()}
+ else if(type==='shard'){ctx.rotate(rot);ctx.globalAlpha=k>.75?(1-k)/.25:1;ctx.fillStyle=color;ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-sz,-sz*.4);ctx.lineTo(sz*.8,-sz*.6);ctx.lineTo(sz*.3,sz*.6);ctx.closePath();ctx.fill();ctx.stroke()}
+ else return false;return true}
+// Store preview: the trail drawn procedurally below the balloon (balloon coordinates).
+function drawTrailPreview(id,s){const em=SKIN_TRAILS[id]||SKIN_TRAILS.classic;ctx.save();em.forEach((e,j)=>{const n=e.still?16:e.chance!==undefined&&e.chance<.3?2:7;for(let i=0;i<n;i++){const ph=(s*(e.still?.9:.6)+i/n+j*.37)%1,seed=hash(i*7.3+j*3.1);
+  const x=e.still?Math.sin(s*2-ph*4)*3:(seed-.5)*18+Math.sin(ph*6+i)*4+(e.type==='shuriken'?(seed-.5)*60*ph:0),y=38+ph*(e.still?70:60)+(e.gravity?ph*ph*30:0),sz=(e.size[0]+e.size[1])/2;
+  ctx.save();ctx.translate(x,y);if(drawPart(e.type,sz,e.colors[(i+j)%e.colors.length],ph,s*(e.vr?3:1)+i)===false){ctx.globalAlpha=1-ph;ctx.strokeStyle=e.colors[0];ctx.lineWidth=sz;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-6);ctx.stroke()}ctx.restore()}});ctx.restore()}
