@@ -232,7 +232,14 @@ boss; P or Escape pauses.
   bubbles, wobbling clown with confetti, jerky robot with sparks, spinning
   melon with juice, growling monster with slime, dashing ninja with smoke,
   galaxy with orbiting stars, gleaming gold with glitter), and choosing one
-  plays a burst. Each skin also leaves its own trail while flying.
+  plays a burst.
+- Every skin leaves its own signature trail while flying (the engine boost's fire replaces it
+  while it burns), and the store cards preview it under the balloon: Classic hearts and puffs,
+  Gumball bubbles, Funny Clown confetti and clown-nose balls, Toy Robot gears, sparks and oil
+  smoke, Watermelon seeds and juice drops, Monster slime and stink clouds, Ninja smoke with the
+  odd flying shuriken, Galaxy glowing nebula and stardust, Golden King spinning coins and
+  glitter, Fire Dragon flames and embers, Rainbow Unicorn a rainbow ribbon with sparkles, and
+  Diamond crystal shards with glints (SKIN_TRAILS in skins.js).
 - Extra lives: after a pop, tap REVIVE to re-inflate where you were and keep
   climbing. You can hold up to 9 lives; you start with 1.
 Coins, skins, lives, bests, high scores and stars are saved in the browser (localStorage).

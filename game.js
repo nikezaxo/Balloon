@@ -98,7 +98,7 @@ function renderPreviews(){const main=ctx,now=performance.now()/1000;for(const cv
   drawSkinShow(id,now,big?p:1,big?0:(skinPop[id]?Math.max(0,1-(now-skinPop[id])/.9):0))}ctx=main}
 // A skin on a store card: its idle style and effect, or its selection pose while one is playing.
 function drawSkinShow(id,now,p,pop){const skin=SKINS[id]||SKINS.classic,fx=SKIN_FX[id]||SKIN_FX.classic,P=p<1&&SKIN_POSES[id]?SKIN_POSES[id].fn(p,now):null,a=P||fx.anim(now);
- ctx.save();if(P){if(P.back)P.back()}else skinFx(fx.fx,now,'back');ctx.restore();
+ ctx.save();if(P){if(P.back)P.back()}else{drawTrailPreview(id,now);skinFx(fx.fx,now,'back')}ctx.restore();
  if(!P&&fx.afterimage)for(const [lag,alpha] of [[.09,.16],[.045,.3]]){ctx.save();ctx.globalAlpha=alpha;placeBalloon(fx.anim(now-lag),0);drawBalloonBody(skin,(now-lag)*.9,'happy',0);ctx.restore()}
  if(!P||P.alpha!==0){ctx.save();if(P&&P.alpha!==undefined)ctx.globalAlpha=P.alpha;placeBalloon(a,pop);drawBalloonBody(P&&P.noCrown?{...skin,extras:[]}:skin,now*.9*(a.turn||1)+(P&&P.spin||0),P?P.face||'joy':pop>0?'star':'happy',0);if(id==='gold')goldSweep(now);ctx.restore()}
  ctx.save();if(P){if(P.front)P.front()}else skinFx(fx.fx,now,'front');ctx.restore();if(pop>0)chosenFx(pop)}
@@ -404,15 +404,9 @@ function drawTicks(){ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=2;for(
 function drawStreaks(){ctx.lineCap='round';for(const s of streaks){const v=Math.hypot(s.vx,s.vy)||1;ctx.strokeStyle=s.color||`rgba(255,255,255,${s.alpha})`;ctx.globalAlpha=s.color?s.alpha:1;ctx.lineWidth=s.width;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x-s.vx/v*s.len,s.y-s.vy/v*s.len);ctx.stroke()}ctx.globalAlpha=1}
 function heart(s){ctx.beginPath();ctx.moveTo(0,s*.35);ctx.bezierCurveTo(-s*1.1,-s*.35,-s*.45,-s*1.05,0,-s*.45);ctx.bezierCurveTo(s*.45,-s*1.05,s*1.1,-s*.35,0,s*.35);ctx.closePath()}
 function drawParticles(back){for(const p of particles){if(!!p.back!==back)continue;const k=p.life/p.max;ctx.save();ctx.translate(p.x,p.y);
- if(p.type==='puff'){ctx.globalAlpha=(1-k)*.6;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(0,0,p.size*(1+k*1.4),0,TAU);ctx.fill()}
- else if(p.type==='star'){ctx.globalAlpha=1-k;ctx.rotate(p.rot);ctx.fillStyle=p.color;star(0,0,p.size*(1-k*.5),p.size*.4*(1-k*.5),4);ctx.fill()}
- else if(p.type==='bubble'){ctx.globalAlpha=k>.8?(1-k)/.2:1;ctx.fillStyle='rgba(255,230,245,.3)';ctx.strokeStyle=p.color;ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(0,0,p.size,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-p.size*.35,-p.size*.35,p.size*.28,0,TAU);ctx.fill()}
- else if(p.type==='seed'){ctx.globalAlpha=1-k;ctx.rotate(p.rot);ctx.fillStyle=p.color;ctx.beginPath();ctx.ellipse(0,0,p.size*.45,p.size*.75,0,0,TAU);ctx.fill()}
- else if(p.type==='slime'){ctx.globalAlpha=1-k;ctx.fillStyle=p.color;ctx.strokeStyle=INK;ctx.lineWidth=1.4;ctx.beginPath();ctx.ellipse(0,0,p.size*.7,p.size*(1+k),0,0,TAU);ctx.fill();ctx.stroke()}
- else if(p.type==='heart'){ctx.globalAlpha=1-k*k;ctx.rotate(p.rot*.2);ctx.fillStyle=p.color;heart(p.size);ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=1.5;ctx.stroke()}
- else if(p.type==='confetti'){ctx.rotate(p.rot);ctx.scale(Math.cos(p.rot*3),1);ctx.globalAlpha=k>.7?(1-k)/.3:1;ctx.fillStyle=p.color;ctx.fillRect(-p.size/2,-p.size/4,p.size,p.size/2)}
- else if(p.type==='shard'){ctx.rotate(p.rot);ctx.globalAlpha=k>.75?(1-k)/.25:1;ctx.fillStyle=p.color;ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(-p.size,-p.size*.4);ctx.lineTo(p.size*.8,-p.size*.6);ctx.lineTo(p.size*.3,p.size*.6);ctx.closePath();ctx.fill();ctx.stroke()}
- else{ctx.globalAlpha=1-k;ctx.strokeStyle=p.color;ctx.lineWidth=p.size;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-p.vx*.05,-p.vy*.05);ctx.stroke()}
+ if(drawPart(p.type,p.size,p.color,k,p.rot)){ctx.restore();continue}
+ // Sparks: short streaks along their motion.
+ {ctx.globalAlpha=1-k;ctx.strokeStyle=p.color;ctx.lineWidth=p.size;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-p.vx*.05,-p.vy*.05);ctx.stroke()}
  ctx.restore()}}
 function drawRings(){for(const r of rings){const k=r.life/r.dur;ctx.globalAlpha=1-k;ctx.strokeStyle=r.color;ctx.lineWidth=r.width*(1-k)+.5;ctx.beginPath();ctx.arc(r.x,r.y,r.max*(1-(1-k)**3),0,TAU);ctx.stroke()}ctx.globalAlpha=1}
 function drawPopups(){ctx.textAlign='center';ctx.lineJoin='round';for(const p of popups){const k=p.life/p.max,scale=k<.18?backOut(k/.18):1;ctx.save();ctx.globalAlpha=k>.7?1-(k-.7)/.3:1;ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.scale(scale,scale);ctx.font=`${p.size}px ${FONT}`;ctx.lineWidth=p.size*.3;ctx.strokeStyle=INK;ctx.strokeText(p.text,0,0);ctx.fillStyle=p.color;ctx.fillText(p.text,0,0);ctx.restore()}}
@@ -471,11 +465,10 @@ function updateEffects(dt,real){shake*=Math.exp(-8*real);flash=Math.max(0,flash-
  if(ropeCut)ropeCut.age+=dt;if(comboTimer>0&&(comboTimer-=dt)<=0)combo=0;
  if(state==='dead'&&deathTimer>0&&(deathTimer-=real)<=0)showResult();
  const scroll=state==='flying'&&!showcase&&!frozen?flightSpeed(alt)*speedMult*worldScale*bossPace():0;
- if(state==='flying'&&!showcase){const starry=stage.id==='space'||stage.id==='universe',tilt=tiltOf(),fire=engineOn(),every=fire?.018:.04;trailClock+=dt;
+ if(state==='flying'&&!showcase){const tilt=tiltOf(),fire=engineOn(),every=fire?.018:.03;trailClock+=dt;
   while(trailClock>every){trailClock-=every;const bx=x*W-Math.sin(tilt)*(fire?56:36),by=balloonY()+(fire?56:36);
    if(fire)particles.push({type:'puff',back:true,world:true,x:bx+rand(-4,4),y:by,vx:rand(-20,20),vy:rand(60,140),life:0,max:rand(.35,.6),size:rand(5,9),color:pick(['#ffd23f','#ff8a2a','#ff4d5e','#fff6b0']),gravity:0,drag:1,rot:0,vr:0});
-   else{const tr=(SKIN_FX[save.skin]||{}).trail;if(tr)particles.push({type:tr.type,back:true,world:true,x:bx+rand(-4,4),y:by,vx:rand(-16,16),vy:tr.type==='slime'?rand(40,80):rand(10,30),life:0,max:tr.type==='bubble'?1.1:.8,size:tr.type==='spark'?rand(1.5,3):tr.type==='confetti'?rand(5,8):rand(3,6),color:pick(tr.colors),gravity:tr.type==='slime'?120:0,drag:1,rot:rand(0,TAU),vr:rand(-6,6)});
-    else particles.push({type:starry?'star':'puff',back:true,world:true,x:bx+rand(-3,3),y:by,vx:rand(-10,10),vy:rand(10,30),life:0,max:starry?.7:.9,size:starry?rand(3,5):rand(4,7),color:starry?pick(['#9fe8ff','#c9a8ff','#fff']):stage.dark?'#c9a8ff':'#fff',gravity:0,drag:1,rot:0,vr:rand(-3,3)})}}
+   else emitTrail(save.skin,bx,by)}
   const speed=flightSpeed(alt)*speedMult;streakClock+=dt*((calm?4:9)+Math.min(22,(speed-130)*.2))*speedMult*bossPace();while(streakClock>1){streakClock--;streaks.push({x:rand(0,SW),y:-60,vx:0,vy:speed*worldScale*rand(2.2,3.4),len:rand(30,80)*speedMult,alpha:rand(.12,.3)*(fire?1.6:1),width:rand(1.5,3),color:fire&&Math.random()<.4?'#ffd23f':null})}
   if(weatherNow&&weatherNow.active&&Math.random()<dt*25)streaks.push({x:weatherNow.dir>0?-60:SW+60,y:rand(0,H),vx:weatherNow.dir*rand(500,800),vy:scroll*.5,len:rand(40,90),alpha:rand(.25,.45),width:rand(2,3.5)});
   if(fire)shake=Math.max(shake,1.5)}
