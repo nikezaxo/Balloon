@@ -88,19 +88,22 @@ The music dips while someone talks. On iPhone, sound plays even with the silent 
 (Safari 17 and newer).
 
 ## Score and stars
-Every run scores points (STAR_SCORES and PTS in game.js):
+Every run scores points (PTS in game.js):
 - 10 points per metre climbed
 - 100 per coin (times the coin multiplier), 500 per perfect coin row
 - 200 per energy cell, 300 per power-up
 - 250 per smash or bonk, 500 per close call
 - 50,000 for defeating a boss
 
-A run earns 1 star at 20,000 points, 2 stars at 60,000 and 3 stars at 150,000. The
-HUD shows the score under the altitude, three stars that light up as you pass each
-target (a star flies from the balloon into the meter) and a bar towards the next star.
+Stars come from bosses defeated in ONE run (revives keep the count; STAR_BOSSES in game.js):
+beat 3 bosses for 1 star, 6 for 2 stars and 12 for 3 stars. The HUD shows the score under
+the altitude, three stars that light up as you earn them (a star flies from the balloon
+into the meter), a bar towards the next star, and the BOSS timer counts your kills towards
+it (for example "BOSS 1:20 · 2/3"). Stars you earned before this rule stay earned.
 
 When the balloon pops, an Angry Birds 2 style results screen opens: the score counts
-up on a framed plaque while the stars pop in one by one above an orange ribbon,
+up on a framed plaque while the stars pop in one by one above an orange ribbon (with how
+many bosses the next star needs),
 "NEW HIGHSCORE!" stamps on when you beat your best, and the balloons you own stand on
 a grass island. Your balloon celebrates by star count (big jumps and star eyes for 3
 stars, a worried look for none). From there you can revive, play again, open the store
@@ -147,9 +150,17 @@ PREVIEW badge and a BUY button, before you spend anything.
 When you are signed in, your avatar, frame, gold name and clan tag show to everyone: on the
 weekly and all-time boards (read from each player's profile, so they always show the newest look), in clans and on your player card (tap any player to see theirs).
 
+PLAYER CARDS: tap any player on the weekly, all-time or season ranking (or in a clan) to open
+their card, even without signing in: avatar and frame, name and clan, this season's rank badge
+and points, their past season finishes and how many season reward items they own, TOTAL SCORE
+(their best scores in every stage added up), BEST SCORE, stars (out of 18), bosses beaten, and
+the highest score and stars in each stage. The stats are saved in their public profile each
+time they play (profiles/{uid} in Firestore), so the card shows the full picture once that
+player has played this version and the updated firestore.rules are published.
+
 ## Seasons and ranks
 A season is one calendar month (UTC); Season 1 is October 2026. Every run earns SEASON
-POINTS (SP): 1 per 1,000 score (up to 150), 5 per star and 25 per boss defeated. Tasks add
+POINTS (SP): 1 per 1,000 score (up to 150), 15 per star and 25 per boss defeated. Tasks add
 more. SP never go down during a season and start again from zero in the next one.
 - Ranks, lowest to highest: METAL, BRONZE, SILVER, GOLD, TITANIUM and DIAMOND, each with
   classes V, IV, III, II and I (Metal V is the start, Diamond I needs 7,750 SP). Each class
@@ -183,10 +194,10 @@ more. SP never go down during a season and start again from zero in the next one
 ## Tasks
 - DAILY: three tasks a day (the same for everyone, new at midnight UTC), such as flying a
   distance in one run, collecting coins, perfect coin rows, engine boosts, smashes, close
-  calls, stars, power-ups, runs or defeating a boss. Each pays coins and SP (some gems), and
+  calls, stars, power-ups, runs or defeating bosses. Each pays coins and SP (some gems), and
   finishing all three pays a bonus of 100 coins, 50 SP and 2 gems.
 - SEASON: ten big goals for the whole season (50 runs, 150,000 m in total, 3,000 coins,
-  100 perfect rows, 30 engine boosts, 60 stars, 3 bosses, 10,000 m in one run, 20 daily tasks,
+  100 perfect rows, 30 engine boosts, 20 stars, 30 bosses, 10,000 m in one run, 20 daily tasks,
   300 smashes) worth 200 to 300 SP plus coins or gems.
 - Progress counts while you fly ("TASK DONE!" pops up) and on the results screen, which also
   shows the SP the run earned and any rank up. Open TASKS and tap CLAIM to collect.
@@ -205,7 +216,8 @@ more. SP never go down during a season and start again from zero in the next one
 These features, and the season ranking, need the updated firestore.rules published in Firebase (see Online high scores).
 
 ## Boss fights
-Every 5 minutes of flying (BOSS_INTERVAL in bosses.js; a BOSS timer counts down in the HUD) the stage boss arrives:
+The first boss arrives after 1 minute 40 seconds of flying, and the next one 1 minute 20 seconds after each
+boss you beat (BOSS_FIRST and BOSS_GAP in bosses.js; a BOSS timer counts down in the HUD):
 1. WARNING: an alarm sounds, ledges retract into the walls (cave walls thin out
    and only bounce you during the fight) and creatures flee.
 2. A versus splash in the style of an Angry Birds 2 poster: rays and focus lines in
@@ -213,12 +225,16 @@ Every 5 minutes of flying (BOSS_INTERVAL in bosses.js; a BOSS timer counts down 
    angry face, they clash in a white burst with a big red VS, and the boss name drops
    in letter by letter.
 3. The boss drops in and attacks. Dodge its weapons; each attack and the passing
-   time drain its stamina bar. Boosts and shields protect you as usual.
+   time drain its stamina bar slowly (a fight lasts about 40 seconds). Below half
+   stamina it gets ENRAGED: the bar turns red, it attacks faster and often chains a
+   second attack right after the first. Every boss you beat in the same run makes the
+   next one faster and more likely to combo (the bar shows which boss of the run it is,
+   e.g. #3). Boosts and shields protect you as usual.
 4. At zero stamina the boss is TIRED (dizzy and sweating). Tap FATALITY (or press
    F, Space or Enter) to finish it with your skin's fatality.
 5. Defeat bursts 500 coins across the screen (+100 per earlier win against that
    boss, +100 with the Golden King skin); they all fly into your balloon, then the
-   course resumes. Repeat wins make the boss slightly faster.
+   course resumes. Repeat wins against a stage's boss also make it slightly faster.
 
 Bosses and weapons:
 - Thunder King (Sunny Sky): lightning strikes, hail fans, wind gusts.
@@ -310,7 +326,7 @@ Coins, skins, lives, bests, high scores and stars are saved in the browser (loca
 ## Customize
 - stages.js: STAGES lists each stage's colours, speed and drawing functions.
 - game.js: generateCourse() controls ledge spacing, coins and power-ups;
-  spawnCritters() controls creatures; POWERS, MEDALS, LIFE_PRICE, STAR_SCORES and
+  spawnCritters() controls creatures; POWERS, MEDALS, LIFE_PRICE, STAR_BOSSES and
   PTS set the rules.
 - skins.js: add a skin to SKINS with its gores, decorations, face, price and rarity,
   and give it a selection pose in SKIN_POSES.

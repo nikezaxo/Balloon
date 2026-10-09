@@ -42,11 +42,11 @@ const DAILY_TASKS=[
  {stat:'rows',goals:[3,5,8],text:g=>`Complete ${g} perfect coin rows`,icon:'star',r:{coins:70,sp:30}},
  {stat:'boosts',goals:[1,2,3],text:g=>`Fire the engine boost ${g} time${g>1?'s':''}`,icon:'bolt',r:{coins:80,sp:30}},
  {stat:'smashes',goals:[5,10,20],text:g=>`Smash or bonk ${g} things`,icon:'flame',r:{coins:60,sp:25}},
- {stat:'stars',goals:[3,5,8],text:g=>`Earn ${g} stars`,icon:'star',r:{coins:80,sp:35}},
+ {stat:'stars',goals:[1,2,3],text:g=>`Earn ${g} star${g>1?'s':''} (beat 3 bosses in a run for each)`,icon:'star',r:{coins:120,sp:45}},
  {stat:'runs',goals:[3,5,8],text:g=>`Play ${g} runs`,icon:'play',r:{coins:50,sp:20}},
  {stat:'close',goals:[3,6,10],text:g=>`Get ${g} close calls`,icon:'shield',r:{coins:60,sp:25}},
  {stat:'powerups',goals:[2,3,5],text:g=>`Collect ${g} power-ups`,icon:'magnet',r:{coins:60,sp:25}},
- {stat:'bosses',goals:[1],text:()=>'Defeat a boss',icon:'crown',r:{coins:200,sp:60,gems:2}}];
+ {stat:'bosses',goals:[1,2,3],text:g=>g>1?`Defeat ${g} bosses`:'Defeat a boss',icon:'crown',r:{coins:150,sp:50,gems:2}}];
 const DAILY_BONUS={coins:100,sp:50,gems:2};
 const SEASON_TASKS=[
  {id:'runs',stat:'runs',goal:50,text:'Play 50 runs',icon:'play',r:{sp:200,coins:300}},
@@ -54,14 +54,14 @@ const SEASON_TASKS=[
  {id:'coins',stat:'coins',goal:3000,text:'Collect 3,000 coins',icon:'coin',r:{sp:200,coins:300,gems:3}},
  {id:'rows',stat:'rows',goal:100,text:'Complete 100 perfect coin rows',icon:'star',r:{sp:250,gems:3}},
  {id:'boosts',stat:'boosts',goal:30,text:'Fire the engine boost 30 times',icon:'bolt',r:{sp:200,coins:300}},
- {id:'stars',stat:'stars',goal:60,text:'Earn 60 stars',icon:'star',r:{sp:250,gems:4}},
- {id:'bosses',stat:'bosses',goal:3,text:'Defeat 3 bosses',icon:'crown',r:{sp:300,gems:5}},
+ {id:'stars',stat:'stars',goal:20,text:'Earn 20 stars',icon:'star',r:{sp:250,gems:4}},
+ {id:'bosses',stat:'bosses',goal:30,text:'Defeat 30 bosses',icon:'crown',r:{sp:300,gems:5}},
  {id:'far',stat:'runAlt',max:true,goal:10000,text:'Fly 10,000 m in one run',icon:'trophy',r:{sp:300,gems:5}},
  {id:'daily',stat:'dailyDone',goal:20,text:'Complete 20 daily tasks',icon:'heart',r:{sp:300,coins:500,gems:5}},
  {id:'smash',stat:'smashes',goal:300,text:'Smash or bonk 300 things',icon:'flame',r:{sp:200,coins:300}}];
 // Three daily tasks, the same for everyone on a given UTC day.
 function dailyFor(day){let seed=0;for(const ch of day)seed=(seed*31+ch.charCodeAt(0))>>>0;const rnd=()=>(seed=(seed*1103515245+12345)>>>0)/4294967296;
- const picks=[];while(picks.length<3){const k=Math.floor(rnd()*DAILY_TASKS.length);if(!picks.some(p=>p.k===k)&&!(k===9&&rnd()<.6))picks.push({k,g:Math.floor(rnd()*DAILY_TASKS[k].goals.length),p:0,c:false})}return picks}
+ const picks=[];while(picks.length<3){const k=Math.floor(rnd()*DAILY_TASKS.length);if(!picks.some(p=>p.k===k)&&!(k===9&&rnd()<.3))picks.push({k,g:Math.floor(rnd()*DAILY_TASKS[k].goals.length),p:0,c:false})}return picks}
 function dailyReward(t){const d=DAILY_TASKS[t.k],m=1+t.g*.5;return {coins:Math.round(d.r.coins*m),sp:Math.round(d.r.sp*m),gems:d.r.gems||0}}
 // Season state lives in save.season and task state in save.tasks; both reset when their period changes.
 function seasonState(){const now=seasonOf();if(!save.season||!save.season.id)save.season={id:now.id,sp:0,reached:-1,legend:false};
@@ -79,7 +79,7 @@ function grant(r){if(r.coins)save.coins+=r.coins;if(r.gems)save.gems=(save.gems|
 function addSP(n){const s=seasonState();s.sp+=Math.max(0,Math.round(n));const r=tierOf(s.sp);while(s.reached<r.idx){s.reached++;const d=DIVISIONS[s.reached];if(s.reached===0)continue;const promo=d.di===0;const coins=REACH_COINS[d.ti],gems=promo?PROMO_GEMS[d.ti]:0;save.coins+=coins;save.gems=(save.gems||0)+gems;rankUps.push({name:d.name,coins,gems,promo,ti:d.ti})}
  if(typeof online!=='undefined')online.seasonSync&&online.seasonSync();refreshSeasonUi()}
 // Season points for a finished run: score, stars and bosses. Called with the run's totals so far (revives add only the rest).
-function runSP(score,stars,bosses){return Math.min(150,Math.round(score/1000))+stars*5+bosses*25}
+function runSP(score,stars,bosses){return Math.min(150,Math.round(score/1000))+stars*15+bosses*25}
 // What this run has already paid into tasks and season points, so a revive only adds what is new.
 let seasonRun=null;
 function seasonNewRun(){seasonRun={sp:0,stars:0,meters:0,coins:0,counted:false,done:0}}
@@ -161,13 +161,13 @@ function renderSeason(){const list=$('#panel-list'),s=seasonState(),sn=seasonOf(
  else{const h=(save.seasonHistory||[]).find(x=>prev&&x.id===prev.id);const card=el('div','season-card');if(h){const r={tier:h.ti===6?LEGEND_TIER:TIERS[h.ti],ti:h.ti,legend:h.ti===6,name:h.rank};card.append(emblemEl(r,70));const info=el('div','season-info');info.append(rankLabel(r),el('b','season-sp',`${h.sp.toLocaleString()} SP`),el('small','',`Your final rank in season ${h.id.slice(1)}`));card.append(info)}else card.append(el('p','rank-note',prev?'You did not play last season.':'This is the first season. Check back next month!'));list.append(card)}
  const id=seasonTab==='now'?sn.id:prev&&prev.id;if(!id)return;const box=el('div','rank-list');list.append(el('small','clan-label','GLOBAL RANKING'),box);
  if(typeof online==='undefined'||!online.configured()){box.append(el('p','rank-note','The global ranking needs online play.'));return}
- if(!online.user){box.append(el('p','rank-note','Sign in to join the global season ranking.'),googleButton());return}
+ if(!online.user)list.append(el('p','rank-note','Sign in to join the global season ranking.'),googleButton());
  box.append(el('p','rank-note','Loading…'));const req=++seasonReq;
- online.seasonTop(id).then(rows=>{if(req!==seasonReq||panelKind!=='season')return;box.replaceChildren();if(!rows.length){box.append(el('p','rank-note','No one has ranked yet. Be the first!'));return}const uid=online.user.uid;
+ Promise.resolve(online.start()).then(()=>online.seasonTop(id)).then(rows=>{if(req!==seasonReq||panelKind!=='season')return;box.replaceChildren();if(!rows.length){box.append(el('p','rank-note','No one has ranked yet. Be the first!'));return}const uid=online.user&&online.user.uid;
   rows.forEach((e,i)=>{const r=tierOf(e.sp||0,i<LEGEND_TOP),row=el('div','rank-row'+(e.uid===uid?' me':'')+(i<3?' top':'')),pos=el('span','rank-pos');if(i<3)pos.innerHTML=icon('medal',['gold','silver','bronze'][i]);else pos.textContent=i+1;row.dataset.uid=e.uid;
-   const lk=e.uid===uid?{...myLook(),name:online.displayName(),clan:save.clan&&save.clan.tag}:e;row.append(pos,avatarEl(lk,32),nameEl(lk.name||e.name,lk.gold,lk.clan),emblemEl(r,26),el('b','rank-score',(e.sp||0).toLocaleString()));row.title=r.name;row.onclick=()=>showProfile(e.uid);box.append(row)});
+   const lk=e.uid===uid?{...myLook(),name:online.displayName(),clan:save.clan&&save.clan.tag}:e;row.append(pos,avatarEl(lk,32),nameEl(lk.name||e.name,lk.gold,lk.clan),emblemEl(r,26),el('b','rank-score',(e.sp||0).toLocaleString()));row.title=r.name;row.onclick=()=>showProfile(e.uid,{name:e.name,avatar:e.avatar,frame:e.frame,gold:e.gold,clanTag:e.clan,seasonId:id,sp:e.sp||0});box.append(row)});
   online.looks(rows.map(e=>e.uid).filter(u=>u!==uid)).then(map=>{for(const row of box.querySelectorAll('.rank-row[data-uid]')){const p=map[row.dataset.uid];if(!p)continue;row.querySelector('canvas').replaceWith(avatarEl(p,32));row.querySelector('.rank-name').replaceWith(nameEl(p.name,p.gold,p.clanTag))}}).catch(()=>{});
-  if(seasonTab==='now'&&!rows.some(e=>e.uid===uid))online.seasonRank(id,s.sp).then(rank=>{if(!rank||req!==seasonReq)return;const r=tierOf(s.sp,rank<=LEGEND_TOP),row=el('div','rank-row me'),lk=myLook();row.append(el('span','rank-pos',`#${rank}`),avatarEl(lk,32),nameEl(online.displayName(),lk.gold,save.clan&&save.clan.tag),emblemEl(r,26),el('b','rank-score',s.sp.toLocaleString()));box.append(row)}).catch(()=>{})})
+  if(uid&&seasonTab==='now'&&!rows.some(e=>e.uid===uid))online.seasonRank(id,s.sp).then(rank=>{if(!rank||req!==seasonReq)return;const r=tierOf(s.sp,rank<=LEGEND_TOP),row=el('div','rank-row me'),lk=myLook();row.append(el('span','rank-pos',`#${rank}`),avatarEl(lk,32),nameEl(online.displayName(),lk.gold,save.clan&&save.clan.tag),emblemEl(r,26),el('b','rank-score',s.sp.toLocaleString()));box.append(row)}).catch(()=>{})})
   .catch(e=>{console.warn(e);if(req===seasonReq)box.replaceChildren(el('p','rank-note','Could not load the ranking right now.'))})}
 function renderSeasonRewards(list,s){const cur=tierOf(s.sp,s.legend);list.append(el('p','rank-note','When the season ends you get the rewards of the tier you finished in, plus the special items of every tier below it.'));
  [...TIERS,LEGEND_TIER].forEach((tier,ti)=>{const rw=SEASON_REWARDS[ti],row=el('div','tier-row'+(cur.ti===ti?' me':'')),r={tier,ti,legend:ti===6,name:tier.name},need=ti===6?`${LEGEND_MIN.toLocaleString()} SP + TOP ${LEGEND_TOP.toLocaleString()}`:`${DIVISIONS[ti*5].min.toLocaleString()} SP`;

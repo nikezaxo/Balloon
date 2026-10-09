@@ -222,6 +222,8 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .boss-info b{display:block;font-family:var(--title);font-weight:400;font-size:15px;letter-spacing:.8px;text-shadow:var(--stroke)}
 .boss-info i{display:block;height:12px;margin-top:3px;background:#0008;border:2px solid var(--ink);border-radius:8px;overflow:hidden}
 .boss-info s{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff3b52,#ffb020);border-radius:6px;transition:width .2s}
+.boss-bar.rage{border-color:#ff3b52;box-shadow:0 4px 0 #1b124088,0 0 14px #ff3b5288}
+.boss-bar.rage s{background:linear-gradient(90deg,#ff1f3d,#ff6a1a);animation:pulse .35s ease-in-out infinite alternate}
 .boss-bar.tired b{color:var(--yellow);animation:pulse .3s ease-in-out infinite alternate}
 .fatality-btn{pointer-events:auto;position:absolute;left:50%;bottom:calc(22px + var(--bottom));transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:12px 26px 15px;font-family:var(--title);font-size:32px;letter-spacing:1px;color:#fff;text-shadow:var(--stroke);background:linear-gradient(#ff6a6a,#c8102e);border:4px solid var(--ink);border-radius:22px;box-shadow:inset 0 -7px 0 #8a0a20,inset 0 3px 0 #ffb0b0,0 7px 0 var(--ink);animation:fatal .45s ease-in-out infinite alternate}
 .fatality-btn[hidden]{display:none}
@@ -555,3 +557,31 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .feat-info .season-note{font-size:11px;font-weight:800;color:#c9a8ff}
 @media(max-height:720px){.event-row{margin-top:.5vh}.event-pill{padding:2px 10px 3px 4px}.ev-ico{width:24px;height:24px}.ev-emblem{width:28px;height:28px}.ev-text b{font-size:13px}.ev-text small{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.red-dot,.emblem .em-rays,.rank-label.t-legend{animation:none}}
+/* Player card */
+.pc-body{max-height:min(64vh,600px);overflow-y:auto;overscroll-behavior:contain;padding:2px 2px 6px;align-items:stretch!important}
+.pc-head{display:flex;align-items:center;gap:12px;text-align:left}
+.pc-who{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.pc-who .profile-name{font-size:22px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-season{display:flex;align-items:center;gap:10px;padding:6px 12px;text-align:left;background:linear-gradient(#b48cff,#6a35ef);border:3px solid var(--ink);border-radius:14px;box-shadow:0 3px 0 var(--ink)}
+.pc-season.none{background:#1b124066}
+.pc-season.none .emblem{filter:grayscale(1);opacity:.6}
+.pc-season-text{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
+.pc-sp{font-family:var(--title);font-weight:400;font-size:16px;color:var(--yellow);text-shadow:var(--stroke)}
+.pc-past{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.pc-past-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pc-past-item{display:flex;flex-direction:column;align-items:center;gap:1px}
+.pc-past-item small{font-size:10px!important}
+.pc-items{display:flex;align-items:center;gap:3px;font-family:var(--title);font-size:12px;padding:2px 8px 3px 4px;background:#1b1240aa;border-radius:8px;text-shadow:var(--stroke)}
+.pc-items .ico{width:16px;height:16px}
+.pc-none{color:#c9d3f0!important}
+.pc-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pc-stat{display:flex;flex-direction:column;align-items:center;padding:5px 4px;background:#1b124066;border:3px solid var(--ink);border-radius:12px}
+.pc-stat b{font-family:var(--title);font-weight:400;font-size:18px;color:var(--yellow);text-shadow:var(--stroke)}
+.pc-stat small{font-size:10px!important}
+.pc-stages{display:flex;flex-direction:column;align-items:stretch;gap:4px;text-align:left}
+.pc-stage{display:flex;align-items:center;gap:7px;padding:4px 8px;background:#1b124066;border:2px solid var(--ink);border-radius:10px}
+.pc-stage.none{opacity:.55}
+.pc-stage>.ico{width:24px;height:24px}
+.pc-stage-name{flex:1;min-width:0;font-family:var(--title);font-weight:400;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:var(--stroke)}
+.pc-stage .star-trio .ico{width:14px;height:14px}.pc-stage .star-trio .ico.mid{width:17px;height:17px}
+.pc-stage .rank-score{font-size:14px}
