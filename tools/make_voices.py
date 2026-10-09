@@ -26,6 +26,10 @@ CHARS = {
  'diamond': ('bf_emma', 1.05, 1.12, 'flanger=delay=2:depth=2:speed=0.4'),
  'prism':   ('af_nova', 1.08, 1.3, 'aphaser=type=t:speed=0.7,chorus=0.6:0.9:35|50:0.3|0.25:0.3|0.4:2.5|1.8'),
  'starlight': ('bm_fable', 0.95, 0.9, 'chorus=0.5:0.9:50|70:0.35|0.3:0.25|0.35:1.5|1,aecho=0.8:0.6:150:0.18'),
+ 'dog':     ('am_adam', 0.82, 0.9, 'lowpass=f=5200,tremolo=f=3:d=0.12'),
+ 'chicks':  ('af_jessica', 1.1, 1.8, 'chorus=0.6:0.9:25|40|55:0.3|0.25|0.2:0.25|0.3|0.4:2|2.3|2.6'),
+ 'fox':     ('am_liam', 1.16, 1.2, 'equalizer=f=1400:t=q:w=1.2:g=5,highpass=f=200'),
+ 'wolf':    ('bm_lewis', 0.95, 0.85, 'equalizer=f=160:t=q:w=1:g=3,aecho=0.8:0.5:50:0.1'),
  'boss_sky':      ('am_fenrir', 0.95, 0.7, 'aecho=0.8:0.6:110:0.16,lowpass=f=4500'),
  'boss_jungle':   ('am_onyx', 0.95, 0.66, 'tremolo=f=30:d=0.4,asoftclip=type=tanh,lowpass=f=3000'),
  'boss_cave':     ('bf_isabella', 1.05, 1.3, 'flanger=delay=3:depth=4:speed=1.5,aecho=0.8:0.5:80:0.14'),
@@ -49,6 +53,19 @@ L = {
  'diamond': ["Shine bright, like a diamond.","Brilliant!","Crystal rush!",["Shatter!","Too hard for you!"],"Hey! A scratch!","Flawless!","Diamond storm!","Unbreakable!","Cracked...","Polished and perfect!"],
  'prism':   ["Prism power! Taste the rainbow light!","Light speed!","Full spectrum!",["Rainbow beam!","Blinded by the light!"],"Hey! My facets!","Pure light!","Rainbow shatter!","Light always wins!","My light... is fading...","Shining again!"],
  'starlight': ["I am the Star Legend!","Rise, starlight!","Supernova!",["Starfall!","Bow to the legend!"],"You dare touch a legend?","Another star. Of course.","Supernova strike!","Legends never lose!","Even legends... fall...","A legend never dies!"],
+}
+# The talking characters have several lines for each moment, plus chatter they say on their own while flying.
+L.update({
+ 'dog':    [["Huh? Oh... hi. Is it nap time?","Yawn... I'm awake. Mostly.","Five more minutes, please..."],["Okay... let's float... slowly...","Up we go... yawn...","Wake me when we land."],["Whoa! Too fast! I'm awake!","Zoomies!","Woof! Speedy!"],["Woof! Bonk!","Shoo! Go away!","Bad critter!"],["Ow! I was napping!","Hey! My ears!","Yelp! Not nice!"],["Ooh... a sparkly treat.","Good boy gets a star!","Shiny... nice..."],["Sleepy slam!","Nap attack!"],["Good boy! Now... nap time.","I did it! Can I sleep now?","Woof! Victory!"],["Goodnight... everyone...","Zzz... huh? Oh no..."],["I'm up! I'm up!","That was a nice nap. Let's go!"]],
+ 'chicks': [["Peep peep! We're the chicks!","Hi! Hi! Hi! Let's play!","Three chicks, one balloon!"],["Wheee! We're flying!","Up, up, up we go!","Look, mama! No feet!"],["Super chick speed!","Faster! Faster!","Peep peep, zoom!"],["Peck peck!","Take that! Peep!","Chick attack!"],["Ouchie! Mama!","Hey! Rude!","Peep! That hurt!"],["Shiny! Can we eat it?","A star! Yay yay yay!","Ooh, sparkly!"],["Peck peck peck!","Chick stampede!"],["We did it! Group hug!","Chicks rule!","Yay! Let's do it again!"],["Mama... help...","Uh oh... we popped..."],["We're back! Peep peep!","Again! Again!"]],
+ 'fox':    [["I'm the big bad fox! Fear me!","Hehe. Nobody suspects the fox.","Sneaky, clever, and very handsome!"],["Time for a sneaky flight!","Shh! Tiptoe into the sky!","Off we go, quietly!"],["Hehe! Too fast to catch!","Fox speed!","Nobody outfoxes me!"],["Outfoxed you!","Ha! Tricked you!","Gotcha, sucker!"],["Ow! My beautiful tail!","Hey! That wasn't in my plan!","Ouch! Okay, okay!"],["A shiny star for a clever fox!","Another trophy for the fox!","Hehe, mine now!"],["Fox trick!","Feather frenzy!"],["Who's the big bad fox now?","Clever beats strong! Hehe!","The fox wins again!"],["My plan... was perfect...","Oh no... not again..."],["The fox is back, baby!","Did you miss me? Hehe!"]],
+ 'wolf':   [["Hmph. I am the big bad wolf.","What do you want? I'm busy.","Don't make me huff and puff."],["Fine. Let's go.","Ugh. Up we go.","Move it, sky!"],["I'll huff, and I'll puff!","Out of my way!","Grr! Full speed!"],["Get lost!","Hmph! Pathetic!","Grr! Beat it!"],["Ow! That's it, I'm angry!","Grr! Who did that?","You'll pay for that!"],["Hmph. Not bad.","A star. Whatever.","Fine, I'll take it."],["Huff and puff!","Big bad blow!"],["Nobody beats the big bad wolf!","Hmph. Too easy.","That's what you get!"],["Ugh... I hate balloons...","This... is so embarrassing..."],["The wolf is back. And grumpier!","Round two. Let's go."]],
+})
+CHAT = {
+ 'dog':    ["Zzz... huh? I'm awake!","Is it dinner time yet?","I could really use a nap.","Who's a good boy? Me?","This cloud looks comfy.","Yawn... flying is tiring.","I smell... sausages?","Five more minutes..."],
+ 'chicks': ["Are we there yet?","Is that a worm? I want it!","Mama says don't fly too high.","I'm the oldest! No, I am!","Peep! Peep! Peep!","Can we be big bad foxes too?","I'm hungry. Are clouds yummy?","Let's play hide and seek!"],
+ 'fox':    ["Am I scary yet? Be honest.","One day, I'll catch a chicken. One day!","Grr! See? Very scary.","I have a plan. A brilliant plan!","Nobody tell the chicks I'm up here.","Who needs wings? I've got brains!","Hmm, that cloud looks like a chicken.","Big. Bad. Fox. Remember that!"],
+ 'wolf':   ["Why am I a balloon? Ugh.","I'm not grumpy. I'm just hungry.","Grr. Stop staring at me.","In my day, wolves walked.","If I see that fox again...","Hmph. Nice view. I guess.","Don't tell anyone I'm having fun.","My stomach is growling. Or is that me?"],
 }
 BOSS = {'sky':"Feel the thunder! Ha ha ha!",'jungle':"You dare enter my jungle?",'cave':"Welcome to my cave, little balloon!",'factory':"Target acquired. Prepare to be crushed.",'space':"Earthling! Surrender now!",'universe':"I will swallow your stars!"}
 MOOD_SPEED = {'hit':1.12,'oof':1.1,'fatality':1.05,'die':0.85,'tired':0.8}
@@ -81,6 +98,10 @@ for char, texts in L.items():
         lines[char][ev] = []
         for i, txt in enumerate(variants):
             make(char, ev, i, txt); lines[char][ev].append(txt)
+    if char in CHAT:
+        lines[char]['chat'] = []
+        for i, txt in enumerate(CHAT[char]):
+            make(char, 'chat', i, txt); lines[char]['chat'].append(txt)
     print(char, flush=True)
 for st, taunt in ({} if ONLY else BOSS).items():
     c = 'boss_'+st; lines['boss-'+st] = {}

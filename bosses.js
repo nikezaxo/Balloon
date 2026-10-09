@@ -292,3 +292,25 @@ const FATALITIES={
 // Season skins borrow the fatality of the skin they grew out of, under their own name.
 FATALITIES.prism={...FATALITIES.diamond,name:'RAINBOW SHATTER'};
 FATALITIES.starlight={...FATALITIES.galaxy,name:'SUPERNOVA'};
+// The talking characters' own fatalities.
+FATALITIES.fox={name:'FEATHER FRENZY',pose(p,b,f){const bx=x*W,by=balloonY(),pts=[[-1,-.4],[1,.1],[-.8,.7],[.9,-.7],[-1,.2],[1,.6]];
+  if(p>=.12&&p<.72){const i=Math.min(5,Math.floor((p-.12)/.1)),[sx,sy]=pts[i];f.balloon={dx:b.x+sx*90*b.scale-bx,dy:b.y+sy*70*b.scale-by}}else if(p>=.72&&p<.86){const k=(p-.72)/.14,[sx,sy]=pts[5];f.balloon={dx:(b.x+sx*90*b.scale-bx)*(1-k),dy:(b.y+sy*70*b.scale-by)*(1-k)}}
+  if(p>=.12&&p<.72)f.pose={dx:Math.sin(p*90)*5,rot:Math.sin(p*40)*.08};if(p>=.72){const q=(p-.72)/.28;f.pose={rot:q*8,scale:Math.max(0,1-q*1.3),dy:-q*60}}
+  for(let i=0;i<6;i++)f.at(.12+i*.1,()=>{burst(b.x+(Math.random()-.5)*120*b.scale,b.y+(Math.random()-.5)*90*b.scale,10,{type:'feather',colors:['#ffffff','#ffd2a0','#ff9a4a'],speed:[80,260],size:[5,8],life:[.8,1.2],gravity:60});gameSound.effect('close')});
+  f.at(.72,()=>{popup(b.x,b.y-100,'OUTFOXED!','#ff9a4a',54);flash=.5;flashColor='#fff';shake=Math.max(shake,18);gameSound.effect('smash');burst(b.x,b.y,40,{type:'feather',colors:['#ffffff','#ffd2a0'],speed:[150,420],size:[6,10],life:[1,1.6],gravity:80})})}};
+FATALITIES.wolf={name:'BIG BAD BLOW',pose(p,b,f){if(p>.2&&p<.45)f.pose={dx:Math.sin(p*120)*(p-.2)*40,rot:(p-.2)*.6};if(p>=.45){const q=easeIn((p-.45)/.55);f.pose={dx:q*(W+300),dy:-q*200,rot:.15+q*12,scale:Math.max(.2,1-q*.6)}}
+  f.at(.05,()=>{popup(x*W,balloonY()-90,'HUFF...','#ffffff',36);gameSound.effect('charged')});f.at(.25,()=>popup(x*W,balloonY()-90,'PUFF!','#ffffff',44));f.at(.45,()=>{popup(b.x,b.y-80,'BLOWN AWAY!','#c9d3f0',50);shake=Math.max(shake,24);gameSound.effect('boom')})},
+ draw(p,b,f){if(p<.15||p>.95)return;const k=Math.min(1,(p-.15)/.2)*(p>.8?1-(p-.8)/.15:1),bx=x*W,by=balloonY()-10,d=Math.hypot(b.x-bx,b.y-by),base=Math.atan2(b.y-by,b.x-bx);ctx.save();ctx.globalAlpha=k*.85;ctx.strokeStyle='#fff';ctx.lineCap='round';
+  for(let i=0;i<14;i++){const ph=(p*6+i/14)%1,ang=base+(hash(i*3.1)-.5)*.7,d0=30+ph*d*1.1,len=30+hash(i*1.7)*40;ctx.lineWidth=2+hash(i*5.3)*4;ctx.beginPath();ctx.moveTo(bx+Math.cos(ang)*d0,by+Math.sin(ang)*d0);ctx.lineTo(bx+Math.cos(ang)*(d0+len),by+Math.sin(ang)*(d0+len));ctx.stroke()}ctx.restore()}};
+FATALITIES.chicks={name:'PECK PECK PECK',pose(p,b,f){const bx=x*W,by=balloonY(),tx=b.x-bx,ty=b.y+60*b.scale-by;
+  if(p<.18){const k=easeOut(p/.18);f.balloon={dx:tx*k,dy:ty*k}}else if(p<.7){const peck=Math.abs(Math.sin((p-.18)*Math.PI*14));f.balloon={dx:tx+Math.sin(p*31)*20,dy:ty-peck*26}}else{const k=easeOut(Math.min(1,(p-.7)/.2));f.balloon={dx:tx*(1-k),dy:ty*(1-k)}}
+  if(p>=.18&&p<.7)f.pose={scale:1-(p-.18)*.6,dx:Math.sin(p*80)*4};if(p>=.7)f.pose={scale:Math.max(0,.69-(p-.7)*3),rot:(p-.7)*10};
+  for(let i=0;i<7;i++)f.at(.2+i*.07,()=>{popup(b.x+(Math.random()-.5)*120,b.y-60-Math.random()*40,'PECK!','#fff3a0',30);burst(b.x+(Math.random()-.5)*80,b.y+(Math.random()-.5)*60,8,{type:'star',colors:['#ffd23f','#fff'],speed:[100,260],size:[4,7],life:[.3,.6]});gameSound.effect('boop')});
+  f.at(.72,()=>{popup(b.x,b.y-90,'PEEP PEEP!','#ffd84a',52);shake=Math.max(shake,14);burst(b.x,b.y,36,{type:'feather',colors:['#ffe066','#fff3a0','#ffffff'],speed:[150,400],size:[5,9],life:[1,1.5],gravity:80});gameSound.effect('pop')})}};
+FATALITIES.dog={name:'SLEEPY SLAM',pose(p,b,f){const bx=x*W,by=balloonY(),tx=b.x-bx,top=b.y-170*b.scale-by,hit=b.y-40*b.scale-by;
+  if(p<.3){const k=easeOut(p/.3);f.balloon={dx:tx*k,dy:top*k}}else if(p<.5)f.balloon={dx:tx+Math.sin(p*20)*4,dy:top+Math.sin(p*14)*4};else if(p<.6){const k=easeIn((p-.5)/.1);f.balloon={dx:tx,dy:top+(hit-top)*k}}else if(p<.75)f.balloon={dx:tx,dy:hit};else{const k=easeOut(Math.min(1,(p-.75)/.2));f.balloon={dx:tx*(1-k),dy:hit*(1-k)}}
+  if(p>=.6&&p<.8)f.pose={sx:1.35,sy:.35,dy:40*b.scale};if(p>=.8){const q=(p-.8)/.2;f.pose={sx:1.35-q*.4,sy:.35,dy:40*b.scale+q*500,rot:q*3,alpha:Math.max(0,1-q*1.5)}}
+  f.at(.3,()=>popup(b.x,Math.max(170,b.y-120*b.scale),'ZZZ...','#c9d3f0',36));
+  f.at(.6,()=>{popup(b.x,b.y-60,'BONK!','#ffd23f',66);shake=Math.max(shake,26);flash=.6;flashColor='#fff';burst(b.x,b.y,24,{type:'star',colors:['#ffd23f','#fff'],speed:[150,420],size:[5,9],life:[.4,.8]});rings.push({x:b.x,y:b.y,max:140,life:0,dur:.5,color:'#ffd23f',width:9});gameSound.effect('smash')});
+  f.at(.66,()=>burst(b.x,b.y-40,12,{type:'bone',colors:['#fff6e0'],speed:[120,320],size:[5,8],life:[.8,1.2],gravity:500}))},
+ draw(p,b,f){if(p<.3||p>=.6||!f.balloon)return;const bx=x*W+f.balloon.dx,by=balloonY()+f.balloon.dy;for(let i=0;i<3;i++){const q=((p-.3)*5+i/3)%1;ctx.save();ctx.globalAlpha=Math.sin(q*Math.PI);zeeShape(bx+24+q*20,by-40-q*30,5+q*6);ctx.restore()}}};
