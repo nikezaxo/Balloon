@@ -33,12 +33,14 @@ let panelKind=null,storeTab='skins',storePick='classic',previews=[],skinPop={},p
 // Coin rows: 10 coins per row along the safe path; every 3 perfect rows in a row add +0.1 to the coin multiplier.
 // Rows are spaced far apart so normal flight has few coins; the big haul is the coin rush during a boost.
 const ROW_SIZE=10,COIN_STEP=42,COIN_BREAK=1000,RUSH_STEP=30;let rushCursor=0,rushCount=0,coinCursor=330,prevLedge={a:0,c:.5},rowId=0,rowCount=0,rowBreaks=0,rows=new Map(),rowStreak=0,coinMult=1,bestMult=1;
+// Free movement: drag anywhere and the balloon follows the finger's movement (relative drag).
+const DRAG=1.25;let lift=0,vy=0,liftTarget=null,drag=null;
 const keys=new Set(),radius=29,worldScale=.65,hudCache={};
 // The canvas fills the screen; gameplay happens in a centred column at most 0.6× the screen height wide.
 function resize(){const r=canvas.getBoundingClientRect();SW=r.width;H=r.height;W=Math.round(Math.min(SW,Math.max(360,H*.6)));OX=(SW-W)/2;dpr=Math.min(devicePixelRatio||1,2);canvas.width=SW*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);shell.style.setProperty('--pw',W+'px')}
 new ResizeObserver(resize).observe(canvas);
 const stageBest=()=>save.best[stage.id]||0;
-function reset(mode='ready'){state=mode;alt=0;x=.5;vx=0;target=null;pointer=null;obstacles=[];coins=[];critters=[];particles=[];leaves=[];flightTime=0;spin=0;wind=0;weatherNow=null;leafClock=0;coinCount=0;shownCoins=0;banked=0;nextObstacle=450;spawnIndex=0;keys.clear();boss=null;caveWallScale=1;nextBossTime=BOSS_INTERVAL;rewardCoins=[];coinCursor=330;rushCursor=0;rushCount=0;prevLedge={a:0,c:.5};rowId=0;rowCount=0;rowBreaks=0;rows=new Map();rowStreak=0;coinMult=1;bestMult=1;$('#versus').hidden=true;$('#boss-bar').hidden=true;$('#fatality').hidden=true;
+function reset(mode='ready'){state=mode;alt=0;x=.5;vx=0;target=null;pointer=null;lift=0;vy=0;liftTarget=null;drag=null;obstacles=[];coins=[];critters=[];particles=[];leaves=[];flightTime=0;spin=0;wind=0;weatherNow=null;leafClock=0;coinCount=0;shownCoins=0;banked=0;nextObstacle=450;spawnIndex=0;keys.clear();boss=null;caveWallScale=1;nextBossTime=BOSS_INTERVAL;rewardCoins=[];coinCursor=330;rushCursor=0;rushCount=0;prevLedge={a:0,c:.5};rowId=0;rowCount=0;rowBreaks=0;rows=new Map();rowStreak=0;coinMult=1;bestMult=1;$('#versus').hidden=true;$('#boss-bar').hidden=true;$('#fatality').hidden=true;
  shake=0;flash=0;timeScale=1;slowTimer=0;deathTimer=0;popups=[];rings=[];flyers=[];streaks=[];combo=0;comboTimer=0;bestCombo=0;nearMisses=0;smashes=0;squash=0;squashV=0;mood='happy';moodTimer=0;danger=0;ropeCut=null;nextMilestone=1000;passedBest=false;medalsHit=0;eventsSeen=new Set();grow=1;revives=0;
  energy=0;boost=null;speedMult=1;shield=0;magnet=0;doubler=0;invuln=0;showcase=null;powerCount=0;bonus=0;starsHit=0;starFlyers=[];bossKills=0;$('#results').hidden=true;
  generateCourse();$('#weather').textContent=stage.wind?'CALM AIR':stage.calm;$('#weather').classList.remove('gust');$('#hint').hidden=mode!=='ready';$('#menu').hidden=mode!=='menu';$('#menu').classList.remove('leaving');transition=null;$('#overlay').hidden=true;$('#panel').hidden=true;panelKind=null;$('#pause').innerHTML=icon('pause');$('#pause').setAttribute('aria-label','Pause game');$('#announce').replaceChildren();refreshMeta()}
@@ -65,7 +67,7 @@ function el(tag,cls='',text){const e=document.createElement(tag);if(cls)e.classN
 function openPanel(kind){panelKind=kind;previews=[];storePick=save.skin;const list=$('#panel-list');list.replaceChildren();
  if(kind==='store')renderStore();
  else if(kind==='ranks')renderRanks();
- else if(kind==='profile')renderProfile();
+ else if(kind==='profile'){cosPreview=null;renderProfile()}
  else if(kind==='clan')renderClan();
  else{$('#panel-title').textContent='POWER-UPS';{const row=el('div','boost-item'),ico=el('span','ico'),text=el('div');ico.innerHTML=icon('skull');ico.style.setProperty('--c','#ff4d5e');text.append(el('h3','','BOSS FIGHTS'),el('p','',`Every ${BOSS_INTERVAL/60} minutes of flying the stage boss arrives. Dodge its weapons until it runs out of stamina, then tap FATALITY. Each balloon skin has its own fatality.`));row.append(ico,text);list.append(row)}for(const p of Object.values(POWERS)){const row=el('div','boost-item'),ico=el('span','ico'),text=el('div');ico.innerHTML=icon(p.ico);ico.style.setProperty('--c',p.color);text.append(el('h3','',p.name),el('p','',p.desc));row.append(ico,text);list.append(row)}}
  $('#panel').hidden=false;list.scrollTop=0}
@@ -111,21 +113,26 @@ function launch(quiet){if(state!=='ready')return;
  rings.push({x:W/2,y:cutY,max:60,life:0,dur:.4,color:'#fff',width:5});
  burst(W/2,balloonY()+34,10,{type:'puff',colors:['#fff'],speed:[40,130],size:[8,14],life:[.5,.9],drag:3});
  squash=-.25;squashV=0;shake=7;mood='joy';moodTimer=1;if(!quiet)announce('GO!','','go')}
-function balloonY(){return H*(.68-Math.min(alt/300,1)*.09)}
+// camY is the screen height of the current altitude (the camera); the balloon can fly above or below it
+// by lift pixels when the player drags it up or down.
+function camY(){return H*(.68-Math.min(alt/300,1)*.09)}
+function balloonY(){return camY()+lift}
+const balloonAlt=()=>alt-lift/worldScale,tiltOf=()=>clamp(vx,-1.2,1.2)*.16+wind*.12;
 function rope(){return {a:{x:W*.5,y:balloonY()+35},b:{x:W*.5,y:H-47}}}
 function cross(a,b,c){return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x)}
 function intersects(a,b,c,d){return cross(a,b,c)*cross(a,b,d)<=0&&cross(c,d,a)*cross(c,d,b)<=0&&Math.max(a.x,b.x)>=Math.min(c.x,d.x)&&Math.min(a.x,b.x)<=Math.max(c.x,d.x)&&Math.max(a.y,b.y)>=Math.min(c.y,d.y)&&Math.min(a.y,b.y)<=Math.max(c.y,d.y)}
 function point(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left-OX,y:e.clientY-r.top}}
-canvas.addEventListener('pointerdown',e=>{canvas.focus();canvas.setPointerCapture(e.pointerId);pointer=point(e);if(state==='flying')target=pointer.x/W});
-canvas.addEventListener('pointermove',e=>{if(!pointer)return;const p=point(e);if(state==='ready'||state==='menu'){const r=rope();if(intersects(pointer,p,r.a,r.b)&&Math.hypot(p.x-pointer.x,p.y-pointer.y)>2){if(state==='menu')startRun('swipe');else launch()}}else if(state==='flying')target=p.x/W;pointer=p});
+function grab(p){drag={fx:p.x,fy:p.y,bx:x*W,bl:lift};target=x;liftTarget=lift}
+canvas.addEventListener('pointerdown',e=>{canvas.focus();canvas.setPointerCapture(e.pointerId);pointer=point(e);if(state==='flying')grab(pointer)});
+canvas.addEventListener('pointermove',e=>{if(!pointer)return;const p=point(e);if(state==='ready'||state==='menu'){const r=rope();if(intersects(pointer,p,r.a,r.b)&&Math.hypot(p.x-pointer.x,p.y-pointer.y)>2){if(state==='menu')startRun('swipe');else launch()}}else if(state==='flying'){if(!drag)grab(p);target=(drag.bx+(p.x-drag.fx)*DRAG)/W;liftTarget=drag.bl+(p.y-drag.fy)*DRAG}pointer=p});
 // Full screen and audio need a user activation, which a finished tap or swipe (pointerup) provides.
-function release(){pointer=null;target=null}canvas.addEventListener('pointerup',()=>{release();if(wantFullscreen){wantFullscreen=false;enterFullscreen()}ensureSound()});canvas.addEventListener('pointercancel',release);
-const GAME_KEYS=['ArrowLeft','ArrowRight','ArrowUp',' ','a','d','w','b','f','A','D','W','B','F','p','P','Escape','Shift','Enter'];
+function release(){pointer=null;target=null;liftTarget=null;drag=null}canvas.addEventListener('pointerup',()=>{release();if(wantFullscreen){wantFullscreen=false;enterFullscreen()}ensureSound()});canvas.addEventListener('pointercancel',release);
+const GAME_KEYS=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','a','d','w','s','b','e','f','A','D','W','S','B','E','F','p','P','Escape','Shift','Enter'];
 window.addEventListener('keydown',e=>{if(!GAME_KEYS.includes(e.key))return;if(!$('#profile-card').hidden){if(e.key==='Escape')$('#pc-close').click();return}if(!$('#panel').hidden){if(e.key==='Escape')$('#panel-close').click();return}e.preventDefault();const k=e.key.toLowerCase();keys.add(k);
  if(state==='menu'&&(k==='arrowleft'||k==='a'))setStage(STAGES.indexOf(stage)-1);if(state==='menu'&&(k==='arrowright'||k==='d'))setStage(STAGES.indexOf(stage)+1);
  if((k==='f'||k==='enter'||k===' ')&&boss&&boss.phase==='tired')startFatality();
  if(e.key===' '){if(state==='menu')startRun('key');else if(state==='ready')launch();else if(state==='dead'&&!$('#results').hidden)reset('ready')}
- if(['arrowup','w','b','shift'].includes(k))activateEngine();
+ if(['b','e','shift'].includes(k))activateEngine();
  if(k==='p'||k==='escape')pause()});
 window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 function show(label,title,text,primary,secondary){$('#result-label').textContent=label;$('#result-title').textContent=title;$('#result-text').textContent=text;$('#primary').textContent=primary;$('#secondary').textContent=secondary;$('#overlay').hidden=false}
@@ -202,7 +209,7 @@ function revive(){if(state!=='dead'||save.lives<=0)return;save.lives--;persist()
  announce('REVIVED!',`${save.lives} ${save.lives===1?'LIFE':'LIVES'} LEFT`,'record','heart');gameSound.effect('power');sayVoice('revive',{force:true,delay:.2});burst(x*W,by,18,{type:'heart',colors:['#ff4d5e','#ff7a9a','#ffffff'],speed:[90,260],size:[6,10],life:[.6,1.1],drag:1.5});rings.push({x:x*W,y:by,max:120,life:0,dur:.6,color:'#ff7a9a',width:7});refreshMeta()}
 
 // ---- Course ----
-function spike(o){const yy=balloonY()+(alt-o.a)*worldScale;const len=W*(o.length*(stage.reach||1)+(o.moving?Math.sin(t*.8+o.phase)*.065:0))*(o.leaving===undefined?1:Math.max(0,1-o.leaving/.6));return {y:yy,len,side:o.side}}
+function spike(o){const yy=camY()+(alt-o.a)*worldScale;const len=W*(o.length*(stage.reach||1)+(o.moving?Math.sin(t*.8+o.phase)*.065:0))*(o.leaving===undefined?1:Math.max(0,1-o.leaving/.6));return {y:yy,len,side:o.side}}
 function drawObstacle(o){if(o.broken)return;const z=spike(o);if(z.y<-80||z.y>H+80)return;ctx.save();ctx.translate(o.side?W:0,z.y);ctx.scale(o.side?-1:1,1);ctx.lineJoin='round';ctx.lineCap='round';stage.ledge(o,z.len,stage.look);ctx.restore()}
 // Project a rotating 3D surface onto the 2D canvas, cel-shaded into three tones.
 const shape=lat=>({r:29*Math.cos(lat)*(1-.16*Math.sin(lat)),y:33*Math.sin(lat)-5});
@@ -211,7 +218,7 @@ const engineOn=()=>!!boost;
 function drawBalloon(){
  if(state==='dead')return;
  const flying=state==='flying'||(state==='paused'&&previousState==='flying'),waiting=state==='ready'||state==='menu';
- ctx.save();ctx.translate(x*W,balloonY()+Math.sin(t*2)*(waiting?3:1));if(boss&&boss.fatal&&boss.fatal.balloon)ctx.translate(boss.fatal.balloon.dx,boss.fatal.balloon.dy);ctx.rotate(vx*.16+wind*.12);if(grow<1){const g=Math.max(.01,backOut(grow));ctx.scale(g,g)}
+ ctx.save();ctx.translate(x*W,balloonY()+Math.sin(t*2)*(waiting?3:1));if(boss&&boss.fatal&&boss.fatal.balloon)ctx.translate(boss.fatal.balloon.dx,boss.fatal.balloon.dy);ctx.rotate(tiltOf());if(grow<1){const g=Math.max(.01,backOut(grow));ctx.scale(g,g)}
  if(invuln>0&&Math.sin(t*40)>0)ctx.globalAlpha=.45;
  if(engineOn()){const len=(boost.kind==='nitro'?44:52)*(1+Math.random()*.35),g=ctx.createLinearGradient(0,50,0,50+len);g.addColorStop(0,'#fff6b0');g.addColorStop(.35,'#ffb020');g.addColorStop(1,'rgba(255,60,40,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(-9,50);ctx.quadraticCurveTo(0,50+len*1.25,9,50);ctx.closePath();ctx.fill();
   ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.fillStyle='#c4cee0';rr(-10,33,20,15,4);ctx.fillStyle='#ff4d5e';ctx.fillRect(-8.5,38,17,4);ctx.fillStyle='#5f6b85';ctx.beginPath();ctx.moveTo(-7,48);ctx.lineTo(7,48);ctx.lineTo(10,54);ctx.lineTo(-10,54);ctx.closePath();ctx.fill();ctx.stroke()}
@@ -294,7 +301,7 @@ function spawnCritters(i,a,side,gap){const r=Math.random(),add=o=>critters.push(
  if(stage.critters==='cave'){if(r<.15)return monkey();if(r<.32)return flock('bat',3,.16,10,280)}
  if(stage.critters==='drones'&&r<.28){add({kind:'drone',a:a+(gap+220)/2,x:rand(.3,.7),vx:(Math.random()<.5?-1:1)*.1,r:16});return 220}
  return 0}
-function critterPos(h){const base=balloonY()+(alt-h.a)*worldScale;
+function critterPos(h){const base=camY()+(alt-h.a)*worldScale;
  if(h.kind==='monkey'){const ang=Math.sin(t*2.2+h.phase)*.55,len=150,pivotX=h.x*W,pivotY=base-len,hx=pivotX+Math.sin(ang)*len+h.kx,hy=pivotY+Math.cos(ang)*len+h.ky;return {x:hx+Math.sin(ang)*24,y:hy+Math.cos(ang)*24,hx,hy,ang,pivotX,pivotY}}
  const wob=h.kind==='bat'?Math.sin(t*6+h.phase)*10:Math.sin(t*3+h.phase)*5;return {x:h.x*W+h.kx,y:base+wob+h.ky}}
 function knock(h,p){if(h.knocked)return;h.knocked=true;h.kvx=(p.x<x*W?-1:1)*rand(260,400);h.kvy=-rand(160,280)}
@@ -314,7 +321,7 @@ function updateWeather(dt){const weather=weatherNow=weatherAt(flightTime);wind=w
 function drawLeaves(){if(Math.abs(wind)>.01){ctx.fillStyle=`rgba(52,88,140,${Math.abs(wind)*.18})`;ctx.fillRect(-40,-40,SW+80,H+80)}const colors=stage.leaves||['#ffb340','#5fcf5a'];
  for(const l of leaves){ctx.save();ctx.translate(l.x,l.y);ctx.rotate(l.angle);ctx.scale(1,.45+.4*Math.abs(Math.sin(t*4+l.phase)));ctx.fillStyle=l.size>6?colors[0]:colors[1];ctx.strokeStyle=INK;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-l.size,0);ctx.quadraticCurveTo(0,-l.size,l.size,0);ctx.quadraticCurveTo(0,l.size,-l.size,0);ctx.fill();ctx.stroke();ctx.restore()}}
 function drawChevrons(){if(state!=='flying'||!weatherNow||!weatherNow.warning)return;const d=weatherNow.dir;ctx.save();ctx.globalAlpha=.55+.45*Math.sin(t*14);ctx.translate(d>0?30:W-30,H*.5);ctx.scale(d,1);ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();for(let i=0;i<3;i++){const ox=i*14-14;ctx.moveTo(ox-6,-14);ctx.lineTo(ox+6,0);ctx.lineTo(ox-6,14)}ctx.strokeStyle=INK;ctx.lineWidth=10;ctx.stroke();ctx.strokeStyle='#ffd23f';ctx.lineWidth=5;ctx.stroke();ctx.restore()}
-function coinY(item){return balloonY()+(alt-item.a)*worldScale}
+function coinY(item){return camY()+(alt-item.a)*worldScale}
 // Spinning gold coin with a visible rim, star emblem and soft glow.
 function drawCoin(cx,cy,r,phase,glowOn=true){const c=Math.cos(phase),w=Math.max(.14,Math.abs(c));ctx.save();ctx.translate(cx,cy);ctx.lineJoin='round';
  if(glowOn){ctx.globalAlpha=.3;ctx.fillStyle='#fff3a0';ctx.beginPath();ctx.arc(0,0,Math.max(0,r*1.6+Math.sin(t*4+phase)*2),0,TAU);ctx.fill();ctx.globalAlpha=1}
@@ -371,14 +378,14 @@ function breakLedge(o,z){o.broken=true;sayVoice('hit');const reach=Math.min(z.le
 function bonkCritter(h){const p=critterPos(h);knock(h,p);critterVoice(h.kind);sayVoice('hit',{delay:.1});coinCount++;flyers.push({x:p.x,y:p.y,age:0});if(h.kind==='drone')smashFx(p.x,p.y,['#c4cee0','#5f6b85','#ffd23f'],'SMASH +1');else{bonus+=PTS.smash;gameSound.effect('boop');burst(p.x,p.y,10,{type:'star',colors:['#fff','#ffd23f'],speed:[80,220],size:[4,7],life:[.3,.6]});popup(p.x,p.y-30,'BOOP +1','#ffd23f',24);shake=Math.max(shake,5)}}
 
 const gapTo=(o,z)=>o.side?(W-z.len-8)-(x*W+28):(x*W-28)-(z.len+8);
-function hitsObstacle(z){const left=z.side?W-z.len-8:0,right=z.side?W:z.len+8;const tilt=vx*.16+wind*.12;const cx=x*W+Math.sin(tilt)*5,cy=balloonY()-Math.cos(tilt)*5;const nx=Math.max(left,Math.min(cx,right)),ny=Math.max(z.y-26,Math.min(cy,z.y+26));return ((cx-nx)/28)**2+((cy-ny)/32)**2<1}
+function hitsObstacle(z){const left=z.side?W-z.len-8:0,right=z.side?W:z.len+8;const tilt=tiltOf();const cx=x*W+Math.sin(tilt)*5,cy=balloonY()-Math.cos(tilt)*5;const nx=Math.max(left,Math.min(cx,right)),ny=Math.max(z.y-26,Math.min(cy,z.y+26));return ((cx-nx)/28)**2+((cy-ny)/32)**2<1}
 // Cave walls: sample the wall profile at three heights along the balloon.
-function wallHit(){const bx=x*W;for(const [dy,rx] of [[-26,18],[-5,27],[18,20]]){const a=alt-dy/worldScale,left=caveWall(a,0)*W,right=W-caveWall(a,1)*W;if(bx-rx<left)return {side:-1,limit:(left+rx+3)/W};if(bx+rx>right)return {side:1,limit:(right-rx-3)/W}}return null}
+function wallHit(){const bx=x*W;for(const [dy,rx] of [[-26,18],[-5,27],[18,20]]){const a=alt-(lift+dy)/worldScale,left=caveWall(a,0)*W,right=W-caveWall(a,1)*W;if(bx-rx<left)return {side:-1,limit:(left+rx+3)/W};if(bx+rx>right)return {side:1,limit:(right-rx-3)/W}}return null}
 // Reward skimming past a spike tip without touching it.
-function checkNearMisses(){for(const o of obstacles){if(o.passed||o.a>alt)continue;o.passed=true;if(o.broken||smashing())continue;const z=spike(o);if(gapTo(o,z)<30){nearMisses++;bonus+=PTS.close;popup(x*W,balloonY()-60,`CLOSE CALL! +${PTS.close}`,'#44d9ff',26);shake=Math.max(shake,5);gameSound.effect('close');burst(o.side?W-z.len-8:z.len+8,z.y,10,{colors:['#fff','#44d9ff'],speed:[100,260],life:[.2,.5],world:true});mood='wow';moodTimer=.7}}}
+function checkNearMisses(){const ba=balloonAlt();for(const o of obstacles){if(o.passed||o.a>ba)continue;o.passed=true;if(o.broken||smashing())continue;const z=spike(o);if(gapTo(o,z)<30){nearMisses++;bonus+=PTS.close;popup(x*W,balloonY()-60,`CLOSE CALL! +${PTS.close}`,'#44d9ff',26);shake=Math.max(shake,5);gameSound.effect('close');burst(o.side?W-z.len-8:z.len+8,z.y,10,{colors:['#fff','#44d9ff'],speed:[100,260],life:[.2,.5],world:true});mood='wow';moodTimer=.7}}}
 function measureDanger(){let d=0;const by=balloonY();for(const o of obstacles){if(o.broken)continue;const z=spike(o),dy=by-z.y;if(dy<-40||dy>110)continue;d=Math.max(d,Math.max(0,1-gapTo(o,z)/60)*(1-Math.abs(dy)/110))}
  for(const h of critters){if(h.dormant||h.knocked)continue;const p=critterPos(h);d=Math.max(d,clamp(1-(Math.hypot(p.x-x*W,p.y-by)-h.r-30)/90,0,1))}
- if(stage.walls){const l=caveWall(alt,0)*W,r=W-caveWall(alt,1)*W;d=Math.max(d,clamp(1-(Math.min(x*W-l,r-x*W)-28)/40,0,1))}return Math.min(1,d)}
+ if(stage.walls){const l=caveWall(balloonAlt(),0)*W,r=W-caveWall(balloonAlt(),1)*W;d=Math.max(d,clamp(1-(Math.min(x*W-l,r-x*W)-28)/40,0,1))}return Math.min(1,d)}
 // Passing a star target mid-flight sends a star from the balloon into the HUD star meter.
 function checkStars(){if(starsHit>=STAR_SCORES.length||runScore()<STAR_SCORES[starsHit])return;const k=starsHit++;sayVoice('star');starFlyers.push({x:x*W,y:balloonY()-20,age:0,k});popup(x*W,balloonY()-96,`${k+1} STAR${k?'S':''}!`,'#ffd23f',32);gameSound.effect('star',k);rings.push({x:x*W,y:balloonY(),max:90,life:0,dur:.5,color:'#ffd23f',width:6})}
 function checkProgress(){if(boss)return;
@@ -393,7 +400,7 @@ function drawRope(){const tied=state==='ready'||state==='menu'||(state==='paused
    const sx=W*(.5+Math.sin(t*2.6)*.2),pulse=(t*1.5)%1;ctx.strokeStyle=`rgba(255,255,255,${1-pulse})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(sx,my,10+pulse*18,0,TAU);ctx.stroke();ctx.fillStyle='#fff';ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.beginPath();ctx.arc(sx,my,9,0,TAU);ctx.fill();ctx.stroke()}}
  if(ropeCut&&ropeCut.age<.8){const bx=W/2,by=H-47+alt*worldScale,k=ropeCut.age/.8,len=ropeCut.length*(1-k*.85),swing=Math.sin(ropeCut.age*14)*(1-k)*26,path=()=>{ctx.beginPath();ctx.moveTo(bx,by);ctx.quadraticCurveTo(bx+swing,by-len*.6,bx+swing*1.6+k*20,by-len+k*len*.4)};
   ctx.globalAlpha=1-k*k;path();ctx.strokeStyle=INK;ctx.lineWidth=7;ctx.stroke();ctx.strokeStyle='#e0b37a';ctx.lineWidth=3.5;ctx.stroke();ctx.globalAlpha=1}}
-function drawTicks(){ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=2;for(let m=Math.floor(alt/250)*250;m<alt+1200;m+=250){const yy=balloonY()+(alt-m)*worldScale;if(yy>30&&yy<H-35){ctx.beginPath();ctx.moveTo(W-16,yy);ctx.lineTo(W-6,yy);ctx.stroke()}}}
+function drawTicks(){ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=2;for(let m=Math.floor(alt/250)*250;m<alt+1200;m+=250){const yy=camY()+(alt-m)*worldScale;if(yy>30&&yy<H-35){ctx.beginPath();ctx.moveTo(W-16,yy);ctx.lineTo(W-6,yy);ctx.stroke()}}}
 function drawStreaks(){ctx.lineCap='round';for(const s of streaks){const v=Math.hypot(s.vx,s.vy)||1;ctx.strokeStyle=s.color||`rgba(255,255,255,${s.alpha})`;ctx.globalAlpha=s.color?s.alpha:1;ctx.lineWidth=s.width;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x-s.vx/v*s.len,s.y-s.vy/v*s.len);ctx.stroke()}ctx.globalAlpha=1}
 function heart(s){ctx.beginPath();ctx.moveTo(0,s*.35);ctx.bezierCurveTo(-s*1.1,-s*.35,-s*.45,-s*1.05,0,-s*.45);ctx.bezierCurveTo(s*.45,-s*1.05,s*1.1,-s*.35,0,s*.35);ctx.closePath()}
 function drawParticles(back){for(const p of particles){if(!!p.back!==back)continue;const k=p.life/p.max;ctx.save();ctx.translate(p.x,p.y);
@@ -440,7 +447,12 @@ function draw(){ctx.save();const amount=calm?shake*.3:shake;if(amount>.4)ctx.tra
  drawFlyers();drawStarFlyers();drawVignette();if(transition)drawIris();if(swapFx>0){ctx.globalAlpha=swapFx*.55;ctx.fillStyle=stage.top;ctx.fillRect(0,0,SW,H);ctx.globalAlpha=1}if(flash>0){ctx.globalAlpha=Math.min(1,flash);ctx.fillStyle=flashColor;ctx.fillRect(0,0,SW,H);ctx.globalAlpha=1}}
 function update(dt){t+=dt;spin+=dt*(.65+Math.abs(wind)*3+Math.abs(vx));if(state!=='flying')return;
  flightTime+=dt;generateCourse();coinRush();updateWeather(dt);updateCritters(dt);if(boss&&boss.wind)wind+=boss.wind.dir*.32;if(!boss&&flightTime>=nextBossTime)startBoss();
- const direction=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0);let desired=direction*.65;if(target!==null)desired=clamp((target-x)*6,-.85,.85);vx+=(desired+wind-vx)*Math.min(1,dt*4);x+=vx*dt;x=clamp(x,(radius+5)/W,1-(radius+5)/W);
+ const direction=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0);let desired=direction*.75;if(target!==null)desired=clamp((target-x)*10,-1.8,1.8);vx+=(desired+wind-vx)*Math.min(1,dt*(target!==null?9:4));x+=vx*dt;x=clamp(x,(radius+5)/W,1-(radius+5)/W);
+ // Up and down: between the HUD and the bottom of the screen; during a boss fight it stays below the boss.
+ const top=(boss&&boss.phase!=='done'?H*.44:Math.max(H*.25,190))-camY(),bottom=H*.86-camY(),vdir=(keys.has('arrowdown')||keys.has('s')?1:0)-(keys.has('arrowup')||keys.has('w')?1:0);
+ let vdes=vdir*H*.7;if(liftTarget!==null)vdes=clamp((clamp(liftTarget,top,bottom)-lift)*10,-H*1.8,H*1.8);vy+=(vdes-vy)*Math.min(1,dt*9);const was=lift;lift+=vy*dt;
+ // Hard stop at an edge; if the edge moved past the balloon (a boss arriving), ease it back in.
+ if(lift<top){lift=was>=top?top:was+(top-was)*Math.min(1,dt*6);vy=Math.max(vy,0)}if(lift>bottom){lift=was<=bottom?bottom:was+(bottom-was)*Math.min(1,dt*6);vy=Math.min(vy,0)}
  alt+=dt*flightSpeed(alt)*speedMult*bossPace();collectPickups(dt);
  if(stage.walls){const hit=wallHit();if(hit){if(boss){x=hit.limit;vx=-hit.side*.4}else if(smashing()||shield>0){if(shield>0&&!smashing())breakShield();x=hit.limit;vx=-hit.side*.5;burst(x*W+hit.side*28,balloonY(),8,{colors:['#fff','#ffd23f'],speed:[80,220],life:[.2,.4]});shake=Math.max(shake,4)}else{finish();return}}}
  for(const o of obstacles){if(o.broken||o.leaving!==undefined)continue;const z=spike(o);if(!hitsObstacle(z))continue;if(smashing()){breakLedge(o,z);continue}if(shield>0){breakShield();breakLedge(o,z);continue}finish();return}
@@ -459,7 +471,7 @@ function updateEffects(dt,real){shake*=Math.exp(-8*real);flash=Math.max(0,flash-
  if(ropeCut)ropeCut.age+=dt;if(comboTimer>0&&(comboTimer-=dt)<=0)combo=0;
  if(state==='dead'&&deathTimer>0&&(deathTimer-=real)<=0)showResult();
  const scroll=state==='flying'&&!showcase&&!frozen?flightSpeed(alt)*speedMult*worldScale*bossPace():0;
- if(state==='flying'&&!showcase){const starry=stage.id==='space'||stage.id==='universe',tilt=vx*.16+wind*.12,fire=engineOn(),every=fire?.018:.04;trailClock+=dt;
+ if(state==='flying'&&!showcase){const starry=stage.id==='space'||stage.id==='universe',tilt=tiltOf(),fire=engineOn(),every=fire?.018:.04;trailClock+=dt;
   while(trailClock>every){trailClock-=every;const bx=x*W-Math.sin(tilt)*(fire?56:36),by=balloonY()+(fire?56:36);
    if(fire)particles.push({type:'puff',back:true,world:true,x:bx+rand(-4,4),y:by,vx:rand(-20,20),vy:rand(60,140),life:0,max:rand(.35,.6),size:rand(5,9),color:pick(['#ffd23f','#ff8a2a','#ff4d5e','#fff6b0']),gravity:0,drag:1,rot:0,vr:0});
    else{const tr=(SKIN_FX[save.skin]||{}).trail;if(tr)particles.push({type:tr.type,back:true,world:true,x:bx+rand(-4,4),y:by,vx:rand(-16,16),vy:tr.type==='slime'?rand(40,80):rand(10,30),life:0,max:tr.type==='bubble'?1.1:.8,size:tr.type==='spark'?rand(1.5,3):tr.type==='confetti'?rand(5,8):rand(3,6),color:pick(tr.colors),gravity:tr.type==='slime'?120:0,drag:1,rot:rand(0,TAU),vr:rand(-6,6)});
@@ -483,8 +495,10 @@ function updateHud(){setText('#coin-count',String(Math.floor(shownCoins)));setTe
  const fat=bp==='tired'&&state==='flying';if($('#fatality').hidden===fat)$('#fatality').hidden=!fat;
  const btn=$('#boost'),visible=(state==='flying'||state==='paused'&&previousState==='flying')&&!['versus','tired','fatality'].includes(bp),key=`${visible}|${energy}|${!!showcase}`;
  if(hudCache.boost!==key){hudCache.boost=key;btn.hidden=!visible;btn.disabled=energy<5||!!showcase;btn.classList.toggle('ready',energy>=5&&!showcase);btn.querySelectorAll('.pips i').forEach((pip,i)=>pip.classList.toggle('on',i<energy))}}
-function frame(now){const real=Math.min((now-last)/1000||0,.035);last=now;
+// One frame of the game. An error in any step is logged and skipped so the game never freezes.
+function frame(now){requestAnimationFrame(frame);try{step(now)}catch(e){if(!frame.warned){frame.warned=true;console.error('Frame error',e)}}}
+function step(now){const real=Math.min((now-last)/1000||0,.035);last=now;
  if(state!=='paused'){if(boss&&boss.freeze)timeScale=0;else if(showcase)timeScale=showcase.mini?.3:.04;else if(slowTimer>0){slowTimer-=real;timeScale=slowTimer>0?.25:1}else timeScale=1;
   const dt=real*timeScale;let remaining=dt;while(remaining>0){const step=Math.min(remaining,8/(flightSpeed(alt)*speedMult*worldScale));update(step);remaining-=step}updateEffects(dt,real)}
- gameSound.update(state==='menu'?'ready':state,wind,flightSpeed(alt),alt,document.hidden);draw();updateHud();if(previews.length&&!$('#panel').hidden)renderPreviews();if(typeof renderLiveAvatars==='function')renderLiveAvatars();if(results&&!$('#results').hidden){updateResults(real);renderResults()}if(boss&&boss.phase==='versus')renderVersus();requestAnimationFrame(frame)}
+ gameSound.update(state==='menu'?'ready':state,wind,flightSpeed(alt),alt,document.hidden);draw();updateHud();if(previews.length&&!$('#panel').hidden)renderPreviews();if(typeof renderLiveAvatars==='function')renderLiveAvatars();if(results&&!$('#results').hidden){updateResults(real);renderResults()}if(boss&&boss.phase==='versus')renderVersus()}
 applyIcons();syncSound();reset('menu');resize();requestAnimationFrame(frame);

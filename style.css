@@ -485,3 +485,13 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .rank-row{cursor:pointer}
 @media(max-height:720px){.small-round{width:44px;height:44px}.social-row{margin-top:.6vh}}
 @media(max-width:380px){.menu-top .pill{font-size:16px;padding:2px 8px 2px 4px;gap:4px}.menu-top .pill .ico{width:20px;height:20px}.menu-top .icon-btn{width:38px;height:38px;padding:6px}.wallet-row{gap:5px}.menu-top .tools{gap:5px}}
+/* Try-on preview */
+.profile-big{position:relative;flex:none}
+.preview-tag{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%) rotate(-4deg);font-family:var(--title);font-size:12px;letter-spacing:1px;padding:2px 9px 3px;background:linear-gradient(#ff9ae6,#c81f8f);border:2px solid var(--ink);border-radius:8px;text-shadow:var(--stroke);white-space:nowrap}
+.profile-head.previewing{background:radial-gradient(circle at 25% 50%,#ff9ae655,transparent 60%);border-radius:16px}
+.profile-head.previewing .profile-big canvas{animation:breathe 1.6s ease-in-out infinite}
+.cos-card.trying{border-color:#ff9ae6;box-shadow:0 4px 0 var(--ink),0 0 0 2px #ff9ae6,0 0 16px #ff9ae6aa}
+.cos-price.trying{background:linear-gradient(#ffe46b,#ffc414);color:#fff}
+.mine-head{cursor:pointer}
+.res-online canvas{align-self:center}
+.reward-banner canvas{order:-1}
