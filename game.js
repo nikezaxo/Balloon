@@ -70,6 +70,13 @@ function startRun(how){if(state!=='menu')return;if(how==='swipe')wantFullscreen=
 function openMenu(){bank();reset('menu')}
 // Daily and season task progress (season.js); safe to call before it loads.
 function tally(stat,n=1){if(typeof trackTask==='function')trackTask(stat,n)}
+// A small dialog over everything: title, message, an optional text box and buttons. Resolves with the pressed
+// button's value and the text; a button with check:true runs validate(text) first, which may return (or resolve to)
+// an error message that keeps the dialog open.
+function askDialog({ribbon='ACCOUNT',title,text='',input=null,buttons,validate}){return new Promise(res=>{const box=$('#ask'),inp=$('#ask-input'),err=$('#ask-error'),row=$('#ask-buttons');
+ $('#ask-ribbon').textContent=ribbon;$('#ask-title').textContent=title;$('#ask-text').textContent=text;inp.hidden=!input;err.hidden=true;if(input){inp.value=input.value||'';inp.placeholder=input.placeholder||''}row.replaceChildren();
+ for(const bt of buttons){const b=el('button','btn'+(bt.cls?' '+bt.cls:''),bt.label);b.onclick=async()=>{if(bt.check&&validate){const all=[...row.children];all.forEach(x=>x.disabled=true);const msg=await Promise.resolve().then(()=>validate(inp.value.trim())).catch(e=>(e&&e.message)||'Something went wrong. Try again.');all.forEach(x=>x.disabled=false);if(msg){err.textContent=msg;err.hidden=false;gameSound.effect('warn');return}}box.hidden=true;res({value:bt.value,text:inp.value.trim()})};row.append(b)}
+ inp.onkeydown=e=>{if(e.key==='Enter'&&row.firstChild)row.firstChild.click()};box.hidden=false;if(input)setTimeout(()=>inp.focus(),60)})}
 // Beginner tutorial (tutorial.js): while it is on, the HUD shows its full labels and coach tips appear.
 const tutorialOn=()=>save.tut==='on';
 function el(tag,cls='',text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
@@ -142,10 +149,10 @@ canvas.addEventListener('pointermove',e=>{if(!pointer)return;const p=point(e);if
 // Full screen and audio need a user activation, which a finished tap or swipe (pointerup) provides.
 function release(){pointer=null;target=null;liftTarget=null;drag=null}canvas.addEventListener('pointerup',()=>{release();if(wantFullscreen){wantFullscreen=false;enterFullscreen()}ensureSound()});canvas.addEventListener('pointercancel',release);
 const GAME_KEYS=['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' ','a','d','w','s','b','e','f','A','D','W','S','B','E','F','p','P','Escape','Shift','Enter'];
-window.addEventListener('keydown',e=>{if(!GAME_KEYS.includes(e.key))return;if(!$('#profile-card').hidden){if(e.key==='Escape')$('#pc-close').click();return}if(!$('#panel').hidden){if(e.key==='Escape')$('#panel-close').click();return}e.preventDefault();const k=e.key.toLowerCase();keys.add(k);
+window.addEventListener('keydown',e=>{if(!GAME_KEYS.includes(e.key)||(e.target&&e.target.tagName==='INPUT'))return;if(!$('#ask').hidden){if(e.key==='Escape'){const b=$('#ask-buttons').lastChild;if(b)b.click()}return}if(!$('#profile-card').hidden){if(e.key==='Escape')$('#pc-close').click();return}if(!$('#panel').hidden){if(e.key==='Escape')$('#panel-close').click();return}e.preventDefault();const k=e.key.toLowerCase();keys.add(k);
  if(state==='menu'&&(k==='arrowleft'||k==='a'))setStage(STAGES.indexOf(stage)-1);if(state==='menu'&&(k==='arrowright'||k==='d'))setStage(STAGES.indexOf(stage)+1);
  if((k==='f'||k==='enter'||k===' ')&&boss&&boss.phase==='tired')startFatality();
- if(e.key===' '){if(state==='menu')startRun('key');else if(state==='ready')launch();else if(state==='dead'&&!$('#results').hidden)reset('ready')}
+ if(e.key===' '||k==='enter'){if(state==='menu'&&$('#welcome').hidden)startRun('key');else if(state==='ready')launch();else if(state==='dead'&&!$('#results').hidden)reset('ready')}
  if(['b','e','shift'].includes(k))activateEngine();
  if(k==='p'||k==='escape')pause()});
 window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
@@ -516,7 +523,8 @@ function updateHud(){setText('#coin-count',String(Math.floor(shownCoins)));setTe
 // One frame of the game. An error in any step is logged and skipped so the game never freezes.
 function frame(now){requestAnimationFrame(frame);try{step(now)}catch(e){if(!frame.warned){frame.warned=true;console.error('Frame error',e)}}}
 function step(now){const real=Math.min((now-last)/1000||0,.035);last=now;
- if(state!=='paused'){if(boss&&boss.freeze)timeScale=0;else if(showcase)timeScale=showcase.mini?.3:.04;else if(slowTimer>0){slowTimer-=real;timeScale=slowTimer>0?.25:1}else timeScale=1;
+ if(state!=='paused'){if(boss&&boss.freeze)timeScale=0;else if(typeof tutorialFrozen==='function'&&tutorialFrozen())timeScale=0;else if(showcase)timeScale=showcase.mini?.3:.04;else if(slowTimer>0){slowTimer-=real;timeScale=slowTimer>0?.25:1}else timeScale=1;
   const dt=real*timeScale;let remaining=dt;while(remaining>0){const step=Math.min(remaining,8/(flightSpeed(alt)*speedMult*worldScale));update(step);remaining-=step}updateEffects(dt,real)}
+ if(typeof tutorialFrame==='function')tutorialFrame(real);
  gameSound.update(state==='menu'?'ready':state,wind,flightSpeed(alt),alt,document.hidden);draw();updateHud();if(previews.length&&!$('#panel').hidden)renderPreviews();if(typeof renderLiveAvatars==='function')renderLiveAvatars();if(results&&!$('#results').hidden){updateResults(real);renderResults()}if(boss&&boss.phase==='versus')renderVersus()}
 applyIcons();syncSound();reset('menu');resize();requestAnimationFrame(frame);

@@ -657,3 +657,32 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .game-shell:not(.tutorial) .mult-pill:not(.active){display:none}
 .game-shell:not(.tutorial) .hint>span,.game-shell:not(.tutorial) .hint .best-chip,.game-shell:not(.tutorial) .hint-stage{display:none}
 .game-shell:not(.tutorial) .menu .swipe-hint{font-size:10px;opacity:.85}
+/* Tutorial hand: its fingertip sits on the point it teaches (left/top), then swipes, drags or taps. */
+.tut-hand{position:absolute;width:0;height:0;z-index:6;pointer-events:none}
+.tut-hand[hidden]{display:none}
+.tut-finger{position:absolute;left:-26px;top:-4px;width:64px;height:64px;filter:drop-shadow(0 4px 0 #1b124088)}
+.tut-finger svg{width:100%;height:100%;display:block;overflow:visible}
+.tut-hand::before{content:'';position:absolute;left:-14px;top:-14px;width:28px;height:28px;border-radius:50%;border:4px solid #fff;opacity:0}
+.tut-hand.tap .tut-finger{animation:handTap .9s ease-in-out infinite}
+.tut-hand.tap::before{animation:handRing .9s ease-out infinite}
+.tut-hand.swipe .tut-finger{animation:handSwipe 1.4s ease-in-out infinite}
+.tut-hand.drag .tut-finger{animation:handDrag 2s ease-in-out infinite}
+@keyframes handTap{0%,100%{transform:translateY(16px)}45%{transform:translateY(0) scale(.92)}}
+@keyframes handRing{0%,40%{opacity:0;transform:scale(.4)}50%{opacity:.9}100%{opacity:0;transform:scale(1.6)}}
+@keyframes handSwipe{0%{transform:translateX(-90px);opacity:0}15%{opacity:1}75%{transform:translateX(90px);opacity:1}100%{transform:translateX(90px);opacity:0}}
+@keyframes handDrag{0%,100%{transform:translateX(-70px) scale(.95)}50%{transform:translateX(70px) scale(.95)}}
+.game-shell.tut-rope .menu .cut-hint{visibility:hidden}
+.game-shell.in-menu .coach,.game-shell.ready .coach{bottom:auto;top:31%}
+/* Dialog (accounts and usernames) */
+.ask{z-index:12}
+.ask p{white-space:pre-line}
+.ask-input{display:block;width:100%;margin:6px 0 2px;padding:10px 12px;font-family:var(--title);font-size:20px;text-align:center;color:var(--ink);background:#fff;border:3px solid var(--ink);border-radius:12px;box-shadow:inset 0 3px 0 #0002;outline:none}
+.ask-input[hidden]{display:none}
+.ask-input:focus{border-color:#ffc414}
+.ask-error{display:block;margin-top:4px;font-size:13px;font-weight:900;color:#ffe46b;text-shadow:0 2px 0 var(--ink)}
+.ask-error[hidden]{display:none}
+.ask .btn:disabled{filter:grayscale(.6);opacity:.8}
+.set-acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.rank-foot .set-acts{margin:2px 0}
+.set-row.guest{flex-wrap:wrap}.set-row.guest .set-acts{width:100%}
+.ask h2{font-size:28px;line-height:1.05}

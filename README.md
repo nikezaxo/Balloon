@@ -46,19 +46,26 @@ and only a few buttons sit around the edges.
 - Bottom bar: STORE (skins and lives), TASKS (red dot when a reward is ready), RANKS (weekly
   tournament, all-time and your bests; the badge shows the time left this week), SEASON (your rank
   badge) and CLAN.
-- SETTINGS: sound, full screen, Google sign-in or sign-out, HOW TO PLAY (power-ups, boost and
-  bosses) and the tutorial (replay it or turn it off).
+- SETTINGS: sound, full screen, your account (guest: SIGN UP or LOG IN; member: sign out), your
+  USERNAME, HOW TO PLAY (power-ups, boost and bosses) and the tutorial (replay it or turn it off).
 On wide screens the action stays in a centred column framed by side walls. All icons are cartoon
 SVGs in icons.js.
 
 ## Tutorial
 The first time someone opens the game they are asked whether they want a quick tutorial (players
-who already played skip the question). While the tutorial is on, the HUD shows all its labels and
-a coach bubble walks through the basics in flight: dragging to move, dodging ledges and creatures,
-coins and the multiplier, energy and the BOOST, power-ups, then at the first boss dodging until it
-is tired, tapping FATALITY, and how bosses give stars. Tips carry over between runs until the last
-one, then the tutorial switches itself off. SKIP TUTORIAL under the tip (or Settings) turns it off
-at any time, and Settings can replay it (tutorial.js).
+who already played skip the question). While it is on, the HUD shows all its labels, a coach bubble
+gives each tip and a pointing hand shows what to do. For the actions the game WAITS, frozen, until
+the player does them:
+1. On the menu the hand swipes across the rope: cut it to fly.
+2. Right after take-off the game stops and the hand drags left and right: drag (or press an arrow key)
+   to carry on.
+3. Tips about dodging ledges and creatures, then coins and the multiplier.
+4. The boost is filled up, the game stops and the hand taps BOOST: tap it to carry on.
+5. A tip about power-ups, then at the first boss a tip to dodge until it is tired.
+6. When the boss is tired the game stops and the hand taps FATALITY: tap it to finish the boss.
+7. How bosses give stars; then the tutorial switches itself off.
+Tips carry over between runs. ESC, or SKIP TUTORIAL under each tip, leaves the tutorial at any time,
+and Settings can replay it or turn it off (tutorial.js).
 
 ## In-game display
 Kept clean so the sky stays clear: the score with its three stars and the bar towards the next star
@@ -134,7 +141,18 @@ or go back to the menu. Each stage keeps its best score and most stars.
 
 ## Online high scores
 With online play switched on:
-- Sign in with Google (the G button in the menu, the high scores screen or the results screen).
+- Everyone starts as a GUEST: they can play, see the weekly, all-time and season rankings, tap any player
+  and see where their own best would place ("your best would be #12 this week"). Guest progress is kept
+  on that device only.
+- SIGN UP (Settings, the high scores screen or the results screen) creates an account with Google:
+  the player picks a USERNAME, their guest progress and best scores go into the account and on the boards,
+  and everything is saved in the cloud. LOG IN signs in to an account they already have.
+- Signing up with a Google account that already has a Skybound account asks first: CANCEL (stay a guest,
+  nothing changes) or SIGN IN with that account (skins and best scores from this device are added to it).
+  Nothing is written to the cloud until the account is confirmed.
+- Usernames are unique (usernames/{name} in Firestore). Picking a name someone else has shows
+  "already taken, please choose another name". Change it any time in SETTINGS > USERNAME; the new name
+  shows right away on the boards, in clans and on your player card, and the old one is freed.
 - Your best score goes on the ALL TIME board and your best this week on the WEEKLY board.
   The results screen shows your world and weekly rank after each run.
 - The weekly tournament runs Monday 00:00 to Sunday 23:59 UTC. The first time you sign in
@@ -142,7 +160,6 @@ With online play switched on:
   3rd 500 + 20 gems, 4th-10th 300 + 10 gems, top 50 150 coins, everyone else who played 50 coins.
 - Your progress (coins, skins, lives, bests and stars) is saved to your account, so it
   follows you to other devices. Skins and records merge; coins, gems and lives come from the newer save.
-- The leaderboard shows your first name and last initial; RENAME picks another name.
 Without it the high scores screen shows your bests on this device.
 
 Switching it on (free Firebase plan, about 10 minutes):
@@ -152,7 +169,8 @@ Switching it on (free Firebase plan, about 10 minutes):
    Then Authentication > Settings > Authorized domains > Add domain: nikezaxo.github.io
 4. Build > Firestore Database > Create database (production mode, any location).
    Open its Rules tab, paste the contents of firestore.rules and Publish. Publish it again
-   whenever firestore.rules changes (profiles, clans and seasons need the current version).
+   whenever firestore.rules changes (profiles, clans, seasons and usernames need the current version;
+   until it is published, usernames still save but are not checked for duplicates).
    tools/rules.test.mjs tests the rules against the Firestore emulator.
 5. Put the config into firebase-config.js, for example
    `const FIREBASE_CONFIG={apiKey:'...',authDomain:'...',projectId:'...',appId:'...'};`

@@ -89,5 +89,15 @@ await t('text score denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsP
 await t('long season history denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, hist: 'x'.repeat(201) }))));
 await t('bad season id denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, seasonId: 'winter' }))));
 await t('anyone reads profiles', assertSucceeds(getDoc(doc(anon, 'profiles/alice'))));
+// Usernames
+const uname = (uid, name) => ({ uid, name, at: serverTimestamp() });
+await t('claim a free username', assertSucceeds(setDoc(doc(A, 'usernames/sky ace'), uname('alice', 'Sky Ace'))));
+await t('claim a taken username denied', assertFails(setDoc(doc(db('bob'), 'usernames/sky ace'), uname('bob', 'Sky Ace'))));
+await t('claim for someone else denied', assertFails(setDoc(doc(db('bob'), 'usernames/bobby'), uname('alice', 'Bobby'))));
+await t('key must match the name', assertFails(setDoc(doc(db('bob'), 'usernames/other'), uname('bob', 'Bobby'))));
+await t('owner changes capitalisation', assertSucceeds(setDoc(doc(A, 'usernames/sky ace'), uname('alice', 'SKY ACE'))));
+await t('others cannot free a name', assertFails(deleteDoc(doc(db('bob'), 'usernames/sky ace'))));
+await t('owner frees a name', assertSucceeds(deleteDoc(doc(A, 'usernames/sky ace'))));
+await t('anyone checks a name', assertSucceeds(getDoc(doc(anon, 'usernames/sky ace'))));
 console.log(`${pass} passed, ${fail} failed`);
 await env.cleanup(); process.exit(fail ? 1 : 0);
