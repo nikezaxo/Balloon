@@ -5,6 +5,7 @@ rope and climb as high as you can.
 
 ## Files
 - index.html: page, menu, HUD, cards and game canvas
+- tutorial.js: the beginner tutorial (welcome question, coach tips, skip) and the settings screen
 - style.css: chunky arcade styling for desktop and mobile
 - sound.js: procedural music, sound effects and the cartoon voice synthesiser (no audio files)
 - icons.js: hand-drawn cartoon SVG icons (buttons, stage badges, medals, power-ups)
@@ -32,20 +33,40 @@ There is no build step. Online high scores use Firebase (free plan) once you add
 fonts load from Google Fonts, with system fallbacks.
 
 ## Main menu
-- Pick a stage right in the menu with the arrows, the dots, a swipe on the stage
-  card or the Left/Right keys; the selected stage plays live behind the menu.
-- Press PLAY, or cut the balloon's rope, to launch. The menu flies away, an iris
-  in the stage colours opens from the balloon and the stage badge spins in.
-  The game goes full screen where the browser allows (not iPhone Safari).
-- The stage card shows your stars and high score for that stage.
-- Under the stage card: your avatar (opens your PROFILE), the orange WEEKLY TOURNAMENT
-  banner (high scores; it reads HIGH SCORES while online play is off) and the green CLAN
-  button. The Google button at the top signs you in, then shows your avatar.
-- Below that: TASKS (today's progress, with a red dot when a reward is ready to claim) and
-  your SEASON rank badge with your season points.
-- STORE sells balloon skins and extra lives; BOOSTS explains the power-ups.
-Your coins and lives are shown at the top. On wide screens the action stays in a
-centred column framed by side walls. All icons are cartoon SVGs in icons.js.
+Laid out like Subway Surfers: the live stage fills the screen with your balloon tied to its rope,
+and only a few buttons sit around the edges.
+- Top bar: your avatar (opens PROFILE), coins, gems and lives, and the gear (SETTINGS).
+- Stage banner: the stage's name, stars and best score, with page dots. SWIPE THE SKY (anywhere
+  above the balloon) or the banner to change stage, left for the next one; the small arrows,
+  the dots and the Left/Right keys work too. The hint under the dots disappears after your first
+  swipe.
+- CUT THE ROPE (swipe across it below the balloon) to fly, or press Space or Enter. There is no
+  PLAY button: the menu flies away, an iris in the stage colours opens from the balloon and the
+  stage badge spins in. The game goes full screen where the browser allows (not iPhone Safari).
+- Bottom bar: STORE (skins and lives), TASKS (red dot when a reward is ready), RANKS (weekly
+  tournament, all-time and your bests; the badge shows the time left this week), SEASON (your rank
+  badge) and CLAN.
+- SETTINGS: sound, full screen, Google sign-in or sign-out, HOW TO PLAY (power-ups, boost and
+  bosses) and the tutorial (replay it or turn it off).
+On wide screens the action stays in a centred column framed by side walls. All icons are cartoon
+SVGs in icons.js.
+
+## Tutorial
+The first time someone opens the game they are asked whether they want a quick tutorial (players
+who already played skip the question). While the tutorial is on, the HUD shows all its labels and
+a coach bubble walks through the basics in flight: dragging to move, dodging ledges and creatures,
+coins and the multiplier, energy and the BOOST, power-ups, then at the first boss dodging until it
+is tired, tapping FATALITY, and how bosses give stars. Tips carry over between runs until the last
+one, then the tutorial switches itself off. SKIP TUTORIAL under the tip (or Settings) turns it off
+at any time, and Settings can replay it (tutorial.js).
+
+## In-game display
+Kept clean so the sky stays clear: the score with its three stars and the bar towards the next star
+at the top left, coins and pause at the top right, power-up timers under them and the BOOST button at
+the bottom. The coin multiplier only shows while a row streak or multiplier is active, the boss
+timer only in the last 20 seconds before a boss, and the wind only when a gust is coming or blowing.
+Your altitude pops up as a big "1,000 m" banner at every 1,000 metres. During the tutorial the HUD also
+shows the altitude, stage name, wind, speed and the boss timer all the time.
 
 ## Stages
 Every stage is endless, with its own best altitude and medals
@@ -98,10 +119,10 @@ Every run scores points (PTS in game.js):
 - 50,000 for defeating a boss
 
 Stars come from bosses defeated in ONE run (revives keep the count; STAR_BOSSES in game.js):
-beat 3 bosses for 1 star, 6 for 2 stars and 12 for 3 stars. The HUD shows the score under
-the altitude, three stars that light up as you earn them (a star flies from the balloon
-into the meter), a bar towards the next star, and the BOSS timer counts your kills towards
-it (for example "BOSS 1:20 · 2/3"). Stars you earned before this rule stay earned.
+beat 3 bosses for 1 star, 6 for 2 stars and 12 for 3 stars. The HUD shows the score with
+three stars that light up as you earn them (a star flies from the balloon into the meter)
+and a bar towards the next star; when the boss timer shows it counts your kills towards it
+(for example "BOSS 0:12 · 2/3"). Stars you earned before this rule stay earned.
 
 When the balloon pops, an Angry Birds 2 style results screen opens: the score counts
 up on a framed plaque while the stars pop in one by one above an orange ribbon (with how
@@ -259,7 +280,7 @@ Touch/mouse: swipe across the rope to launch, then put a finger anywhere and dra
 balloon follows your finger's movement in every direction (left, right, up and down), so your
 finger never covers it. It stays below the HUD, above the bottom edge, and below the boss
 during a boss fight. Flying higher on the screen reaches things sooner.
-Keyboard: Space plays/launches; arrow keys or WASD move; B, E or Shift fires the boost engine; F, Space or Enter performs a fatality on a tired
+Keyboard: Space or Enter plays from the menu and launches; Left/Right in the menu change stage; arrow keys or WASD move; B, E or Shift fires the boost engine; F, Space or Enter performs a fatality on a tired
 boss; P or Escape pauses.
 
 ## Coins, power-ups and boost

@@ -120,10 +120,9 @@ const GOOGLE_G='<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335"
 let ranksTab='week',ranksReq=0;
 function googleButton(label='Sign in with Google'){const b=el('button','google-btn');b.innerHTML=`<span class="g">${GOOGLE_G}</span>`;b.append(el('span','',label));b.onclick=()=>online.signIn().catch(()=>{b.classList.add('nope')});return b}
 // Menu account button, weekly banner and the results screen's rank line follow the online state.
-function refreshOnline(full=true){const on=online.configured(),acc=$('#account'),u=online.user;acc.hidden=!on;
- if(on){acc.replaceChildren();if(u){acc.append(avatarEl(myLook(),40));acc.classList.add('signed');acc.setAttribute('aria-label','Profile: '+online.displayName())}else{acc.innerHTML=GOOGLE_G;acc.classList.remove('signed');acc.setAttribute('aria-label','Sign in with Google')}}
- if(full&&panelKind==='profile')renderProfile();if(full&&panelKind==='clan')renderClan();
- $('#weekly-title').textContent=on?'WEEKLY TOURNAMENT':'HIGH SCORES';$('#weekly-left').textContent=on?`${online.timeLeft()} LEFT`:'YOUR BESTS';
+function refreshOnline(full=true){const on=online.configured();
+ if(full&&panelKind==='profile')renderProfile();if(full&&panelKind==='clan')renderClan();if(full&&panelKind==='settings')renderSettings();
+ $('#weekly-title').textContent='RANKS';const left=$('#weekly-left');left.textContent=on?online.timeLeft():'';left.hidden=!on;
  if(full&&panelKind==='ranks')renderRanks();if(full&&!$('#results').hidden)resultsOnline();if(online.reward&&state==='menu'&&$('#panel').hidden)openPanel('ranks')}
 function resultsOnline(rank){const box=$('#res-online');box.replaceChildren();if(!online.configured())return;
  if(!online.user){box.append(googleButton('Sign in to post your score'));return}

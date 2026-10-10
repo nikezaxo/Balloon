@@ -130,8 +130,8 @@ function rankLabel(r){const b=el('span','rank-label t-'+(r.tier||TIERS[0]).id);b
 
 // ---- Menu buttons ----
 function refreshSeasonUi(){const btn=$('#open-season');if(!btn)return;const s=seasonState(),r=tierOf(s.sp,s.legend),key=r.name+s.sp;
- if(btn.dataset.key!==key){btn.dataset.key=key;$('#season-emblem').replaceChildren(emblemEl(r,34,true));$('#season-rank').textContent=r.name;$('#season-sp').textContent=`${s.sp.toLocaleString()} SP`}
- const n=tasksReady(),dot=$('#tasks-dot');dot.hidden=!n;dot.textContent=n;const t=save.tasks;$('#tasks-sub').textContent=`${t.daily.filter(d=>d.c).length}/3 TODAY`}
+ if(btn.dataset.key!==key){btn.dataset.key=key;$('#season-emblem').replaceChildren(emblemEl(r,34,true));$('#season-rank').textContent='SEASON';btn.title=`${r.name} · ${s.sp.toLocaleString()} SP`}
+ const n=tasksReady(),dot=$('#tasks-dot');dot.hidden=!n;dot.textContent=n}
 
 // ---- Tasks panel ----
 let tasksTab='daily';
