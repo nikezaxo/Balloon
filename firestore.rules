@@ -57,6 +57,18 @@ service cloud.firestore {
       allow update: if owner(uid) && validSeason(request.resource.data)
         && request.resource.data.sp >= resource.data.sp;
     }
+    // Usernames: one player per name. The document id is the name in lower case and holds its owner.
+    function validUsername(key, d) {
+      return d.keys().hasOnly(['uid', 'name', 'at']) && d.uid == request.auth.uid
+        && validName(d.name) && d.name.size() >= 2 && d.name.size() <= 16 && key == d.name.lower()
+        && d.at == request.time;
+    }
+    match /usernames/{key} {
+      allow read: if true;
+      allow create: if signedIn() && validUsername(key, request.resource.data);
+      allow update: if signedIn() && resource.data.uid == request.auth.uid && validUsername(key, request.resource.data);
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
     // Cloud saves are private to their owner.
     match /players/{uid} {
       allow read: if owner(uid);
