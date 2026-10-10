@@ -99,5 +99,11 @@ await t('owner changes capitalisation', assertSucceeds(setDoc(doc(A, 'usernames/
 await t('others cannot free a name', assertFails(deleteDoc(doc(db('bob'), 'usernames/sky ace'))));
 await t('owner frees a name', assertSucceeds(deleteDoc(doc(A, 'usernames/sky ace'))));
 await t('anyone checks a name', assertSucceeds(getDoc(doc(anon, 'usernames/sky ace'))));
+// Free Run board
+await t('own free run entry', assertSucceeds(setDoc(doc(A, 'freerun/alice'), entry('Alice', 90000))));
+await t('free run score down denied', assertFails(setDoc(doc(A, 'freerun/alice'), entry('Alice', 100))));
+await t('other free run entry denied', assertFails(setDoc(doc(db('bob'), 'freerun/alice'), entry('Bob', 5))));
+await t('anyone reads free run board', assertSucceeds(getDocs(query(collection(anon, 'freerun'), orderBy('score', 'desc'), limit(5)))));
+await t('profile with free run best', assertSucceeds(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, free: 90000 }))));
 console.log(`${pass} passed, ${fail} failed`);
 await env.cleanup(); process.exit(fail ? 1 : 0);

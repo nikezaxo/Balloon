@@ -11,7 +11,7 @@ const TUT_STEPS=[
  {id:'rope',text:'SWIPE ACROSS THE ROPE TO FLY!',hand:'swipe',menu:true,at:()=>{const r=rope();return {x:W/2,y:r.a.y+(r.b.y-r.a.y)*.4}},done:()=>state==='flying'},
  {id:'drag',text:'DRAG ANYWHERE TO MOVE THE BALLOON',hand:'drag',freeze:true,ready:()=>flightTime>1.6,at:()=>({x:x*W,y:balloonY()+70}),done:T=>T.moved},
  {id:'dodge',text:'DODGE THE SPIKY LEDGES AND THE CREATURES',done:T=>T.time>4.5},
- {id:'coins',text:'GRAB COINS! A FULL ROW RAISES YOUR COIN MULTIPLIER',done:T=>(T.time>4&&Math.floor(coinCount)>=T.coins0+6)||T.time>9},
+ {id:'coins',text:'GRAB COINS! A FULL ROW OF COINS GIVES BONUS POINTS',done:T=>(T.time>4&&Math.floor(coinCount)>=T.coins0+6)||T.time>9},
  {id:'boost',text:'YOUR BOOST IS FULL. TAP IT NOW!',hand:'tap',freeze:true,start:()=>{if(energy<5){energy=5;chargedUp()}},at:()=>colPos('#boost'),done:()=>!!showcase||(!!boost&&boost.kind==='engine')},
  {id:'powers',text:'POWER-UPS GIVE YOU A SHIELD, A MAGNET, TURBO OR DOUBLE COINS',done:T=>T.time>5},
  {id:'boss',text:'A BOSS IS COMING! DODGE ITS ATTACKS UNTIL IT GETS TIRED',ready:()=>!!boss||nextBossTime-flightTime<10,done:()=>!!boss&&['tired','fatality','done'].includes(boss.phase)},
@@ -64,7 +64,7 @@ function renderSettings(){const list=$('#panel-list');$('#panel-title').textCont
  const btn=(label,cls,fn)=>{const b=el('button','mini-btn'+(cls?' '+cls:''),label);b.onclick=fn;return b};
  row(sound?'speaker':'mute','SOUND',sound?'Music, effects and voices are on':'Sound is off',btn(sound?'ON':'OFF',sound?'go':'',async()=>{await toggleSound();renderSettings()}));
  if(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen)row('fullscreen','FULL SCREEN','Hide the browser bars',btn(fsElement()?'EXIT':'GO','',()=>{toggleFullscreen();setTimeout(renderSettings,400)}));
- if(online.configured()){if(online.user){row(avatarEl(myLook(),34),'ACCOUNT','Signed in with Google. Your progress is saved in the cloud.',btn('SIGN OUT','',()=>online.signOut().then(renderSettings)));
+ if(online.configured()){if(online.user){row(avatarEl(myLook(),34),'ACCOUNT','Signed in with Google. Your progress is saved in the cloud.',btn('SIGN OUT','',async()=>{const r=await askDialog({ribbon:'SIGN OUT',title:'Sign out?',text:'Your progress is saved to your account. This device goes back to a fresh guest until you log in again.',buttons:[{label:'SIGN OUT',cls:'orange',value:true},{label:'CANCEL',cls:'blue',value:false}]});if(r.value)online.signOut()}));
    row('crown','USERNAME',online.displayName(),btn('CHANGE','',()=>chooseName({current:save.nick||online.displayName()})))}
   else{const r=row(avatarEl(myLook(),34),'GUEST','You are playing as a guest. Sign up to save your progress in the cloud and join the rankings.'),acts=el('div','set-acts');acts.append(googleButton('SIGN UP','signup'),googleButton('LOG IN','login'));r.classList.add('guest');r.append(acts)}}
  row('bolt','HOW TO PLAY','Power-ups, the boost and boss fights',btn('OPEN','',()=>openPanel('boosts')));

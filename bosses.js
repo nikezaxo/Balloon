@@ -195,9 +195,14 @@ function bossHit(s){if(smashing()){if(s.kind==='orb'||s.kind==='faller'){s.dead=
  if(shield>0){breakShield();if(s.kind==='orb'||s.kind==='faller')s.dead=true;else s.hit=true;return}finish()}
 function startFatality(){if(!boss||boss.phase!=='tired'||state!=='flying')return;const def=FATALITIES[save.skin]||FATALITIES.classic;setPhase('fatality');boss.fatal={def,p:0,pose:{},balloon:null,fired:new Set(),at(th,fn){if(this.p>=th&&!this.fired.has(th)){this.fired.add(th);fn()}}};announce(def.name,'FATALITY!','fatal','skull');gameSound.effect('fatality');announcer('fatality');sayVoice('fatality',{force:true,delay:1.1});bossVoice('defeat',1.4);shake=Math.max(shake,8)}
 function bossDefeated(){const b=boss,reward=500+100*b.level+(save.skin==='gold'?100:0);spawnRewardCoins(b,reward);bonus+=PTS.boss;bossKills++;tally('bosses');popup(W/2,H*.5,`+${PTS.boss.toLocaleString()}`,'#fff',40);
- save.bossWins=save.bossWins||{};save.bossWins[stage.id]=(save.bossWins[stage.id]||0)+1;persist();
+ save.bossWins=save.bossWins||{};save.bossWins[stage.id]=(save.bossWins[stage.id]||0)+1;
+ // Campaign: beating a stage's boss clears it and unlocks the next stage.
+ if(runMode==='campaign'){save.cleared=save.cleared||{};const i=STAGES.indexOf(stage),next=STAGES[i+1],opened=!!next&&!save.cleared[stage.id]&&save.bossWins[stage.id]===1&&!(save.best||{})[next.id];save.cleared[stage.id]=true;if(opened)setTimeout(()=>{if(state==='flying'){announce('STAGE CLEAR!',`${next.name} UNLOCKED`,'record','trophy');gameSound.effect('record')}},2200)}
+ persist();
  announce('BOSS DEFEATED!',`+${reward} COINS`,'record','trophy');confetti(50);gameSound.effect('record');sayVoice('win',{force:true,delay:.3});b.hidden=true;b.shots=[];setPhase('done')}
-function endBoss(){boss=null;nextBossTime=flightTime+BOSS_GAP;nextObstacle=alt+H/worldScale*.95;prevLedge={a:nextObstacle-300,c:.5};coinCursor=Math.max(coinCursor,nextObstacle-260)}
+// Free Run: after each boss the run flies on into the next stage (and back to the first after the last).
+function nextFreeStage(){const next=STAGES[(STAGES.indexOf(stage)+1)%STAGES.length];stage=next;caveWallScale=0;transition={age:0,dur:1.2};refreshMeta();announce(next.name,'NEXT STAGE','stage',next.icon);gameSound.effect('zone');if(sound)preloadVoices()}
+function endBoss(){boss=null;if(runMode==='free')nextFreeStage();nextBossTime=flightTime+BOSS_GAP;nextObstacle=alt+H/worldScale*.95;prevLedge={a:nextObstacle-300,c:.5};coinCursor=Math.max(coinCursor,nextObstacle-260)}
 // Boss reward: coins burst out across the screen, hang for a moment, then all fly into the balloon.
 function spawnRewardCoins(b,n){const cx=b.x,cy=Math.max(60,b.y);for(let i=0;i<n;i++){const a=rand(0,TAU),sp=rand(60,560);rewardCoins.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,age:0,hold:rand(.7,1.3),phase:rand(0,TAU)})}}
 function updateRewardCoins(real){if(!rewardCoins.length)return;const bx=x*W,by=balloonY()-5;let got=0;

@@ -69,6 +69,13 @@ service cloud.firestore {
       allow update: if signedIn() && resource.data.uid == request.auth.uid && validUsername(key, request.resource.data);
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
+    // Free Run board: best score of one endless run through all stages.
+    match /freerun/{uid} {
+      allow read: if true;
+      allow create: if owner(uid) && validEntry(request.resource.data);
+      allow update: if owner(uid) && validEntry(request.resource.data)
+        && request.resource.data.score >= resource.data.score;
+    }
     // Cloud saves are private to their owner.
     match /players/{uid} {
       allow read: if owner(uid);
@@ -95,14 +102,15 @@ service cloud.firestore {
         && (!('sp' in d) || (d.sp is int && d.sp >= 0 && d.sp <= 10000000))
         && (!('legend' in d) || d.legend is bool)
         && (!('hist' in d) || shortText(d.hist, 200))
-        && (!('items' in d) || (d.items is int && d.items >= 0 && d.items <= 100));
+        && (!('items' in d) || (d.items is int && d.items >= 0 && d.items <= 100))
+        && (!('free' in d) || (d.free is int && d.free >= 0 && d.free <= 100000000));
     }
     // Public profiles: anyone can look, only the player writes.
     match /profiles/{uid} {
       allow read: if true;
       allow write: if owner(uid)
         && request.resource.data.keys().hasOnly(['name', 'avatar', 'frame', 'gold', 'clanId', 'clanTag', 'clanName', 'best', 'skin', 'at',
-          'scores', 'stars', 'bosses', 'seasonId', 'sp', 'legend', 'hist', 'items'])
+          'scores', 'stars', 'bosses', 'seasonId', 'sp', 'legend', 'hist', 'items', 'free'])
         && validStats(request.resource.data)
         && validName(request.resource.data.name) && validLook(request.resource.data)
         && shortText(request.resource.data.clanId, 40) && shortText(request.resource.data.clanTag, 5)
