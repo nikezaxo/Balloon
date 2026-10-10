@@ -425,7 +425,7 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .social-row .weekly-banner{margin-top:0}
 .small-round{width:52px;height:52px;padding:3px;display:grid;place-items:center}
 .small-round.purple{background:linear-gradient(#b48cff,#7a3cff);box-shadow:inset 0 -5px 0 #5521c9,0 5px 0 var(--ink)}
-#open-clan{padding:10px}
+#open-clan.round-btn{padding:10px}
 .account-btn.signed{padding:1px;background:#1b1240}
 .account-btn.signed canvas{width:100%!important;height:100%!important}
 .gold-name{background:linear-gradient(100deg,#fff3a0 0%,#ffd23f 30%,#ff9a1a 50%,#ffd23f 70%,#fff3a0 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;text-shadow:none!important;-webkit-text-stroke:.6px #6a3a00;filter:drop-shadow(0 2px 0 var(--ink)) drop-shadow(0 0 4px #ffb30088);animation:goldShine 2.4s linear infinite}
@@ -585,3 +585,75 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .pc-stage-name{flex:1;min-width:0;font-family:var(--title);font-weight:400;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:var(--stroke)}
 .pc-stage .star-trio .ico{width:14px;height:14px}.pc-stage .star-trio .ico.mid{width:17px;height:17px}
 .pc-stage .rank-score{font-size:14px}
+/* Main menu, Subway Surfers style: the live stage fills the screen; swipe the sky to change stage, cut the rope to fly. */
+.menu{background:linear-gradient(#1b124099,#1b124000 30%,#1b124000 72%,#1b124066);padding-bottom:0}
+.menu .menu-space,.menu .swipe-hint{pointer-events:none}
+.menu-top{gap:8px}
+.top-avatar{flex:none;width:50px;height:50px;padding:0;display:grid;place-items:center;background:none;border:0}
+.top-avatar canvas{display:block}
+.wallet-row{flex:1;min-width:0;display:flex;gap:6px;justify-content:flex-start}
+.menu-top .pill{font-size:17px;padding:2px 10px 2px 4px}.menu-top .pill .ico{width:22px;height:22px}
+.gear-btn{flex:none}
+.menu .logo{margin-top:.8vh;font-size:clamp(30px,8.5vw,46px);text-shadow:var(--stroke),0 5px 0 var(--ink)}
+.stage-banner{margin-top:.8vh;display:flex;align-items:center;gap:4px;width:100%;max-width:330px;padding:5px 6px;background:linear-gradient(160deg,var(--a,#3fa9ff),var(--b,#c4f3ff));border:3px solid var(--ink);border-radius:18px;box-shadow:inset 0 -5px 0 #0003,0 5px 0 var(--ink);touch-action:pan-y}
+.stage-banner.from-right{animation:fromRight .35s cubic-bezier(.3,1.4,.5,1)}
+.stage-banner.from-left{animation:fromLeft .35s cubic-bezier(.3,1.4,.5,1)}
+@keyframes fromRight{from{transform:translateX(60px);opacity:0}}
+@keyframes fromLeft{from{transform:translateX(-60px);opacity:0}}
+.chev{flex:none;width:30px;height:38px;padding:6px 4px;background:#1b124055;border:0;border-radius:10px}
+.chev svg{width:100%;height:100%;display:block}
+.sb-main{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center}
+.sb-title{display:flex;align-items:center;gap:6px}
+.sb-title .ico{width:30px;height:30px}
+.sb-title b{font-family:var(--title);font-weight:400;font-size:21px;line-height:1.05;text-shadow:var(--stroke),0 3px 0 var(--ink);white-space:nowrap}
+.sb-sub{display:flex;align-items:center;gap:6px;font-family:var(--title);font-size:12px;letter-spacing:.5px;text-shadow:var(--stroke)}
+.sb-sub .star-trio .ico{width:16px;height:16px}.sb-sub .star-trio .ico.mid{width:20px;height:20px}
+#stage-score{padding:1px 8px 2px;background:#1b1240b8;border-radius:7px}
+.menu .dots{margin-top:7px}
+.swipe-hint{margin-top:6px;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:900;letter-spacing:.5px;text-shadow:0 2px 0 var(--ink),1px 0 0 var(--ink),-1px 0 0 var(--ink);animation:nudge 1.4s ease-in-out infinite}
+.swipe-hint[hidden]{display:none}
+.swipe-hint .ico{width:14px;height:14px}
+@keyframes nudge{50%{transform:translateX(6px)}}
+.menu-space{flex:1}
+.menu .cut-hint{margin:0 0 10px;padding:4px 12px 5px;font-family:var(--title);font-size:15px;font-weight:400;letter-spacing:.6px;background:#1b1240aa;border-radius:12px;animation:pulse .7s ease-in-out infinite alternate}
+.nav-bar{width:calc(100% + 28px);max-width:600px;display:flex;justify-content:space-around;align-items:flex-end;gap:2px;padding:7px 6px calc(8px + env(safe-area-inset-bottom));background:linear-gradient(#2c1f78f0,#1b1240f5);border-top:3px solid var(--ink);border-radius:20px 20px 0 0;box-shadow:0 -4px 0 #ffffff22 inset}
+.nav-btn{position:relative;flex:1;max-width:84px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:2px 0;color:#fff;background:none;border:0;font-family:var(--title)}
+.nav-ico{width:46px;height:46px;display:grid;place-items:center;padding:7px;background:linear-gradient(#6fc1ff,#2f86ff);border:3px solid var(--ink);border-radius:15px;box-shadow:inset 0 -4px 0 #1d5fd0,0 4px 0 var(--ink)}
+.nav-ico svg{width:100%;height:100%;display:block;overflow:visible}
+#open-store .nav-ico{background:linear-gradient(#7ef08f,#2fbf4f);box-shadow:inset 0 -4px 0 #1f8f39,0 4px 0 var(--ink)}
+#open-tasks .nav-ico{background:linear-gradient(#ffe46b,#ffc414);box-shadow:inset 0 -4px 0 #e08e00,0 4px 0 var(--ink)}
+#weekly-banner .nav-ico{width:56px;height:56px;background:linear-gradient(#ff9a3c,#e8501a);box-shadow:inset 0 -4px 0 #b83a0a,0 4px 0 var(--ink)}
+#open-season .nav-ico{padding:3px;background:linear-gradient(#b48cff,#6a35ef);box-shadow:inset 0 -4px 0 #4a1fb0,0 4px 0 var(--ink)}
+#open-season .nav-ico .emblem{width:36px!important;height:36px!important}
+#open-clan .nav-ico{background:linear-gradient(#ff7a85,#e0203c);box-shadow:inset 0 -4px 0 #a8102a,0 4px 0 var(--ink)}
+.nav-btn small{font-size:11px;letter-spacing:.6px;text-shadow:var(--stroke)}
+.nav-btn:active .nav-ico{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.nav-badge{position:absolute;top:-6px;right:2px;font-size:10px;padding:1px 5px 2px;background:#1b1240;border:2px solid var(--ink);border-radius:7px;text-shadow:none;white-space:nowrap}
+.nav-badge[hidden],.nav-badge:empty{display:none}
+.nav-btn .red-dot{top:-6px;right:6px}
+@media(max-height:720px){.menu .logo{display:none}.nav-ico{width:40px;height:40px;padding:6px}#weekly-banner .nav-ico{width:48px;height:48px}.stage-banner{margin-top:.6vh}}
+@media(max-width:360px){.menu-top .pill{font-size:15px;padding:2px 7px 2px 3px}.menu-top .pill .ico{width:18px;height:18px}.top-avatar{width:44px;height:44px}}
+/* Settings */
+.set-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#1b124066;border:3px solid var(--ink);border-radius:13px}
+.set-ico{flex:none;width:34px;height:34px;display:grid;place-items:center}.set-ico svg{width:100%;height:100%;display:block}
+.set-g{width:28px;height:28px;display:block}.set-g svg{width:100%;height:100%}
+.set-text{flex:1;min-width:0;display:flex;flex-direction:column;text-align:left}
+.set-text b{font-family:var(--title);font-weight:400;font-size:16px;text-shadow:var(--stroke)}
+.set-text small{font-size:11px;font-weight:800;color:#dfe6ff}
+.set-row .google-btn{font-size:12px;padding:4px 10px 4px 5px}
+/* Tutorial coach */
+.coach{position:absolute;left:14px;right:14px;bottom:calc(122px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.coach[hidden]{display:none}
+.coach b{max-width:340px;padding:8px 14px 10px;text-align:center;font-family:var(--title);font-weight:400;font-size:16px;line-height:1.2;color:var(--yellow);background:#1b1240e6;border:3px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);text-shadow:var(--stroke)}
+.coach .mini-btn{pointer-events:auto;font-size:11px;background:linear-gradient(#ff7a85,#e0203c)}
+.coach.in b{animation:coachIn .35s cubic-bezier(.3,1.6,.5,1)}
+@keyframes coachIn{from{transform:translateY(20px) scale(.8);opacity:0}}
+/* Clean HUD outside the tutorial: score and stars, coins, pause; altitude shows as 1,000 m announcements. */
+.game-shell:not(.tutorial) .hud-alt>small,.game-shell:not(.tutorial) .hud-alt>strong,.game-shell:not(.tutorial) .zone,.game-shell:not(.tutorial) #speed{display:none}
+.game-shell:not(.tutorial) .hud-alt .score-line{margin-top:0}
+.game-shell:not(.tutorial) .hud-alt .score-line b{font-size:20px}
+.game-shell:not(.tutorial) #weather:not(.gust){display:none}
+.game-shell:not(.tutorial) #boss-timer:not(.soon){display:none}
+.game-shell:not(.tutorial) .mult-pill:not(.active){display:none}
+.game-shell:not(.tutorial) .hint>span,.game-shell:not(.tutorial) .hint .best-chip,.game-shell:not(.tutorial) .hint-stage{display:none}
+.game-shell:not(.tutorial) .menu .swipe-hint{font-size:10px;opacity:.85}
