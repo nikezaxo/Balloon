@@ -43,13 +43,26 @@ and only a few buttons sit around the edges.
 - CUT THE ROPE (swipe across it below the balloon) to fly, or press Space or Enter. There is no
   PLAY button: the menu flies away, an iris in the stage colours opens from the balloon and the
   stage badge spins in. The game goes full screen where the browser allows (not iPhone Safari).
-- Bottom bar: STORE (skins and lives), TASKS (red dot when a reward is ready), RANKS (weekly
-  tournament, all-time and your bests; the badge shows the time left this week), SEASON (your rank
-  badge) and CLAN.
+- Bottom bar: STORE (skins and lives), TASKS (red dot when a reward is ready), MAP (Campaign or
+  Free Run, see Modes), RANKS (weekly tournament, all-time, Free Run and your bests; the badge shows
+  the time left this week), SEASON (your rank badge) and CLAN.
 - SETTINGS: sound, full screen, your account (guest: SIGN UP or LOG IN; member: sign out), your
   USERNAME, HOW TO PLAY (power-ups, boost and bosses) and the tutorial (replay it or turn it off).
 On wide screens the action stays in a centred column framed by side walls. All icons are cartoon
 SVGs in icons.js.
+
+## Modes: Campaign and Free Run
+The MAP button (the big middle button of the bottom bar), or a tap on the stage banner, opens the map.
+- CAMPAIGN: the six stages in order. Only Sunny Sky is open at first; beating a stage's boss CLEARS it
+  and unlocks the next stage ("STAGE CLEAR! JUNGLE ISLAND UNLOCKED"). Locked stages show a padlock on the
+  map, the banner and the page dots, with the boss that unlocks them; cutting the rope on a locked stage
+  does nothing. Stages you had already played or beaten stay open. Campaign runs count for the stage's
+  best, stars, and the weekly and all-time boards.
+- FREE RUN: one endless run through every stage. It starts at Sunny Sky; after each boss the run flies
+  straight on into the next stage (new backdrop, ledges, creatures and boss), and after Deep Universe it
+  starts again at Sunny Sky, tougher every time. It has its own record (FREE RUN in MY BESTS) and its own
+  world ranking by highest score (the FREE RUN tab of the rankings, freerun/{uid} in Firestore); it
+  does not change your stage records. The banner reads FREE RUN with your best; change mode on the map.
 
 ## Tutorial
 The first time someone opens the game they are asked whether they want a quick tutorial (players
@@ -59,7 +72,7 @@ the player does them:
 1. On the menu the hand swipes across the rope: cut it to fly.
 2. Right after take-off the game stops and the hand drags left and right: drag (or press an arrow key)
    to carry on.
-3. Tips about dodging ledges and creatures, then coins and the multiplier.
+3. Tips about dodging ledges and creatures, then coins and row bonuses.
 4. The boost is filled up, the game stops and the hand taps BOOST: tap it to carry on.
 5. A tip about power-ups, then at the first boss a tip to dodge until it is tired.
 6. When the boss is tired the game stops and the hand taps FATALITY: tap it to finish the boss.
@@ -70,7 +83,7 @@ and Settings can replay it or turn it off (tutorial.js).
 ## In-game display
 Kept clean so the sky stays clear: the score with its three stars and the bar towards the next star
 at the top left, coins and pause at the top right, power-up timers under them and the BOOST button at
-the bottom. The coin multiplier only shows while a row streak or multiplier is active, the boss
+the bottom. A rainbow x2 timer shows while the rainbow star's double score lasts, the boss
 timer only in the last 20 seconds before a boss, and the wind only when a gust is coming or blowing.
 Your altitude pops up as a big "1,000 m" banner at every 1,000 metres. During the tutorial the HUD also
 shows the altitude, stage name, wind, speed and the boss timer all the time.
@@ -120,7 +133,7 @@ The music dips while someone talks. On iPhone, sound plays even with the silent 
 ## Score and stars
 Every run scores points (PTS in game.js):
 - 10 points per metre climbed
-- 100 per coin (times the coin multiplier), 500 per perfect coin row
+- 100 per coin, 500 per perfect coin row (every coin of a row)
 - 200 per energy cell, 300 per power-up
 - 250 per smash or bonk, 500 per close call
 - 50,000 for defeating a boss
@@ -150,6 +163,9 @@ With online play switched on:
 - Signing up with a Google account that already has a Skybound account asks first: CANCEL (stay a guest,
   nothing changes) or SIGN IN with that account (skins and best scores from this device are added to it).
   Nothing is written to the cloud until the account is confirmed.
+- SIGN OUT (Settings, after a confirmation) saves the latest progress to the account, then wipes it from
+  the device: the game restarts as a fresh guest with nothing unlocked, until the player signs up (linking
+  the new guest progress to an account) or logs in again, which brings back all their records and items.
 - Usernames are unique (usernames/{name} in Firestore). Picking a name someone else has shows
   "already taken, please choose another name". Change it any time in SETTINGS > USERNAME; the new name
   shows right away on the boards, in clans and on your player card, and the old one is freed.
@@ -305,18 +321,19 @@ boss; P or Escape pauses.
 - Coins are scarce in normal flight: rows of 10 that follow the safe path, about one row
   every three ledges. The big haul is the COIN RUSH: while the engine boost (two lanes) or
   turbo fires, a wavy river of coins pours in and the balloon pulls nearby coins in.
-- Coin rows: Collect
-  every coin in 3 rows in a row to raise the coin multiplier to x1.1, then x1.2
-  after the next 3, and so on; each coin is worth the multiplier. Missing a single
-  coin resets it to x1.0. The multiplier and row progress show under the coin
-  counter. Coins you collect are added to your wallet for the store.
+- Coin rows: collecting every coin of a row pays a 500 point PERFECT ROW bonus (and counts for
+  the row tasks). Coins you collect are added to your wallet for the store.
+- RAINBOW STAR: after every 5 minutes of flying (once any boss fight is over) a big spinning rainbow
+  star marked x2 appears in the middle of the course, in a gap between ledges. Grab it for 30 seconds
+  of DOUBLE SCORE: every metre climbed and every bonus counts twice. A rainbow x2 timer shows under the
+  coins and the score glows pink while it lasts. (It replaces the old coin-row multiplier.)
 - Energy cells (in every second gap between coin rows, roughly one engine boost every
   13,000 m): collect 5, then tap ⚡ BOOST. This is the only
   power with a cinematic intro — the action freezes, rays spin and the balloon
   zooms in with sunglasses — then a rocket engine smashes through everything for
   3.5 seconds.
 - Rare power-ups (in every eighth gap between coin rows): coin magnet, bubble shield, turbo and
-  DOUBLE COINS (every coin counts twice for 15 seconds, on top of the row multiplier; the coin
+  DOUBLE COINS (every coin counts twice for 15 seconds; the coin
   counter glows and an x2 timer shows in the HUD).
   Turbo plays a quick mini intro in slow motion, then rockets you up.
 - Smashing ledges or drones, or bonking creatures while boosted, earns a coin.
