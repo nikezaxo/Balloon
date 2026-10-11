@@ -75,7 +75,7 @@ const putEntry=(path,e)=>fb.F.setDoc(ref(...path),e).catch(err=>fb.F.setDoc(ref(
 // Leaderboard entries carry the player's look so boards can show avatars, frames, gold names and clan tags.
 const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),score:Math.floor(score),stage:String(stageId).slice(0,12),skin:String(skin).slice(0,12),avatar:lk.avatar,frame:lk.frame,gold:lk.gold,clan:save.clan?save.clan.tag:'',at:fb.F.serverTimestamp()}};
  // Cloud save: unlocks and records merge (union and best of both); coins, lives and skin come from the newer save.
- function mergeSave(cloud){if(!cloud||typeof cloud!=='object')return;const num=(v,lo,hi)=>typeof v==='number'&&isFinite(v)?Math.min(hi,Math.max(lo,Math.floor(v))):null;
+ function mergeSave(cloud){if(!cloud||typeof cloud!=='object')return;const newer=(cloud.updated||0)>(save.updated||0),num=(v,lo,hi)=>typeof v==='number'&&isFinite(v)?Math.min(hi,Math.max(lo,Math.floor(v))):null;
   if((cloud.updated||0)>(save.updated||0)){const c=num(cloud.coins,0,1e9),l=num(cloud.lives,0,MAX_LIVES),g=num(cloud.gems,0,1e6);if(c!==null)save.coins=c;if(g!==null)save.gems=g;if(l!==null)save.lives=l;if(SKINS[cloud.skin])save.skin=cloud.skin;save.updated=cloud.updated}
   save.skins=[...new Set([...(save.skins||[]),...(Array.isArray(cloud.skins)?cloud.skins:[])])].filter(id=>SKINS[id]);if(!save.skins.includes(save.skin))save.skin='classic';
   for(const k of ['best','scores','stars','bossWins']){save[k]=save[k]||{};for(const [id,v] of Object.entries(cloud[k]||{})){const n=num(v,0,1e9);if(n!==null&&STAGES.some(s=>s.id===id))save[k][id]=Math.max(save[k][id]||0,n)}}
@@ -84,6 +84,9 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
   // Free Run records keep the best of both; cleared campaign stages add up.
   for(const k of ['freeBest','freeAlt']){const n=num(cloud[k],0,1e9);if(n!==null)save[k]=Math.max(save[k]||0,n)}
   if(cloud.cleared&&typeof cloud.cleared==='object'){save.cleared=save.cleared||{};for(const id of Object.keys(cloud.cleared))if(STAGES.some(st=>st.id===id)&&cloud.cleared[id])save.cleared[id]=true}
+  // Skin cards keep the most of each; unopened boxes come from the newer save, like coins.
+  if(cloud.cards&&typeof cloud.cards==='object'){save.cards={...(save.cards||{})};for(const [id,v] of Object.entries(cloud.cards)){const n=num(v,0,1000);if(n!==null&&SKINS[id])save.cards[id]=Math.max(save.cards[id]||0,n)}}
+  if(newer&&cloud.boxes&&typeof cloud.boxes==='object'){const b={};for(const k of ['sky','storm','legend']){const n=num(cloud.boxes[k],0,999);if(n)b[k]=n}save.boxes=b}
   save.weeklyClaimed=[...new Set([...(save.weeklyClaimed||[]),...(Array.isArray(cloud.weeklyClaimed)?cloud.weeklyClaimed:[])])].slice(-12);if(!save.nick&&cloud.nick)save.nick=clean(cloud.nick);if(!save.nickKey&&typeof cloud.nickKey==='string'&&user&&cloud.nickUid===user.uid){save.nickKey=cloud.nickKey;save.nickUid=cloud.nickUid;save.nick=clean(cloud.nick)}
   if(typeof mergeSeason==='function')try{mergeSeason(cloud)}catch(e){console.warn('Season merge failed',e)}
   try{localStorage.setItem('skybound-save',JSON.stringify(save))}catch{}refreshMeta()}

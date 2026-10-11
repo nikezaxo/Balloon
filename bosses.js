@@ -197,7 +197,6 @@ function startFatality(){if(!boss||boss.phase!=='tired'||state!=='flying')return
 function bossDefeated(){const b=boss,reward=500+100*b.level+(save.skin==='gold'?100:0);spawnRewardCoins(b,reward);bonus+=PTS.boss;bossKills++;tally('bosses');popup(W/2,H*.5,`+${PTS.boss.toLocaleString()}`,'#fff',40);
  save.bossWins=save.bossWins||{};save.bossWins[stage.id]=(save.bossWins[stage.id]||0)+1;
  // Campaign: beating a stage's boss clears it and unlocks the next stage.
- if(runMode==='campaign'){save.cleared=save.cleared||{};const i=STAGES.indexOf(stage),next=STAGES[i+1],opened=!!next&&!save.cleared[stage.id]&&save.bossWins[stage.id]===1&&!(save.best||{})[next.id];save.cleared[stage.id]=true;if(opened)setTimeout(()=>{if(state==='flying'){announce('STAGE CLEAR!',`${next.name} UNLOCKED`,'record','trophy');gameSound.effect('record')}},2200)}
  persist();
  announce('BOSS DEFEATED!',`+${reward} COINS`,'record','trophy');confetti(50);gameSound.effect('record');sayVoice('win',{force:true,delay:.3});b.hidden=true;b.shots=[];setPhase('done')}
 // Free Run: after each boss the run flies on into the next stage (and back to the first after the last).

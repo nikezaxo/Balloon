@@ -155,6 +155,19 @@ const gameSound = (() => {
     if (kind === 'stamp') { noise(.3, { filter: 'lowpass', from: 1200, to: 200, volume: .4 }); note(160, 60, .25, 0, .2, 'square'); arpeggio([1046.5, 1318.5, 1568, 2093, 2637], .05, .035, 'square'); }
     // Ominous sting under the announcer: a deep boom, a dark rumble and a dissonant metallic ring.
     if (kind === 'sting') { note(72, 30, 1.3, 0, .28, 'sine'); noise(1.1, { filter: 'lowpass', from: 700, to: 90, q: .7, volume: .3 }); note(220, 214, 1, .02, .028, 'sawtooth'); note(233, 226, 1, .02, .028, 'sawtooth'); note(110, 108, 1.2, 0, .05, 'triangle'); }
+    // Box opening: the box lands, rattles and blasts open, then each reward flips (rarer ones ring brighter).
+    if (kind === 'whoosh') noise(.28, { from: 500, to: 2600, q: .9, volume: .14 });
+    if (kind === 'thud') { noise(.3, { filter: 'lowpass', from: 900, to: 120, volume: .45 }); note(120, 45, .3, 0, .22, 'sine'); }
+    if (kind === 'charge') { note(180, 760, .95, 0, .05, 'sawtooth'); noise(.95, { from: 300, to: 3200, q: 3, volume: .12 }); for (let i = 0; i < 9; i++) noise(.05, { filter: 'highpass', from: 1800, volume: .06 + i * .012, delay: i * .1 }); }
+    if (kind === 'burst') { noise(.7, { filter: 'lowpass', from: 3200, to: 140, q: .7, volume: .55 }); note(95, 32, .6, 0, .28, 'sine'); arpeggio([1046.5, 1318.5, 1568, 2093, 2637], .04, .03, 'square'); noise(.6, { filter: 'highpass', from: 6000, volume: .1 }); }
+    if (kind === 'flip') { note(420, 1300, .1, 0, .04, 'triangle'); noise(.1, { filter: 'highpass', from: 3500, volume: .07 }); }
+    if (kind === 'reveal') {
+      const sets = [[784, 1046.5], [659.25, 783.99, 1046.5, 1318.5], [523.25, 659.25, 783.99, 1046.5, 1318.5, 1568], [523.25, 659.25, 783.99, 1046.5, 1318.5, 1568, 2093]];
+      arpeggio(sets[Math.max(0, Math.min(3, level))], .05, .035, 'square');
+      if (level >= 2) { noise(.8, { filter: 'highpass', from: 5000, volume: .1 }); note(1046.5, 1046.5, .9, .3, .03, 'triangle'); }
+      if (level >= 3) { note(85, 35, .9, 0, .25, 'sine'); [523.25, 659.25, 783.99].forEach(f => note(f, f, 1.2, .35, .025, 'sawtooth')); }
+    }
+    if (kind === 'unlock') { arpeggio([523.25, 659.25, 783.99, 1046.5, 1318.5, 1568, 2093], .07, .04, 'square'); [1046.5, 1318.5, 1568].forEach(f => note(f, f, 1.1, .5, .03, 'triangle')); noise(1, { filter: 'highpass', from: 5500, volume: .1, delay: .4 }); }
     if (kind === 'warn') { note(880, 880, .08, 0, .035, 'square'); note(880, 880, .08, .14, .035, 'square'); }
   }
   // A bouncy pentatonic loop; drums join once the balloon is flying.
