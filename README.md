@@ -17,7 +17,9 @@ rope and climb as high as you can.
 - online.js: Google sign-in, cloud save, public profiles, worldwide and weekly leaderboards and the weekly tournament
 - cosmetics.js: profile avatars, avatar frames and the gold name, and the profile screen
 - clans.js: clans (create, find, join, requests, roles, settings) and player profile cards
-- season.js: monthly seasons, ranks, season points, daily and season tasks, rewards and the Season and Tasks screens
+- season.js: monthly seasons, ranks, season points, daily, box and season tasks, rewards and the Season and Tasks screens
+- modes.js: the MAP screen (Campaign and Free Run)
+- boxes.js: boxes (coins, gems and skin cards), card unlocks, the box opening show and the store's BOXES tab
 - firebase-config.js: your Firebase project config (online play is off while it is empty)
 - firestore.rules: security rules to paste into Firebase
 
@@ -43,7 +45,7 @@ and only a few buttons sit around the edges.
 - CUT THE ROPE (swipe across it below the balloon) to fly, or press Space or Enter. There is no
   PLAY button: the menu flies away, an iris in the stage colours opens from the balloon and the
   stage badge spins in. The game goes full screen where the browser allows (not iPhone Safari).
-- Bottom bar: STORE (skins and lives), TASKS (red dot when a reward is ready), MAP (Campaign or
+- Bottom bar: STORE (skins, boxes and lives; a red badge counts unopened boxes), TASKS (red dot when a reward is ready), MAP (Campaign or
   Free Run, see Modes), RANKS (weekly tournament, all-time, Free Run and your bests; the badge shows
   the time left this week), SEASON (your rank badge) and CLAN.
 - SETTINGS: sound, full screen, your account (guest: SIGN UP or LOG IN; member: sign out), your
@@ -53,11 +55,16 @@ SVGs in icons.js.
 
 ## Modes: Campaign and Free Run
 The MAP button (the big middle button of the bottom bar), or a tap on the stage banner, opens the map.
-- CAMPAIGN: the six stages in order. Only Sunny Sky is open at first; beating a stage's boss CLEARS it
-  and unlocks the next stage ("STAGE CLEAR! JUNGLE ISLAND UNLOCKED"). Locked stages show a padlock on the
-  map, the banner and the page dots, with the boss that unlocks them; cutting the rope on a locked stage
-  does nothing. Stages you had already played or beaten stay open. Campaign runs count for the stage's
-  best, stars, and the weekly and all-time boards.
+- CAMPAIGN: the six stages in order. Only Sunny Sky is open at first. Each stage has a GOAL altitude, and
+  every goal is higher than the one before: Sunny Sky 3,000 m, Jungle Island 6,000 m, Crystal Cave
+  10,000 m, Robo Factory 15,000 m, Outer Space 25,000 m and Deep Universe 40,000 m (STAGE_GOALS in game.js).
+  Reaching a stage's goal CLEARS it and unlocks the next stage mid-flight ("STAGE CLEAR! JUNGLE ISLAND
+  UNLOCKED"), and the first clear of each stage pays a box (Sky Box for the first two, Storm Box for the
+  next three, Legend Box for Deep Universe). The altitude banners show the goal ("2,000 m · GOAL 3,000 m"),
+  the menu banner shows it under the stage name and the map shows a goal bar for each stage. Locked stages
+  show a padlock on the map, the banner and the page dots with what opens them ("REACH 3,000 m IN SUNNY
+  SKY"); cutting the rope on a locked stage does nothing. Stages you had already played or cleared stay
+  open. Campaign runs count for the stage's best, stars, and the weekly and all-time boards.
 - FREE RUN: one endless run through every stage. It starts at Sunny Sky; after each boss the run flies
   straight on into the next stage (new backdrop, ledges, creatures and boss), and after Deep Universe it
   starts again at Sunny Sky, tougher every time. It has its own record (FREE RUN in MY BESTS) and its own
@@ -174,8 +181,9 @@ With online play switched on:
 - The weekly tournament runs Monday 00:00 to Sunday 23:59 UTC. The first time you sign in
   after it ends you get your prize: 1st 1,000 coins + 50 gems, 2nd 750 + 30 gems,
   3rd 500 + 20 gems, 4th-10th 300 + 10 gems, top 50 150 coins, everyone else who played 50 coins.
-- Your progress (coins, skins, lives, bests and stars) is saved to your account, so it
-  follows you to other devices. Skins and records merge; coins, gems and lives come from the newer save.
+- Your progress (coins, skins, lives, bests, stars, skin cards and boxes) is saved to your account, so it
+  follows you to other devices. Skins, records and cards merge; coins, gems, lives and unopened boxes come from
+  the newer save.
 Without it the high scores screen shows your bests on this device.
 
 Switching it on (free Firebase plan, about 10 minutes):
@@ -256,6 +264,9 @@ more. SP never go down during a season and start again from zero in the next one
 - SEASON: ten big goals for the whole season (50 runs, 150,000 m in total, 3,000 coins,
   100 perfect rows, 30 engine boosts, 20 stars, 30 bosses, 10,000 m in one run, 20 daily tasks,
   300 smashes) worth 200 to 300 SP plus coins or gems.
+- BOX TASKS: on Tuesday, Thursday and Saturday (UTC) one extra, harder task shows at the top of the daily tasks
+  (for example "Defeat 2 bosses" or "Fly 8,000 m in one run"). Claiming it opens a box right away: a Sky Box, or a
+  Storm Box on Saturdays. On other days the row says when the next one comes.
 - Progress counts while you fly ("TASK DONE!" pops up) and on the results screen, which also
   shows the SP the run earned and any rank up. Open TASKS and tap CLAIM to collect.
 
@@ -338,6 +349,34 @@ boss; P or Escape pauses.
   Turbo plays a quick mini intro in slow motion, then rockets you up.
 - Smashing ledges or drones, or bonking creatures while boosted, earns a coin.
 
+## Boxes and skin cards
+- A box holds coins, sometimes GEMS (rare) and stacks of SKIN CARDS. EPIC, LEGENDARY and MYTHIC skins are not sold
+  any more: collect enough cards of one to unlock it. The rarer the skin, the more cards it needs and the rarer its
+  cards are: EPIC 10 cards, LEGENDARY 20, MYTHIC 30 (CARD_NEED in boxes.js). Cards usually go to the locked skin
+  you are closest to, sometimes to any locked skin of that rarity. Spare cards (for skins you already have) turn
+  into coins. Skins you already owned stay yours.
+- Boxes (BOXES in boxes.js; the store lists these odds too):
+
+  | Box | Price | Coins | Gems | Card stacks | Each stack: epic / legendary / mythic |
+  |---|---|---|---|---|---|
+  | SKY BOX | 250 coins | 60-140 | 3% chance, 1-2 | 2 | 76% / 20% / 4% |
+  | STORM BOX | 750 coins | 180-360 | 8% chance, 2-4 | 3 | 55% / 35% / 10% |
+  | LEGEND BOX | 40 gems | 400-800 | 12% chance, 3-6 | 4 (the first always legendary or mythic) | 30% / 45% / 25% |
+
+- Free boxes: BOX TASKS (Tuesday, Thursday and Saturday, see Tasks), the first clear of each campaign stage's goal,
+  and MYSTERY BOXES that float through the sky in about a third of runs (at most two a day): grab one to keep it.
+  Won and found boxes wait under YOUR BOXES in the store (the STORE button shows how many), and the results
+  screen has an OPEN BOX button for boxes found in that run.
+- OPENING A BOX plays a full-screen show: the box drops in and bounces, TAP TO OPEN, it shakes while light leaks
+  from the lid, then blasts open (the lid flies off) with a light beam in the colour of the best reward inside.
+  The rewards fly out one by one, face down; the rarer the reward, the longer the card shakes before it flips
+  (mythic cards shimmer in rainbow colours). Coins and gems count up, a skin card fills its bar (for example
+  6 / 10), and completing a set shows NEW SKIN UNLOCKED! while the skin plays its pose and speaks. A badge on the
+  box counts the rewards left; SKIP jumps to the end. The last screen lists everything with OPEN NEXT (when more
+  boxes are waiting) and OK.
+- The store's BOXES tab has your boxes, the three boxes to buy, what is inside each and your CARD COLLECTION
+  (each card skin's progress; tap one to see the skin).
+
 ## Store
 - Skins are shown as Angry Birds style cards with light rays, coloured by rarity
   (common teal, rare blue, epic purple, legendary orange). The picked skin sits on a
@@ -348,21 +387,22 @@ boss; P or Escape pauses.
   Robot Dance with laser eyes, Watermelon – Melon Twister, Monster – Monster Roar,
   Ninja – Shadow Clones, Galaxy – Cosmic Warp, Golden King – King's Treasure, Sleepy Dog –
   Nap Time, Chick Trio – Chick Parade, Sly Fox – Sneaky Scheme, Grumpy Wolf – Huff and Puff.
-- Skins: Classic (free), Gumball, Funny Clown, Toy Robot, Watermelon, Monster,
-  Ninja, Galaxy and Golden King for coins, and three MYTHIC skins sold only for gems:
-  Fire Dragon (30 gems, Dragon Fire pose, Dragon Breath fatality), Rainbow Unicorn
-  (50 gems, Rainbow Dash, Rainbow Blast) and Diamond (80 gems, Crystal Shine, Diamond Storm).
-- Four TALKING CHARACTERS for coins, original characters each with 35 voice lines: Sleepy Dog
-  (350: floppy ears, eye patch and nightcap; trails Zzz, bones and puffs; Sleepy Slam fatality),
-  Chick Trio (450: a chick balloon with two baby chicks flying beside it; feathers, music notes
-  and seeds; Peck Peck Peck), Sly Fox (600: pointy ears, white muzzle, whiskers and a bushy tail;
-  feathers; Feather Frenzy) and Grumpy Wolf (800: ragged ears, heavy brows and fangs; wind puffs
+- Skins: Classic (free), and Gumball, Funny Clown, Toy Robot and Watermelon for coins. The EPIC skins
+  (Monster, Ninja, Chick Trio, Sly Fox), LEGENDARY skins (Galaxy, Golden King, Grumpy Wolf) and MYTHIC skins
+  (Fire Dragon: Dragon Fire pose, Dragon Breath fatality; Rainbow Unicorn: Rainbow Dash, Rainbow Blast; Diamond:
+  Crystal Shine, Diamond Storm) are unlocked with skin cards from boxes; their store button shows the cards
+  collected (for example 4 / 10 CARDS) and opens the BOXES tab.
+- Four TALKING CHARACTERS, original characters each with 35 voice lines: Sleepy Dog
+  (rare, 350 coins: floppy ears, eye patch and nightcap; trails Zzz, bones and puffs; Sleepy Slam fatality),
+  Chick Trio (epic, cards: a chick balloon with two baby chicks flying beside it; feathers, music notes
+  and seeds; Peck Peck Peck), Sly Fox (epic, cards: pointy ears, white muzzle, whiskers and a bushy tail;
+  feathers; Feather Frenzy) and Grumpy Wolf (legendary, cards: ragged ears, heavy brows and fangs; wind puffs
   and blown leaves; Big Bad Blow). Besides their lines for every moment, they chat on their own
   every 13 to 22 seconds while flying (not during boss fights), with a speech bubble.
 - Two SEASON skins are never sold, only won as end-of-season rewards: PRISM (Diamond: rainbow
   crystal, Rainbow Flash pose, rainbow crystal trail) and STARLIGHT (Star Legend: night-sky
   balloon with a halo of stars, Supernova pose, starlight trail). Both have their own voice.
-- Gems are won in the weekly tournament's top 10, from tasks and from seasons, and shown next to your coins. Each has its own colours, decorations that turn
+- Gems are won in the weekly tournament's top 10, from tasks, from seasons and (rarely) from boxes, and shown next to your coins. Each has its own colours, decorations that turn
   with the balloon, and some have their own face and accessories. In the store
   every skin's card moves in its own style with its own effect (bouncing gumball with
   bubbles, wobbling clown with confetti, jerky robot with sparks, spinning
@@ -378,7 +418,7 @@ boss; P or Escape pauses.
   Diamond crystal shards with glints (SKIN_TRAILS in skins.js).
 - Extra lives: after a pop, tap REVIVE to re-inflate where you were and keep
   climbing. You can hold up to 9 lives; you start with 1.
-Coins, skins, lives, bests, high scores and stars are saved in the browser (localStorage).
+Coins, skins, cards, boxes, lives, bests, high scores and stars are saved in the browser (localStorage).
 
 ## Gameplay details
 - Starting climb speed: 130 m/s (game-world units), scaled slightly per stage.

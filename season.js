@@ -48,6 +48,18 @@ const DAILY_TASKS=[
  {stat:'powerups',goals:[2,3,5],text:g=>`Collect ${g} power-ups`,icon:'magnet',r:{coins:60,sp:25}},
  {stat:'bosses',goals:[1,2,3],text:g=>g>1?`Defeat ${g} bosses`:'Defeat a boss',icon:'crown',r:{coins:150,sp:50,gems:2}}];
 const DAILY_BONUS={coins:100,sp:50,gems:2};
+// Box tasks: on Tuesdays, Thursdays and Saturdays (UTC) one extra, harder task pays a box (a Storm Box on Saturdays).
+const BOX_TASKS=[
+ {stat:'runAlt',max:true,goal:8000,text:'Fly 8,000 m in one run',icon:'balloon'},
+ {stat:'bosses',goal:2,text:'Defeat 2 bosses',icon:'crown'},
+ {stat:'coins',goal:250,text:'Collect 250 coins',icon:'coin'},
+ {stat:'rows',goal:10,text:'Complete 10 perfect coin rows',icon:'star'},
+ {stat:'smashes',goal:25,text:'Smash or bonk 25 things',icon:'flame'},
+ {stat:'close',goal:12,text:'Get 12 close calls',icon:'shield'},
+ {stat:'boosts',goal:3,text:'Fire the engine boost 3 times',icon:'bolt'}];
+const BOX_DAYS={2:'sky',4:'sky',6:'storm'},DAY_NAMES=['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+function boxTaskFor(day){const box=BOX_DAYS[new Date(day+'T00:00:00Z').getUTCDay()];if(!box)return null;let seed=7;for(const ch of day)seed=(seed*33+ch.charCodeAt(0))>>>0;return {k:seed%BOX_TASKS.length,box,p:0,c:false}}
+function nextBoxDay(){const d=new Date();for(let i=1;i<=7;i++){const n=new Date(d.getTime()+i*864e5);if(BOX_DAYS[n.getUTCDay()])return i===1?'TOMORROW':DAY_NAMES[n.getUTCDay()]}return ''}
 const SEASON_TASKS=[
  {id:'runs',stat:'runs',goal:50,text:'Play 50 runs',icon:'play',r:{sp:200,coins:300}},
  {id:'meters',stat:'meters',goal:150000,text:'Fly 150,000 m in total',icon:'balloon',r:{sp:250,coins:400}},
@@ -65,14 +77,15 @@ function dailyFor(day){let seed=0;for(const ch of day)seed=(seed*31+ch.charCodeA
 function dailyReward(t){const d=DAILY_TASKS[t.k],m=1+t.g*.5;return {coins:Math.round(d.r.coins*m),sp:Math.round(d.r.sp*m),gems:d.r.gems||0}}
 // Season state lives in save.season and task state in save.tasks; both reset when their period changes.
 function seasonState(){const now=seasonOf();if(!save.season||!save.season.id)save.season={id:now.id,sp:0,reached:-1,legend:false};
- const t=save.tasks||(save.tasks={});if(t.day!==todayId()){t.day=todayId();t.daily=dailyFor(t.day);t.bonus=false}
+ const t=save.tasks||(save.tasks={});if(t.day!==todayId()){t.day=todayId();t.daily=dailyFor(t.day);t.bonus=false;t.boxTask=boxTaskFor(t.day)}if(!('boxTask' in t))t.boxTask=boxTaskFor(t.day)
  if(t.season!==save.season.id){t.season=save.season.id;t.st={};t.sc=[]}return save.season}
 let seasonToast=[];
 function trackTask(stat,amount=1){if(!amount)return;seasonState();const t=save.tasks,max=stat==='runAlt';
  for(const d of t.daily){const def=DAILY_TASKS[d.k];if(def.stat!==stat||d.c)continue;const goal=def.goals[d.g],was=d.p;d.p=max?Math.max(d.p,amount):d.p+amount;if(was<goal&&d.p>=goal){seasonToast.push(`TASK DONE: ${def.text(goal).toUpperCase()}`);if(seasonRun)seasonRun.done++}}
+ const bt=t.boxTask;if(bt&&!bt.c&&BOX_TASKS[bt.k].stat===stat){const goal=BOX_TASKS[bt.k].goal,w=bt.p;bt.p=max?Math.max(bt.p,amount):bt.p+amount;if(w<goal&&bt.p>=goal){seasonToast.push('BOX TASK DONE! CLAIM YOUR BOX');if(seasonRun)seasonRun.done++}}
  const was=t.st[stat]||0;t.st[stat]=max?Math.max(was,amount):was+amount;for(const s of SEASON_TASKS)if(s.stat===stat&&was<s.goal&&t.st[stat]>=s.goal&&!t.sc.includes(s.id)){seasonToast.push(`SEASON TASK DONE: ${s.text.toUpperCase()}`);if(seasonRun)seasonRun.done++}
  if(state==='flying'&&seasonToast.length){for(const msg of seasonToast)popup(x*W,balloonY()-120,msg,'#7ef08f',18);seasonToast=[];gameSound.effect('milestone')}}
-const tasksReady=()=>{seasonState();const t=save.tasks;return t.daily.filter(d=>!d.c&&d.p>=DAILY_TASKS[d.k].goals[d.g]).length+SEASON_TASKS.filter(s=>!t.sc.includes(s.id)&&(t.st[s.stat]||0)>=s.goal).length+(!t.bonus&&t.daily.every(d=>d.c)?1:0)};
+const tasksReady=()=>{seasonState();const t=save.tasks;return t.daily.filter(d=>!d.c&&d.p>=DAILY_TASKS[d.k].goals[d.g]).length+SEASON_TASKS.filter(s=>!t.sc.includes(s.id)&&(t.st[s.stat]||0)>=s.goal).length+(!t.bonus&&t.daily.every(d=>d.c)?1:0)+(t.boxTask&&!t.boxTask.c&&t.boxTask.p>=BOX_TASKS[t.boxTask.k].goal?1:0)};
 // Rewards: coins, gems and season points; season points can promote you, and each new division pays out.
 let rankUps=[];
 function grant(r){if(r.coins)save.coins+=r.coins;if(r.gems)save.gems=(save.gems||0)+r.gems;if(r.sp)addSP(r.sp);persist();refreshMeta()}
@@ -137,12 +150,14 @@ function refreshSeasonUi(){const btn=$('#open-season');if(!btn)return;const s=se
 let tasksTab='daily';
 function taskRow(ic,text,p,goal,reward,claimed,onClaim){const row=el('div','task-row'+(claimed?' done':'')),ico=el('span','task-ico');ico.innerHTML=icon(ic);const mid=el('div','task-mid');mid.append(el('b','',text));
  const bar=el('i','task-bar'),fill=el('s');fill.style.width=Math.min(100,p/goal*100)+'%';bar.append(fill);mid.append(bar,el('small','',`${Math.min(p,goal).toLocaleString()} / ${goal.toLocaleString()}`));
- const rw=el('div','task-reward');if(reward.coins)rw.insertAdjacentHTML('beforeend',`<span>${iconHTML('coin')}${reward.coins}</span>`);if(reward.gems)rw.insertAdjacentHTML('beforeend',`<span>${iconHTML('gem')}${reward.gems}</span>`);if(reward.sp)rw.insertAdjacentHTML('beforeend',`<span class="sp">+${reward.sp} SP</span>`);
+ const rw=el('div','task-reward');if(reward.coins)rw.insertAdjacentHTML('beforeend',`<span>${iconHTML('coin')}${reward.coins}</span>`);if(reward.gems)rw.insertAdjacentHTML('beforeend',`<span>${iconHTML('gem')}${reward.gems}</span>`);if(reward.sp)rw.insertAdjacentHTML('beforeend',`<span class="sp">+${reward.sp} SP</span>`);if(reward.box)rw.insertAdjacentHTML('beforeend',`<span class="box">${iconHTML('box')}${BOXES[reward.box].name}</span>`);
  const end=el('div','task-end');end.append(rw);if(claimed)end.append(el('span','task-claimed','DONE ✓'));else if(p>=goal){const b=el('button','mini-btn go','CLAIM');b.onclick=()=>{onClaim();gameSound.effect('buy');confetti(16);renderTasks()};end.append(b)}
  row.append(ico,mid,end);return row}
 function renderTasks(){seasonState();const list=$('#panel-list'),t=save.tasks,scroll=list.scrollTop;$('#panel-title').textContent='TASKS';list.replaceChildren();
  const tabs=el('div','tabs rank-tabs');for(const [id,label,ic] of [['daily','DAILY','star'],['season','SEASON','trophy']]){const b=el('button','tab'+(tasksTab===id?' on':''));b.innerHTML=iconHTML(ic)+label;b.onclick=()=>{tasksTab=id;renderTasks()};tabs.append(b)}list.append(tabs);
- if(tasksTab==='daily'){list.append(el('p','rank-note',`New tasks in ${dayLeft()}`));for(const d of t.daily){const def=DAILY_TASKS[d.k],goal=def.goals[d.g],r=dailyReward(d);list.append(taskRow(def.icon,def.text(goal),d.p,goal,r,d.c,()=>{d.c=true;grant(r);trackTask('dailyDone',1)}))}
+ if(tasksTab==='daily'){list.append(el('p','rank-note',`New tasks in ${dayLeft()}`));
+  const bt=t.boxTask;if(bt){const def=BOX_TASKS[bt.k],row=taskRow('box',`BOX TASK: ${def.text}`,bt.p,def.goal,{box:bt.box},bt.c,()=>{bt.c=true;persist();setTimeout(()=>openBox(bt.box,'gift'),250)});row.classList.add('box-task');list.append(row)}
+  else{const row=el('div','task-row box-task soon'),ico=el('span','task-ico');ico.innerHTML=icon('box');const mid=el('div','task-mid');mid.append(el('b','','BOX TASKS'),el('small','',`Tuesday, Thursday and Saturday. Next one: ${nextBoxDay()}`));row.append(ico,mid);list.append(row)}for(const d of t.daily){const def=DAILY_TASKS[d.k],goal=def.goals[d.g],r=dailyReward(d);list.append(taskRow(def.icon,def.text(goal),d.p,goal,r,d.c,()=>{d.c=true;grant(r);trackTask('dailyDone',1)}))}
   const all=t.daily.every(d=>d.c),bonus=taskRow('gem','Finish all 3 daily tasks',t.daily.filter(d=>d.c).length,3,DAILY_BONUS,t.bonus,()=>{t.bonus=true;grant(DAILY_BONUS)});bonus.classList.add('bonus');list.append(bonus)}
  else{list.append(el('p','rank-note',`Season ${seasonOf().n} ends in ${seasonLeft()}`));for(const s of SEASON_TASKS)list.append(taskRow(s.icon,s.text,t.st[s.stat]||0,s.goal,s.r,t.sc.includes(s.id),()=>{t.sc.push(s.id);grant(s.r)}))}
  list.scrollTop=scroll;refreshSeasonUi()}
