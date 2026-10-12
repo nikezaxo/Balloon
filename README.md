@@ -181,7 +181,7 @@ With online play switched on:
   after it ends you get your prize: 1st 1,000 coins + 50 gems, 2nd 750 + 30 gems,
   3rd 500 + 20 gems, 4th-10th 300 + 10 gems, top 50 150 coins, everyone else who played 50 coins.
 - Your progress (coins, skins, lives, bests, stars, skin cards and boxes) is saved to your account, so it
-  follows you to other devices. Skins, records and cards merge; coins, gems, lives and unopened boxes come from
+  follows you to other devices. Skins, records, cards and total metres (your level) merge; coins, gems, lives and unopened boxes come from
   the newer save.
 Without it the high scores screen shows your bests on this device.
 
@@ -200,6 +200,30 @@ Switching it on (free Firebase plan, about 10 minutes):
    and publish. The config values are not secret; the rules protect the data.
 Scores are sent by the game itself, so the rules can check their shape and stop scores
 from going down, but a determined cheater could still post a fake score.
+
+## Player level
+Your PLAYER LEVEL comes from the total metres you have flown in every run (revives count only the new metres).
+Like PUBG Mobile, every level needs more than the one before (levelNeed in cosmetics.js):
+
+| Level | Metres for the next level | Total metres to reach it |
+|---|---|---|
+| 2 | 2,500 | 2,500 |
+| 10 | 19,780 (to 11) | 82,020 |
+| 20 | 54,180 (to 21) | 421,420 |
+| 30 | 104,580 (to 31) | 1,176,820 |
+| 50 | 253,380 (to 51) | 4,575,620 |
+| 100 (max) | | 31,552,620 |
+
+- The level number sits on a badge at the bottom right of your avatar frame, everywhere your avatar shows: the menu,
+  your profile, the rankings, the season board, clans, the results screen and your player card, and other players
+  see it too. The badge changes with your tier: ROOKIE 1-9 (bronze, round), PILOT 10-19 (silver) and ACE 20-29
+  (gold, hexagon), CAPTAIN 30-49 (teal) and COMMANDER 50-69 (purple, shield), LEGEND 70-99 (red with a crown) and
+  SKY MASTER at 100 (a shimmering rainbow crown).
+- PROFILE shows your level, tier and a bar towards the next level; player cards show the same for other players.
+- The results screen shows the metres the run added and how far it is to the next level. A new level shows
+  "LEVEL UP!" and pays 50 + 25 × the new level in coins (and 10 gems every 10 levels).
+- Players from before levels start from what their save shows they flew (their best altitudes or this season's
+  total, whichever is bigger). Signed-in players' levels are saved to their account and public profile.
 
 ## Profiles, avatars and frames
 Open PROFILE to pick your avatar, its frame and your name colour. Six avatars (Sunny, Kitty,
@@ -406,6 +430,8 @@ boss; P or Escape pauses.
   (each card skin's progress; tap one to see the skin).
 
 ## Store
+- The store has your coins and gems at the top and three big tabs: SKINS, BOXES (with a badge counting unopened
+  boxes) and LIVES (two offer cards: +1 life, or +3 lives as the best deal).
 - Skins are shown as Angry Birds style cards with light rays, coloured by rarity
   (common teal, rare blue, epic purple, legendary orange). The picked skin sits on a
   big card next to its details and buy/equip button; all skins are in the fanned row

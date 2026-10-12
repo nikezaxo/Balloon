@@ -82,6 +82,8 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
   const cc=cloud.cos;if(cc&&typeof cc==='object'){const c=myCos();c.own=[...new Set([...c.own,...(Array.isArray(cc.own)?cc.own:[])])].filter(id=>AVATARS[id]||FRAMES[id]);c.goldOwned=c.goldOwned||!!cc.goldOwned;if((cloud.updated||0)>=(save.updated||0)){if(AVATARS[cc.avatar])c.avatar=cc.avatar;if(FRAMES[cc.frame])c.frame=cc.frame;c.gold=!!cc.gold}}
   if((cloud.updated||0)>(save.updated||0)){if(cloud.clan&&typeof cloud.clan==='object')save.clan=cloud.clan;if(cloud.clanReq&&typeof cloud.clanReq==='object')save.clanReq=cloud.clanReq}
   // Free Run records keep the best of both; cleared campaign stages add up.
+  // Lifetime metres (player level) keep the larger total.
+  {const n=num(cloud.totalM,0,1e10);if(n!==null)save.totalM=Math.max(save.totalM||0,n)}
   for(const k of ['freeBest','freeAlt']){const n=num(cloud[k],0,1e9);if(n!==null)save[k]=Math.max(save[k]||0,n)}
   if(cloud.cleared&&typeof cloud.cleared==='object'){save.cleared=save.cleared||{};for(const id of Object.keys(cloud.cleared))if(STAGES.some(st=>st.id===id)&&cloud.cleared[id])save.cleared[id]=true}
   // Skin cards keep the most of each; unopened boxes come from the newer save, like coins.
@@ -134,7 +136,7 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
  // past season finishes (id:tier:points) and how many season reward items the player owns.
  function profileStats(){const per=(o,max)=>{const m={};for(const s of STAGES){const v=Math.floor(Number((o||{})[s.id])||0);if(v>0)m[s.id]=Math.min(max,v)}return m},s=typeof seasonState==='function'?seasonState():null;
   return {scores:per(save.scores,1e8),stars:per(save.stars,3),bosses:Math.min(1e6,Object.values(save.bossWins||{}).reduce((a,v)=>a+(Math.floor(v)||0),0)),seasonId:s?s.id:'S1',sp:s?Math.min(1e7,Math.floor(s.sp)):0,legend:!!(s&&s.legend),
-   hist:(save.seasonHistory||[]).slice(-8).map(h=>`${h.id}:${h.ti}:${h.sp}`).join(',').slice(0,200),free:Math.min(1e8,Math.floor(save.freeBest||0)),items:Math.min(100,save.skins.filter(id=>SKINS[id]&&SKINS[id].season).length+myCos().own.filter(id=>(AVATARS[id]||FRAMES[id]||{}).season).length)}}
+   level:typeof playerLevel==='function'?playerLevel():1,meters:Math.min(1e10,Math.floor(save.totalM||0)),hist:(save.seasonHistory||[]).slice(-8).map(h=>`${h.id}:${h.ti}:${h.sp}`).join(',').slice(0,200),free:Math.min(1e8,Math.floor(save.freeBest||0)),items:Math.min(100,save.skins.filter(id=>SKINS[id]&&SKINS[id].season).length+myCos().own.filter(id=>(AVATARS[id]||FRAMES[id]||{}).season).length)}}
  // The signed-in player's own card, straight from this device.
  function myCard(){const cl=save.clan;return {name:displayName(),...myLook(),clanTag:cl?cl.tag:'',clanName:cl?cl.name:'',best:Math.max(best.all||0,...Object.values(save.scores||{})),skin:save.skin,...profileStats()}}
  // Current looks for a list of players, read from their public profiles (30 per query, cached for a minute).
