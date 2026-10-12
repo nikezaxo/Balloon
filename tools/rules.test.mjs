@@ -105,5 +105,11 @@ await t('free run score down denied', assertFails(setDoc(doc(A, 'freerun/alice')
 await t('other free run entry denied', assertFails(setDoc(doc(db('bob'), 'freerun/alice'), entry('Bob', 5))));
 await t('anyone reads free run board', assertSucceeds(getDocs(query(collection(anon, 'freerun'), orderBy('score', 'desc'), limit(5)))));
 await t('profile with free run best', assertSucceeds(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, free: 90000 }))));
+// Player level
+await t('profile with level and metres', assertSucceeds(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, level: 23, meters: 812345 }))));
+await t('level 0 denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, level: 0 }))));
+await t('level above 100 denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, level: 101 }))));
+await t('text level denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, level: 'max' }))));
+await t('negative metres denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, meters: -5 }))));
 console.log(`${pass} passed, ${fail} failed`);
 await env.cleanup(); process.exit(fail ? 1 : 0);

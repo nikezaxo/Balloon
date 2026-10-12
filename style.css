@@ -789,3 +789,39 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .bo-btns{position:absolute;left:12px;right:12px;bottom:calc(20px + env(safe-area-inset-bottom));display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
 .bo-btns[hidden]{display:none}
 @media(prefers-reduced-motion:reduce){.res-box,.box-mine .box-card{animation:none}}
+/* Store: wallet row and big tile tabs */
+.store-head{display:flex;justify-content:center;gap:8px;margin-bottom:8px}
+.store-head .pill{font-size:18px;padding:3px 14px 4px 5px}
+.store-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.store-tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:76px;padding:8px 4px 10px;color:#fff;background:linear-gradient(160deg,#5b48c8,#2c1f74);border:3px solid var(--ink);border-radius:18px;box-shadow:inset 0 -6px 0 #0005,inset 0 3px 0 #ffffff22,0 5px 0 var(--ink);transition:transform .12s,box-shadow .12s;overflow:visible}
+.store-tab .st-ico{width:38px;height:38px;display:grid;place-items:center;filter:drop-shadow(0 3px 0 #0004)}.store-tab .st-ico svg{width:38px;height:38px}
+.store-tab b{font-family:var(--title);font-weight:400;font-size:17px;letter-spacing:.8px;text-shadow:var(--stroke)}
+.store-tab:active{transform:translateY(3px);box-shadow:inset 0 -3px 0 #0005,0 2px 0 var(--ink)}
+.store-tab.on{transform:translateY(-3px);background:linear-gradient(160deg,#fff08a,#ffb300);box-shadow:inset 0 -6px 0 #d98200,inset 0 3px 0 #ffffff88,0 5px 0 var(--ink),0 0 22px #ffd23faa}
+.store-tab.on b{color:#fff}
+.store-tab.on .st-ico{animation:tabBob 1.3s ease-in-out infinite}
+@keyframes tabBob{50%{transform:translateY(-3px) rotate(-5deg) scale(1.06)}}
+.store-tab .tab-dot{top:-9px;right:-7px;min-width:24px;height:24px;font-size:13px;border-radius:12px}
+/* Lives offers */
+.life-offers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.life-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 8px 12px;background:linear-gradient(160deg,#ff8aa0,#c8203c);border:3px solid var(--ink);border-radius:18px;box-shadow:inset 0 -6px 0 #0004,0 5px 0 var(--ink)}
+.life-card.best{background:linear-gradient(160deg,#ffb0d8,#a020c0)}
+.life-ico{position:relative;width:56px;height:52px;display:grid;place-items:center}.life-ico svg{width:50px;height:50px}
+.life-ico i{position:absolute;width:30px;height:30px;bottom:-2px}.life-ico i:first-of-type{left:-10px}.life-ico i:last-of-type{right:-10px}.life-ico i svg{width:30px;height:30px}
+.life-card>b{font-family:var(--title);font-weight:400;font-size:30px;line-height:1;text-shadow:var(--stroke)}
+.life-card>small{font-size:11px;font-weight:900;text-shadow:var(--stroke)}
+.life-card .buy{margin-top:6px;display:flex;align-items:center;gap:4px;font-size:18px}
+.life-deal{position:absolute;top:-11px;padding:1px 8px 3px;font-family:var(--title);font-size:12px;background:linear-gradient(#8ff09c,#2fbf4f);border:2px solid var(--ink);border-radius:9px;text-shadow:var(--stroke);transform:rotate(-4deg)}
+/* Player level */
+.level-box{margin:8px 0;padding:7px 10px 8px;background:linear-gradient(120deg,color-mix(in srgb,var(--lb) 55%,#1b1240),#1b1240cc);border:3px solid var(--ink);border-radius:13px}
+.level-title{display:block;font-family:var(--title);font-weight:400;font-size:16px;letter-spacing:.5px;text-shadow:var(--stroke);color:var(--la)}
+.level-box small{display:block;margin-top:3px;font-size:10.5px;font-weight:900;color:#e6ebff}
+.level-bar{display:block;height:10px;margin-top:4px;background:#1b1240aa;border:2px solid var(--ink);border-radius:6px;overflow:hidden}
+.level-bar s{display:block;height:100%;background:linear-gradient(var(--la),var(--lb))}
+.profile-info .level-box{margin:6px 0 2px}
+.res-level{display:flex;align-items:center;gap:8px;margin:6px auto 0;padding:5px 10px 6px;max-width:300px;background:#1b1240cc;border:3px solid var(--ink);border-radius:13px;text-align:left}
+.res-level[hidden]{display:none}
+.res-level-mid{flex:1;min-width:0}.res-level-mid b{display:block;font-family:var(--title);font-weight:400;font-size:14px;color:var(--la);text-shadow:var(--stroke)}
+.res-level-mid small{display:block;font-size:10px;font-weight:900;color:#e6ebff;margin-top:2px}
+.res-level.up{border-color:#ffd23f;box-shadow:0 0 16px #ffd23f99;animation:pulse .8s ease-in-out 3 alternate}
+@media(prefers-reduced-motion:reduce){.store-tab.on .st-ico,.res-level.up{animation:none}}

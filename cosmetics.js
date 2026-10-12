@@ -40,7 +40,33 @@ const seasonGoal=tier=>tier==='legend'?'Season reward: finish a season as a STAR
 const GOLD_NAME_PRICE=500,CLAN_PRICE=100;
 const myCos=()=>{const c=save.cos||(save.cos={own:[],avatar:'sunny',frame:'basic',gold:false,goldOwned:false});c.own=c.own||[];return c};
 // The look other players see: avatar, frame and whether the name is gold.
-const myLook=()=>{const c=myCos();return {avatar:AVATARS[c.avatar]?c.avatar:'sunny',frame:FRAMES[c.frame]?c.frame:'basic',gold:!!(c.gold&&c.goldOwned)}};
+const myLook=()=>{const c=myCos();return {avatar:AVATARS[c.avatar]?c.avatar:'sunny',frame:FRAMES[c.frame]?c.frame:'basic',gold:!!(c.gold&&c.goldOwned),level:playerLevel()}};
+// ---- Player level ----
+// Levels come from the total metres flown in every run, and each level needs more metres than the one before
+// (2,500 m for level 2, about 20,000 m at level 10, 105,000 m at level 30, 905,000 m for the last one), up to
+// level 100. The level shows on a badge at the bottom right of the avatar frame, for you and for everyone else.
+const MAX_LEVEL=100;
+const levelNeed=L=>2500+1200*(L-1)+80*(L-1)**2;
+function levelOf(m){let L=1,rest=Math.max(0,Math.floor(m||0));while(L<MAX_LEVEL&&rest>=levelNeed(L)){rest-=levelNeed(L);L++}return {level:L,into:rest,need:L<MAX_LEVEL?levelNeed(L):0}}
+const playerLevel=()=>levelOf(save.totalM).level;
+const LEVEL_TIERS=[{from:1,name:'ROOKIE',c:['#ffe2bf','#c8782a'],shape:'round'},{from:10,name:'PILOT',c:['#ffffff','#8f9db8'],shape:'hex'},{from:20,name:'ACE',c:['#fff3a0','#e89a00'],shape:'hex'},
+ {from:30,name:'CAPTAIN',c:['#c8fff4','#14a394'],shape:'shield'},{from:50,name:'COMMANDER',c:['#e2d4ff','#6a3cf0'],shape:'shield'},{from:70,name:'LEGEND',c:['#ffd6d6','#e0203c'],shape:'crown'},{from:100,name:'SKY MASTER',c:['#fff6b0','#ff7ad9'],shape:'crown',rainbow:true}];
+const levelTier=L=>LEVEL_TIERS.filter(t=>L>=t.from).pop();
+// Each new level pays coins (and gems every 10 levels).
+const levelReward=L=>({coins:50+25*L,gems:L%10===0?10:0});
+// Players from before levels start from what their save already shows they flew. This is not saved here on
+// purpose: persisting at start-up would stamp the save as newer than the cloud copy and stop it being restored.
+if(save.totalM===undefined){const st=((save.tasks||{}).st||{}).meters||0,bests=Object.values(save.best||{}).reduce((a,v)=>a+(Math.floor(v)||0),0);save.totalM=Math.max(st,bests)}
+// The level badge, drawn in avatar units (the avatar spans -50..50).
+function levelBadge(c,L,t){const tier=levelTier(L),r=19.5;c.save();c.translate(29,29);let [a,b]=tier.c;if(tier.rainbow){const h=(t*90)%360;a=`hsl(${h},100%,80%)`;b=`hsl(${(h+70)%360},90%,55%)`}
+ const g=c.createLinearGradient(0,-r,0,r);g.addColorStop(0,a);g.addColorStop(1,b);c.fillStyle=g;c.strokeStyle=INK;c.lineWidth=3;c.lineJoin='round';c.beginPath();
+ if(tier.shape==='round')c.arc(0,0,r,0,TAU);
+ else if(tier.shape==='hex')for(let i=0;i<6;i++){const q=i/6*TAU+Math.PI/6;c.lineTo(Math.cos(q)*r*1.08,Math.sin(q)*r*1.08)}
+ else{c.moveTo(-r,-r*.72);c.lineTo(r,-r*.72);c.lineTo(r,r*.15);c.quadraticCurveTo(r*.85,r*.82,0,r*1.12);c.quadraticCurveTo(-r*.85,r*.82,-r,r*.15);c.closePath()}
+ c.fill();c.stroke();
+ if(tier.shape==='crown'){c.beginPath();c.moveTo(-r*.8,-r*.72);c.lineTo(-r*.95,-r*1.35);c.lineTo(-r*.4,-r*1.0);c.lineTo(0,-r*1.5);c.lineTo(r*.4,-r*1.0);c.lineTo(r*.95,-r*1.35);c.lineTo(r*.8,-r*.72);c.closePath();c.fillStyle='#ffd23f';c.fill();c.stroke()}
+ c.fillStyle='rgba(255,255,255,.4)';c.beginPath();c.ellipse(-r*.3,-r*.42,r*.45,r*.2,-.4,0,TAU);c.fill();
+ const txt=String(L),fs=txt.length>2?15:txt.length>1?19.5:22;c.font=`${fs}px ${FONT}`;c.textAlign='center';c.textBaseline='middle';c.lineWidth=4.2;c.strokeStyle=INK;c.strokeText(txt,0,1.8);c.fillStyle='#fff';c.fillText(txt,0,1.8);c.restore()}
 const ownsCos=id=>{const item=AVATARS[id]||FRAMES[id];return !!item&&((!item.gems&&!item.season)||myCos().own.includes(id))};
 
 function face(eyeY,{eye=4.5,gap=10,smile=true,blink=false}={}){ctx.fillStyle=INK;for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*gap,eyeY,eye*.8,blink?.8:eye,0,0,TAU);ctx.fill();if(!blink){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s*gap+1.3,eyeY-1.6,1.4,0,TAU);ctx.fill();ctx.fillStyle=INK}}
@@ -121,11 +147,11 @@ function frameGlow(color,alpha){ctx.save();ctx.globalAlpha=Math.max(0,alpha);ctx
 // Draw an avatar with its frame into a 2D context at the given pixel size.
 function paintAvatar(c,px,look,t){const main=ctx,a=AVATARS[look.avatar]||AVATARS.sunny,f=FRAME_ART[look.frame]||FRAME_ART.basic,k=px/100;ctx=c;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,px,px);c.setTransform(k,0,0,k,px/2,px/2);c.lineJoin='round';c.lineCap='round';
  const g=c.createRadialGradient(-10,-14,4,0,0,36);g.addColorStop(0,a.bg[0]);g.addColorStop(1,a.bg[1]);c.save();c.beginPath();c.arc(0,0,35.5,0,TAU);c.clip();c.fillStyle=g;c.fillRect(-36,-36,72,72);c.strokeStyle=INK;c.lineWidth=2.5;(AVATAR_ART[look.avatar]||AVATAR_ART.sunny)(t);c.restore();
- c.strokeStyle=INK;c.lineWidth=2.5;f(t);ctx=main}
+ c.strokeStyle=INK;c.lineWidth=2.5;f(t);if(look.level)levelBadge(c,Math.min(MAX_LEVEL,Math.max(1,Math.floor(look.level))),t);ctx=main}
 // Avatar canvases; animated ones are redrawn every frame while they are on screen.
 const liveAvatars=new Set();
-function avatarEl(look,size=32,cls=''){const cv=document.createElement('canvas'),px=Math.round(size*Math.min(2,devicePixelRatio||1)),lk={avatar:look&&look.avatar,frame:look&&look.frame};cv.width=cv.height=px;cv.className='avatar-cv '+cls;cv.style.width=cv.style.height=size+'px';cv._look=lk;paintAvatar(cv.getContext('2d'),px,lk,performance.now()/1000);
- if((AVATARS[lk.avatar]||{}).anim||(FRAMES[lk.frame]||{}).anim)liveAvatars.add(cv);return cv}
+function avatarEl(look,size=32,cls=''){const cv=document.createElement('canvas'),px=Math.round(size*Math.min(2,devicePixelRatio||1)),lk={avatar:look&&look.avatar,frame:look&&look.frame,level:look&&look.level};cv.width=cv.height=px;cv.className='avatar-cv '+cls;cv.style.width=cv.style.height=size+'px';cv._look=lk;paintAvatar(cv.getContext('2d'),px,lk,performance.now()/1000);
+ if((AVATARS[lk.avatar]||{}).anim||(FRAMES[lk.frame]||{}).anim||lk.level>=MAX_LEVEL)liveAvatars.add(cv);return cv}
 function renderLiveAvatars(){if(!liveAvatars.size)return;const t=performance.now()/1000;for(const cv of liveAvatars){if(!cv.isConnected){liveAvatars.delete(cv);continue}paintAvatar(cv.getContext('2d'),cv.width,cv._look,t)}}
 // A player name, gold and shimmering for players who bought the gold name, with their clan tag.
 function nameEl(name,gold,tag,cls='rank-name'){const b=el('b',cls+(gold?' gold-name':''),name||'Player');if(tag){const s=el('small','clan-tag',`[${tag}]`);b.prepend(s)}return b}
@@ -134,9 +160,12 @@ function nameEl(name,gold,tag,cls='rank-name'){const b=el('b',cls+(gold?' gold-n
 // Tapping an item you own equips it; tapping a gem item you don't own tries it on: the big avatar at the top
 // shows it, animated, with a BUY button, so players can see exactly how it looks before buying.
 let profileTab='avatars',cosPreview=null;
+// Level, tier and the bar towards the next level (for your profile; player cards use the same box).
+function levelBox(meters,level){const lv=levelOf(meters),L=level||lv.level,tier=levelTier(L),box=el('div','level-box'),bar=el('i','level-bar'),fill=el('s');box.style.setProperty('--la',tier.c[0]);box.style.setProperty('--lb',tier.c[1]);
+ box.append(el('b','level-title',`LEVEL ${L} · ${tier.name}`));if(meters!==undefined&&meters!==null){if(lv.need){fill.style.width=Math.min(100,lv.into/lv.need*100)+'%';bar.append(fill);box.append(bar,el('small','',`${(lv.need-lv.into).toLocaleString()} m TO LEVEL ${L+1} · ${Math.floor(meters).toLocaleString()} m FLOWN`))}else{fill.style.width='100%';bar.append(fill);box.append(bar,el('small','',`MAX LEVEL · ${Math.floor(meters).toLocaleString()} m FLOWN`))}}return box}
 function renderProfile(){const list=$('#panel-list'),c=myCos(),look=myLook(),scroll=list.scrollTop,pv=cosPreview,shown={...look,...(pv?pv.look:{})};$('#panel-title').textContent='PROFILE';list.replaceChildren();
  const head=el('div','profile-head'+(pv?' previewing':'')),info=el('div','profile-info'),big=el('div','profile-big');big.append(avatarEl(shown,pv?110:92,'big'));if(pv)big.append(el('span','preview-tag','PREVIEW'));head.append(big);
- const name=typeof online!=='undefined'?online.displayName():'Player';info.append(nameEl(name,shown.gold,save.clan&&save.clan.tag,'profile-name'));
+ const name=typeof online!=='undefined'?online.displayName():'Player';info.append(nameEl(name,shown.gold,save.clan&&save.clan.tag,'profile-name'),levelBox(save.totalM));
  if(pv&&pv.season){info.append(el('small','profile-note',pv.name),el('small','profile-note',seasonGoal(pv.tier)));const back=el('button','mini-btn','STOP PREVIEW');back.onclick=()=>{cosPreview=null;renderProfile()};info.append(back)}
  else if(pv){info.append(el('small','profile-note',`${pv.name} · ${pv.price} GEMS`));const buy=el('button','buy big gem');buy.innerHTML=`BUY ${iconHTML('gem')}${pv.price}`;buy.onclick=()=>{if((save.gems||0)<pv.price){buy.classList.remove('nope');void buy.offsetWidth;buy.classList.add('nope');gameSound.effect('warn');buy.innerHTML=`NEED ${iconHTML('gem')}${pv.price-(save.gems||0)}`;return}save.gems-=pv.price;pv.apply();cosPreview=null;gameSound.effect('buy');confetti(24);cosChanged()};
   const back=el('button','mini-btn','STOP PREVIEW');back.onclick=()=>{cosPreview=null;renderProfile()};info.append(buy,back)}

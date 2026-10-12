@@ -103,14 +103,16 @@ service cloud.firestore {
         && (!('legend' in d) || d.legend is bool)
         && (!('hist' in d) || shortText(d.hist, 200))
         && (!('items' in d) || (d.items is int && d.items >= 0 && d.items <= 100))
-        && (!('free' in d) || (d.free is int && d.free >= 0 && d.free <= 100000000));
+        && (!('free' in d) || (d.free is int && d.free >= 0 && d.free <= 100000000))
+        && (!('level' in d) || (d.level is int && d.level >= 1 && d.level <= 100))
+        && (!('meters' in d) || (d.meters is int && d.meters >= 0 && d.meters <= 10000000000));
     }
     // Public profiles: anyone can look, only the player writes.
     match /profiles/{uid} {
       allow read: if true;
       allow write: if owner(uid)
         && request.resource.data.keys().hasOnly(['name', 'avatar', 'frame', 'gold', 'clanId', 'clanTag', 'clanName', 'best', 'skin', 'at',
-          'scores', 'stars', 'bosses', 'seasonId', 'sp', 'legend', 'hist', 'items', 'free'])
+          'scores', 'stars', 'bosses', 'seasonId', 'sp', 'legend', 'hist', 'items', 'free', 'level', 'meters'])
         && validStats(request.resource.data)
         && validName(request.resource.data.name) && validLook(request.resource.data)
         && shortText(request.resource.data.clanId, 40) && shortText(request.resource.data.clanTag, 5)
