@@ -15,7 +15,7 @@ const POWERS={
 // The rainbow star: every RAINBOW_EVERY seconds of flight one appears ahead; it doubles all points for RAINBOW_TIME.
 const RAINBOW_EVERY=300,RAINBOW_TIME=30;let scoreX2=0,scoreExtra=0,lastBase=0,nextRainbow=RAINBOW_EVERY;
 // Boxes found this run, and when this run's mystery box floats by (-1 = not decided yet, 0 = none; boxes.js).
-let runBoxes=[],skyBoxAt=-1,levelCredited=0;
+let runBoxes=[],skyBoxAt=-1,levelCredited=0,runBoost=0;
 const PICKUPS=['magnet','shield','nitro','double'];
 const DOUBLE_TIME=15;
 // Altitude banners show only every MILESTONE metres, to keep the screen clear.
@@ -58,7 +58,7 @@ const stageUnlocked=i=>i<=0||stageCleared(STAGES[i-1].id)||!!save.best[STAGES[i]
 // What opens a locked stage, e.g. "REACH 3,000 m IN SUNNY SKY".
 const unlockText=i=>`REACH ${stageGoal(STAGES[i-1].id).toLocaleString()} m IN ${STAGES[i-1].name}`;
 const stageBest=()=>runMode==='free'?(save.freeAlt||0):(save.best[stage.id]||0);
-function reset(mode='ready'){state=mode;alt=0;x=.5;vx=0;target=null;pointer=null;lift=0;vy=0;liftTarget=null;drag=null;obstacles=[];coins=[];critters=[];particles=[];leaves=[];flightTime=0;spin=0;wind=0;weatherNow=null;leafClock=0;coinCount=0;shownCoins=0;banked=0;nextObstacle=450;spawnIndex=0;keys.clear();boss=null;caveWallScale=1;nextBossTime=BOSS_FIRST;rewardCoins=[];coinCursor=330;rushCursor=0;rushCount=0;prevLedge={a:0,c:.5};rowId=0;rowCount=0;rowBreaks=0;rows=new Map();rowStreak=0;coinMult=1;bestMult=1;scoreX2=0;scoreExtra=0;lastBase=0;nextRainbow=RAINBOW_EVERY;runBoxes=[];skyBoxAt=-1;levelCredited=0;runMode=save.mode==='free'?'free':'campaign';if(runMode==='free')stage=STAGES[0];$('#versus').hidden=true;$('#boss-bar').hidden=true;$('#fatality').hidden=true;
+function reset(mode='ready'){state=mode;alt=0;x=.5;vx=0;target=null;pointer=null;lift=0;vy=0;liftTarget=null;drag=null;obstacles=[];coins=[];critters=[];particles=[];leaves=[];flightTime=0;spin=0;wind=0;weatherNow=null;leafClock=0;coinCount=0;shownCoins=0;banked=0;nextObstacle=450;spawnIndex=0;keys.clear();boss=null;caveWallScale=1;nextBossTime=BOSS_FIRST;rewardCoins=[];coinCursor=330;rushCursor=0;rushCount=0;prevLedge={a:0,c:.5};rowId=0;rowCount=0;rowBreaks=0;rows=new Map();rowStreak=0;coinMult=1;bestMult=1;scoreX2=0;scoreExtra=0;lastBase=0;nextRainbow=RAINBOW_EVERY;runBoxes=[];skyBoxAt=-1;levelCredited=0;runBoost=0;runMode=save.mode==='free'?'free':'campaign';if(runMode==='free')stage=STAGES[0];$('#versus').hidden=true;$('#boss-bar').hidden=true;$('#fatality').hidden=true;
  shake=0;flash=0;timeScale=1;slowTimer=0;deathTimer=0;popups=[];rings=[];flyers=[];streaks=[];combo=0;comboTimer=0;bestCombo=0;nearMisses=0;smashes=0;squash=0;squashV=0;mood='happy';moodTimer=0;danger=0;ropeCut=null;nextMilestone=MILESTONE;passedBest=false;goalHit=false;medalsHit=0;eventsSeen=new Set();grow=1;revives=0;
  energy=0;boost=null;speedMult=1;shield=0;magnet=0;doubler=0;invuln=0;showcase=null;powerCount=0;bonus=0;starsHit=0;starFlyers=[];bossKills=0;$('#results').hidden=true;if(typeof seasonNewRun==='function')seasonNewRun();
  generateCourse();$('#weather').textContent=stage.wind?'CALM AIR':stage.calm;$('#weather').classList.remove('gust');$('#hint').hidden=mode!=='ready';$('#menu').hidden=mode!=='menu';$('#menu').classList.remove('leaving');transition=null;$('#overlay').hidden=true;$('#panel').hidden=true;panelKind=null;$('#pause').innerHTML=icon('pause');$('#pause').setAttribute('aria-label','Pause game');$('#announce').replaceChildren();refreshMeta()}
@@ -222,11 +222,13 @@ function showResult(){bank();const a=Math.floor(alt),free=runMode==='free',recor
  results={score:sc,stars,high,record,age:0,shown:-1,lit:0,done:false,tick:0,confetti:0,rank:undefined};resFx=[];refreshMeta();resultsOnline()}
 // Player level: the metres of this run (only the new ones after a revive) go to the lifetime total; each new level
 // pays its reward and shows on the results screen.
-function creditLevel(a){if(typeof levelOf!=='function')return;const add=Math.max(0,a-levelCredited);levelCredited=Math.max(levelCredited,a);const before=levelOf(save.totalM).level;save.totalM=(save.totalM||0)+add;const after=levelOf(save.totalM).level;
- const ups=[];for(let L=before+1;L<=after;L++){const r=levelReward(L);save.coins+=r.coins;save.gems=(save.gems||0)+r.gems;ups.push({L,...r})}resultsLevel(add,ups)}
-function resultsLevel(add,ups){const box=$('#res-level');if(typeof levelOf!=='function'){box.hidden=true;return}const lv=levelOf(save.totalM),tier=levelTier(lv.level);box.hidden=false;box.replaceChildren();box.style.setProperty('--la',tier.c[0]);box.style.setProperty('--lb',tier.c[1]);
+// A level ticket boost multiplies the run's metres; the run counts against the boost once, on its first results.
+function creditLevel(a){if(typeof levelOf!=='function')return;const raw=Math.max(0,a-levelCredited);levelCredited=Math.max(levelCredited,a);
+ if(!runBoost){const bst=activeBoost();runBoost=bst?bst.mult:1;if(bst&&--bst.runs<=0)save.boost=null}const add=raw*runBoost;const before=levelOf(save.totalM).level;save.totalM=(save.totalM||0)+add;const after=levelOf(save.totalM).level;
+ const ups=[];for(let L=before+1;L<=after;L++){const r=levelReward(L);save.coins+=r.coins;save.gems=(save.gems||0)+r.gems;ups.push({L,...r})}resultsLevel(add,ups,runBoost)}
+function resultsLevel(add,ups,mult=1){const box=$('#res-level');if(typeof levelOf!=='function'){box.hidden=true;return}const lv=levelOf(save.totalM),tier=levelTier(lv.level);box.hidden=false;box.replaceChildren();box.style.setProperty('--la',tier.c[0]);box.style.setProperty('--lb',tier.c[1]);
  const up=ups.length?ups[ups.length-1]:null,bar=el('i','level-bar'),fill=el('s');fill.style.width=(lv.need?Math.min(100,lv.into/lv.need*100):100)+'%';bar.append(fill);
- box.append(avatarEl(myLook(),34),el('div','res-level-mid'));const mid=box.lastChild;mid.append(el('b','',up?`LEVEL UP! LEVEL ${lv.level}`:`LEVEL ${lv.level} · ${tier.name}`),bar,el('small','',up?`+${ups.reduce((n,u)=>n+u.coins,0)} COINS${ups.some(u=>u.gems)?` · +${ups.reduce((n,u)=>n+u.gems,0)} GEMS`:''}`:`+${add.toLocaleString()} m · ${lv.need?(lv.need-lv.into).toLocaleString()+' m TO NEXT':'MAX LEVEL'}`));
+ box.append(avatarEl(myLook(),34),el('div','res-level-mid'));const mid=box.lastChild;mid.append(el('b','',(up?`LEVEL UP! LEVEL ${lv.level}`:`LEVEL ${lv.level}`)+(mult>1?` · x${mult} BOOST`:'')),bar,el('small','',up?`+${ups.reduce((n,u)=>n+u.coins,0)} COINS${ups.some(u=>u.gems)?` · +${ups.reduce((n,u)=>n+u.gems,0)} GEMS`:''}`:`+${add.toLocaleString()} m · ${lv.need?(lv.need-lv.into).toLocaleString()+' m TO NEXT':'MAX LEVEL'}`));
  box.classList.toggle('up',!!up);if(up&&!box.dataset.cheered){box.dataset.cheered='1';setTimeout(()=>{gameSound.effect('record');confetti(30)},1600)}if(!up)delete box.dataset.cheered}
 // Boxes found or won in this run can be opened right from the results.
 function resultsBoxes(){const b=$('#res-box'),n=typeof boxTotal==='function'?boxTotal():0;b.hidden=!runBoxes.length||!n;if(!b.hidden)b.innerHTML=`${iconHTML('box')}OPEN ${n>1?`${n} BOXES`:'BOX'}!`}

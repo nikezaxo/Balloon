@@ -12,11 +12,12 @@ const CARD_RANK={epic:1,legendary:2,mythic:3};
 const isCardSkin=id=>!!SKINS[id]&&!!CARD_NEED[SKINS[id].rarity];
 const cardsOf=id=>(save.cards||{})[id]||0;
 // coins: range; gems: [chance, min, max]; stacks: card stacks per box with the odds of each rarity and how many
-// cards a stack holds; sure: the Legend Box's first stack is always legendary or better (this chance of mythic).
+// cards a stack holds; sure: the Legend Box's first stack is always legendary or better (this chance of mythic);
+// tickets: the (very rare) chance of a x2 and of a x4 LEVEL TICKET.
 const BOXES={
- sky:{name:'SKY BOX',price:{coins:250},coins:[60,140],gems:[.03,1,2],stacks:2,odds:{epic:.76,legendary:.2,mythic:.04},amt:{epic:[2,4],legendary:[1,3],mythic:[1,2]},body:['#a6e4ff','#3d9bff','#1f4fb0'],trim:['#fff3a0','#ffc21a','#b87400'],glow:'#7cd0ff',emblem:'cloud'},
- storm:{name:'STORM BOX',price:{coins:750},coins:[180,360],gems:[.08,2,4],stacks:3,odds:{epic:.55,legendary:.35,mythic:.1},amt:{epic:[3,6],legendary:[2,4],mythic:[1,3]},body:['#dcc0ff','#8a4cff','#3c1890'],trim:['#ffffff','#c9d3ec','#6f7a9c'],glow:'#b98cff',emblem:'bolt'},
- legend:{name:'LEGEND BOX',price:{gems:40},coins:[400,800],gems:[.12,3,6],stacks:4,sure:.25,odds:{epic:.3,legendary:.45,mythic:.25},amt:{epic:[5,8],legendary:[3,6],mythic:[2,4]},body:['#ffa898','#e8402a','#8a1410'],trim:['#fff6b8','#ffd23f','#c98a00'],glow:'#ffcf4a',emblem:'crown'}};
+ sky:{tickets:[.015,.003],name:'SKY BOX',price:{coins:250},coins:[60,140],gems:[.03,1,2],stacks:2,odds:{epic:.76,legendary:.2,mythic:.04},amt:{epic:[2,4],legendary:[1,3],mythic:[1,2]},body:['#a6e4ff','#3d9bff','#1f4fb0'],trim:['#fff3a0','#ffc21a','#b87400'],glow:'#7cd0ff',emblem:'cloud'},
+ storm:{tickets:[.04,.01],name:'STORM BOX',price:{coins:750},coins:[180,360],gems:[.08,2,4],stacks:3,odds:{epic:.55,legendary:.35,mythic:.1},amt:{epic:[3,6],legendary:[2,4],mythic:[1,3]},body:['#dcc0ff','#8a4cff','#3c1890'],trim:['#ffffff','#c9d3ec','#6f7a9c'],glow:'#b98cff',emblem:'bolt'},
+ legend:{tickets:[.1,.03],name:'LEGEND BOX',price:{gems:40},coins:[400,800],gems:[.12,3,6],stacks:4,sure:.25,odds:{epic:.3,legendary:.45,mythic:.25},amt:{epic:[5,8],legendary:[3,6],mythic:[2,4]},body:['#ffa898','#e8402a','#8a1410'],trim:['#fff6b8','#ffd23f','#c98a00'],glow:'#ffcf4a',emblem:'crown'}};
 const BOX_ORDER=['sky','storm','legend'];
 // The box for clearing each stage's goal the first time.
 const GOAL_BOX={sky:'sky',jungle:'sky',cave:'storm',factory:'storm',space:'storm',universe:'legend'};
@@ -45,10 +46,13 @@ function rollBox(kind){const B=BOXES[kind],items=[{type:'coins',n:rint(...B.coin
  // Cards beyond what a skin needs (or for a collection that is complete) come as coins, revealed on their own.
  if(spare)items.push({type:'coins',n:spare,spare:true});
  // Rarest last, so the best card is the final reveal.
- items.push(...cards.sort((a,b)=>CARD_RANK[a.rar]-CARD_RANK[b.rar]||a.n-b.n));return items}
+ items.push(...cards.sort((a,b)=>CARD_RANK[a.rar]-CARD_RANK[b.rar]||a.n-b.n));
+ // A level ticket is the rarest prize, so it comes out last.
+ const tr=Math.random();if(tr<B.tickets[1])items.push({type:'ticket',mult:4,n:1});else if(tr<B.tickets[0]+B.tickets[1])items.push({type:'ticket',mult:2,n:1});return items}
 // Rewards are saved before the show starts, so closing the game mid-show loses nothing.
 function applyBox(items){save.cards={...(save.cards||{})};
  for(const it of items){if(it.type==='coins')save.coins+=it.n;else if(it.type==='gems')save.gems=(save.gems||0)+it.n;
+  else if(it.type==='ticket'){const k='x'+it.mult;save.tickets={...(save.tickets||{}),[k]:((save.tickets||{})[k]||0)+1}}
   else{it.from=cardsOf(it.id);it.to=it.from+it.n;save.cards[it.id]=it.to;if(it.to>=CARD_NEED[it.rar]&&!save.skins.includes(it.id)){save.skins.push(it.id);it.unlock=true}}}
  save.boxesOpened=(save.boxesOpened||0)+1;persist();refreshMeta()}
 // src: 'stock' (a box you have), 'buy' (pay for it now) or 'gift' (a reward opened straight away).
@@ -103,15 +107,24 @@ function drawBoxArt(c,kind,x,y,s,{lift=0,lidOff=false,open=false,glowCol='#fffff
  drawBoxBody(c,kind,open,glowCol);if(!lidOff){c.save();c.translate(0,-94-lift);drawBoxLid(c,kind);c.restore()}c.restore()}
 
 // ---- Drawing: reward cards ----
-const RAR_COL={coins:['#fff3a0','#ffb300'],gems:['#ffc4f2','#c81f8f'],epic:['#dcc0ff','#7a3cf0'],legendary:['#ffe27a','#ff8a00'],mythic:['#ffb8ee','#b020d0']};
-const rarOf=it=>it.type==='card'?it.rar:it.type;
-function itemCol(it,now){if(rarOf(it)==='mythic'){const h=now*90%360;return [hueHex(h,.78),hueHex((h+60)%360,.5)]}return RAR_COL[rarOf(it)]}
-const itemLabel=it=>it.type==='card'?(RARITY[it.rar]||{}).name||'CARD':it.type==='gems'?'RARE GEMS!':it.spare?'SPARE CARDS':'COINS';
-const itemName=it=>it.type==='card'?SKINS[it.id].name.toUpperCase():'';
+const RAR_COL={coins:['#fff3a0','#ffb300'],gems:['#ffc4f2','#c81f8f'],epic:['#dcc0ff','#7a3cf0'],legendary:['#ffe27a','#ff8a00'],mythic:['#ffb8ee','#b020d0'],ticket2:['#d0fff2','#14a88e'],ticket4:['#fff0a8','#e0309a']};
+const rarOf=it=>it.type==='card'?it.rar:it.type==='ticket'?'ticket'+it.mult:it.type;
+function itemCol(it,now){if(rarOf(it)==='mythic'||rarOf(it)==='ticket4'){const h=now*90%360;return [hueHex(h,.78),hueHex((h+60)%360,.5)]}return RAR_COL[rarOf(it)]}
+const itemLabel=it=>it.type==='card'?(RARITY[it.rar]||{}).name||'CARD':it.type==='gems'?'RARE GEMS!':it.type==='ticket'?'LEVEL TICKET!':it.spare?'SPARE CARDS':'COINS';
+const itemName=it=>it.type==='card'?SKINS[it.id].name.toUpperCase():it.type==='ticket'?`x${it.mult} LEVEL BOOST`:'';
 function drawGem(c,k){c.save();c.scale(k,k);c.beginPath();c.moveTo(-14,-23);c.lineTo(14,-23);c.lineTo(27,-7);c.lineTo(0,26);c.lineTo(-27,-7);c.closePath();c.fillStyle=vgrad(c,-23,26,['#ffc4f2','#c81f8f']);c.fill();c.lineWidth=3.5;c.strokeStyle=BX_INK;c.stroke();
  c.lineWidth=2;c.beginPath();c.moveTo(-27,-7);c.lineTo(27,-7);c.moveTo(-14,-23);c.lineTo(-7,-7);c.lineTo(0,26);c.lineTo(7,-7);c.lineTo(14,-23);c.moveTo(-7,-7);c.lineTo(0,-23);c.lineTo(7,-7);c.stroke();
  c.fillStyle='rgba(255,255,255,.5)';c.beginPath();c.moveTo(-7,-7);c.lineTo(0,-23);c.lineTo(7,-7);c.closePath();c.fill();c.restore()}
-function cardArt(c,it,w,h,now,pose){if(it.type==='coins'){const main=ctx;ctx=c;const r=w*.13;for(const [px,py] of [[-1.5,.9],[0,.9],[1.5,.9],[-.75,-.15],[.75,-.15],[0,-1.2]])drawCoin(px*r*1.25,py*r*1.15+h*.02,r,now*2+px,false);ctx=main}
+// A level ticket: notched ticket with a perforated stub and a star, x2 (teal) or x4 (gold and pink, sparkling).
+function drawTicket(c,m,k,now){const w=150,h=78,col=m===4?['#fff0a8','#ff6ad6']:['#d8fff4','#2fd0b0'];c.save();c.scale(k,k);c.rotate(-.1+Math.sin(now*2)*.04);c.lineJoin='round';
+ c.beginPath();c.moveTo(-w/2,-h/2);c.lineTo(w/2,-h/2);c.lineTo(w/2,-11);c.arc(w/2,0,11,-Math.PI/2,Math.PI/2,true);c.lineTo(w/2,h/2);c.lineTo(-w/2,h/2);c.lineTo(-w/2,11);c.arc(-w/2,0,11,Math.PI/2,-Math.PI/2,true);c.closePath();
+ c.fillStyle=vgrad(c,-h/2,h/2,col);c.fill();c.lineWidth=4;c.strokeStyle=BX_INK;c.stroke();
+ c.setLineDash([5,5]);c.lineWidth=2.5;c.beginPath();c.moveTo(w/2-40,-h/2+6);c.lineTo(w/2-40,h/2-6);c.stroke();c.setLineDash([]);
+ c.fillStyle='rgba(255,255,255,.4)';rrect(c,-w/2+10,-h/2+7,w-64,9,4);c.fill();
+ c.fillStyle='#fff6b0';starPath(c,w/2-20,0,12,5);c.fill();c.lineWidth=2.5;c.stroke();
+ bxText(c,`x${m}`,-20,-5,42,'#fff');bxText(c,'LEVEL',-20,24,15,'#fff');
+ if(m===4)for(let i=0;i<4;i++){const a=now*2+i*TAU/4;c.fillStyle='#fff';starPath(c,Math.cos(a)*w*.55,Math.sin(a)*h*.62,5,2);c.fill()}c.restore()}
+function cardArt(c,it,w,h,now,pose){if(it.type==='ticket'){c.save();c.translate(0,-h*.02);drawTicket(c,it.mult,w/190*.95,now);c.restore();return}if(it.type==='coins'){const main=ctx;ctx=c;const r=w*.13;for(const [px,py] of [[-1.5,.9],[0,.9],[1.5,.9],[-.75,-.15],[.75,-.15],[0,-1.2]])drawCoin(px*r*1.25,py*r*1.15+h*.02,r,now*2+px,false);ctx=main}
  else if(it.type==='gems'){for(const [px,py,k] of [[-.2,.08,.9],[.2,.1,.85],[0,-.02,1.3]]){c.save();c.translate(px*w,py*h);drawGem(c,w/190*k);c.restore()}}
  else{const main=ctx;ctx=c;c.save();c.translate(0,h*.04);const k=w/190*1.45;c.scale(k,k);drawSkinShow(it.id,now,pose,0);c.restore();ctx=main}}
 function drawCardBack(c,it,w,h,now){const [a,b]=itemCol(it,now);rrect(c,-w/2,-h/2,w,h,16);c.fillStyle=vgrad(c,-h/2,h/2,[b,BX_INK]);c.fill();
@@ -121,7 +134,7 @@ function drawCardBack(c,it,w,h,now){const [a,b]=itemCol(it,now);rrect(c,-w/2,-h/
 function drawCardFront(c,it,w,h,now,{count=it.n,pose=1}={}){const [a,b]=itemCol(it,now);rrect(c,-w/2,-h/2,w,h,16);c.fillStyle=vgrad(c,-h/2,h/2,[a,b]);c.fill();
  c.save();rrect(c,-w/2+9,-h/2+30,w-18,h-78,10);const g=c.createRadialGradient(0,-h*.05,4,0,-h*.05,w*.6);g.addColorStop(0,'#ffffff');g.addColorStop(1,a);c.fillStyle=g;c.fill();c.clip();cardArt(c,it,w,h,now,pose);c.restore();
  rrect(c,-w/2+9,-h/2+30,w-18,h-78,10);c.lineWidth=3;c.strokeStyle=BX_INK;c.stroke();rrect(c,-w/2,-h/2,w,h,16);c.lineWidth=5;c.stroke();
- bxText(c,itemLabel(it),0,-h/2+16,Math.min(18,w*.095),'#fff');const nm=itemName(it),amt=`+${count.toLocaleString()}${it.type==='card'?(it.n>1?' CARDS':' CARD'):''}`;
+ bxText(c,itemLabel(it),0,-h/2+16,Math.min(18,w*.095),'#fff');const nm=itemName(it),amt=it.type==='ticket'?`FOR ${TICKET_RUNS} RUNS`:`+${count.toLocaleString()}${it.type==='card'?(it.n>1?' CARDS':' CARD'):''}`;
  if(nm){bxText(c,nm,0,h/2-36,Math.min(20,w*1.5/Math.max(8,nm.length)),'#fff');bxText(c,amt,0,h/2-14,Math.min(22,w*.12),'#fff6b0')}else bxText(c,amt,0,h/2-25,Math.min(34,w*.18),'#fff6b0')}
 function bxText(c,txt,x,y,size,fill,{align='center',lw=size*.24,alpha=1}={}){c.save();c.globalAlpha*=alpha;c.font=`${Math.round(size)}px ${FONT}`;c.textAlign=align;c.textBaseline='middle';c.lineJoin='round';c.lineWidth=lw;c.strokeStyle=BX_INK;c.strokeText(txt,x,y);c.fillStyle=fill;c.fillText(txt,x,y);c.restore()}
 function bxRays(c,x,y,r,rot,col,alpha,n=16){c.save();c.translate(x,y);c.rotate(rot);c.globalAlpha=alpha;const g=c.createRadialGradient(0,0,0,0,0,r);g.addColorStop(0,hexA(col,.9));g.addColorStop(1,hexA(col,0));c.fillStyle=g;c.beginPath();for(let i=0;i<n;i++){const a=i/n*TAU;c.moveTo(0,0);c.arc(0,0,r,a,a+TAU/n/2);c.closePath()}c.fill();c.restore()}
@@ -141,7 +154,7 @@ function boxFrame(now){const R=boxRun;if(!R)return;const dt=Math.min(.04,(now-R.
 function bxPart(R,o){R.parts.push({life:0,max:1,g:0,drag:.6,rot:rand(0,TAU),vr:rand(-6,6),size:5,type:'spark',...o})}
 function bxBurst(R,x,y,n,cols,{speed=[150,520],up=0,size=[4,9],types=['star','confetti','spark'],g=500}={}){for(let i=0;i<n;i++){const a=rand(0,TAU),v=rand(...speed);bxPart(R,{x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-up,g,max:rand(.7,1.4),size:rand(...size),color:pick(cols),type:pick(types)})}}
 const RANK_COLS=[['#ffd23f','#fff3a0','#ffffff'],['#c79cff','#8a4cff','#ffffff'],['#ffd23f','#ff9a1a','#ffffff'],['#ff5e7a','#ffd23f','#5fe36b','#44d9ff','#a273ff','#ffffff']];
-const itemRank=it=>it.type==='card'?CARD_RANK[it.rar]:it.type==='gems'?1:0;
+const itemRank=it=>it.type==='card'?CARD_RANK[it.rar]:it.type==='ticket'?(it.mult===4?3:2):it.type==='gems'?1:0;
 // How long a face-down card shakes before it flips: the rarer, the longer.
 const TEASE=[.12,.3,.6,1];
 function boxUpdate(R,dt,now){const L=boxLayout(),{s,gy,cx}=L;
@@ -222,8 +235,9 @@ function drawBxPart(c,p){const k=p.life/p.max,a=p.type==='in'?1:1-k*k;c.save();c
 function boxSummary(R){R.phase='summary';R.t=0;$('#bo-skip').hidden=true;const sum=$('#bo-sum'),grid=el('div','bo-grid');sum.replaceChildren(el('h3','','YOU GOT'),grid);
  R.items.forEach((it,k)=>{const [a,b]=RAR_COL[rarOf(it)],tile=el('div','bo-tile'+(it.unlock?' new':''));tile.style.setProperty('--ca',a);tile.style.setProperty('--cb',b);tile.style.animationDelay=k*.08+'s';
   if(it.type==='card'){const cv=document.createElement('canvas');cv.width=120;cv.height=120;const c=cv.getContext('2d'),main=ctx;ctx=c;c.translate(60,66);c.scale(1.05,1.05);drawSkinShow(it.id,performance.now()/1000,1,0);ctx=main;tile.append(cv)}
+  else if(it.type==='ticket'){const cv=document.createElement('canvas');cv.width=120;cv.height=120;const c=cv.getContext('2d');c.translate(60,62);drawTicket(c,it.mult,.68,performance.now()/1000);tile.append(cv)}
   else{const i=el('span','bo-ico');i.innerHTML=icon(it.type==='gems'?'gem':'coin');tile.append(i)}
-  tile.append(el('b','',`+${it.n.toLocaleString()}`),el('small','',it.type==='card'?SKINS[it.id].name:it.type==='gems'?'GEMS':it.spare?'COINS FOR SPARE CARDS':'COINS'));
+  tile.append(el('b','',it.type==='ticket'?`x${it.mult}`:`+${it.n.toLocaleString()}`),el('small','',it.type==='card'?SKINS[it.id].name:it.type==='ticket'?`LEVEL TICKET · ${TICKET_RUNS} RUNS`:it.type==='gems'?'GEMS':it.spare?'COINS FOR SPARE CARDS':'COINS'));
   if(it.type==='card'){const need=CARD_NEED[it.rar],bar=el('i','bo-bar'),f=el('s');f.style.width=Math.min(100,it.to/need*100)+'%';bar.append(f);tile.append(bar,el('small','bo-prog',it.unlock?'UNLOCKED!':`${Math.min(it.to,need)} / ${need}`))}
   if(it.unlock)tile.append(el('span','bo-new','NEW!'));grid.append(tile)});
  sum.hidden=false;const btns=$('#bo-btns');btns.replaceChildren();const more=BOX_ORDER.find(k=>k===R.kind&&boxCount(k)>0)||BOX_ORDER.find(k=>boxCount(k)>0);
@@ -242,6 +256,12 @@ function renderBoxTiles(){boxTiles=boxTiles.filter(cv=>cv.isConnected);const now
   const wig=(now+k.length)%3<.35?Math.sin(now*30)*.05:0;drawBoxArt(c,k,w/2,h*.9+Math.sin(now*2.5+k.length)*3,Math.min(w/210,h/185),{rot:wig})}}
 const oddsText=B=>Object.entries(B.odds).map(([r,p])=>`${RARITY[r].name} ${Math.round(p*100)}%`).join(' · ');
 function renderBoxShop(list){boxTiles=[];
+ // Level tickets you own (use one for a x2 or x4 level boost) and the boost that is running.
+ const bst=activeBoost();if(ticketCount(2)||ticketCount(4)||bst){const sec=el('div','ticket-sec');sec.append(el('h4','box-head','LEVEL TICKETS'));
+  if(bst)sec.append(el('p','ticket-active',`x${bst.mult} LEVEL BOOST ACTIVE · ${bst.runs} RUN${bst.runs>1?'S':''} LEFT`));
+  const row=el('div','ticket-row');for(const m of [2,4]){const n=ticketCount(m);if(!n)continue;const t=el('div','ticket-card x'+m),cv=document.createElement('canvas');cv.width=220;cv.height=130;cv.style.width='110px';cv.style.height='65px';const c=cv.getContext('2d');c.translate(110,65);drawTicket(c,m,1.25,0);
+   t.append(cv,el('b','',`x${m} LEVEL BOOST`),el('small','',`${TICKET_RUNS} RUNS · YOU HAVE ${n}`));const b=el('button','buy go',bst?'BOOST RUNNING':'USE');b.disabled=!!bst;b.onclick=()=>{if(useTicket(m)){gameSound.effect('power');confetti(24);renderStore()}};t.append(b);row.append(t)}
+  sec.append(row);list.append(sec)}
  if(boxTotal()){const mine=el('div','box-mine');mine.append(el('h4','box-head','YOUR BOXES'));const row=el('div','box-row');
   for(const k of BOX_ORDER){const n=boxCount(k);if(!n)continue;const t=el('div','box-card mine');t.style.setProperty('--glow',BOXES[k].glow);t.append(boxTile(k),el('b','',BOXES[k].name),el('span','box-count',`x${n}`));const b=el('button','buy go','OPEN');b.onclick=()=>openBox(k);t.append(b);row.append(t)}
   mine.append(row);list.append(mine)}
@@ -249,8 +269,8 @@ function renderBoxShop(list){boxTiles=[];
  for(const k of BOX_ORDER){const B=BOXES[k],t=el('div','box-card');t.style.setProperty('--glow',B.glow);t.append(boxTile(k),el('b','',B.name),el('small','',`COINS + ${B.stacks} CARD REWARDS${B.sure?' · 1 LEGENDARY+':''}`));
   const b=el('button','buy'+(B.price.gems?' gem':''));b.innerHTML=B.price.gems?iconHTML('gem')+B.price.gems:iconHTML('coin')+B.price.coins;b.onclick=()=>{const need=B.price.gems||B.price.coins,have=B.price.gems?(save.gems||0):save.coins;if(have<need)return notEnough(b,need,!!B.price.gems);openBox(k,'buy')};t.append(b);shop.append(t)}
  list.append(shop);
- const info=el('div','box-info');info.append(el('p','',"Every box has coins, sometimes GEMS (rare) and SKIN CARD rewards (each one is several cards of one skin). Collect enough cards of an EPIC, LEGENDARY or MYTHIC skin to unlock it. Win free boxes from BOX TASKS (Tuesday, Thursday and Saturday), by clearing a stage's goal for the first time, and from mystery boxes floating in the sky."));
- for(const k of BOX_ORDER){const B=BOXES[k];info.append(el('small','',`${B.name}: ${B.coins[0]}-${B.coins[1]} coins · gems ${Math.round(B.gems[0]*100)}% · each card reward ${oddsText(B)}${B.sure?' (the first is always legendary or mythic)':''}`))}list.append(info);
+ const info=el('div','box-info');info.append(el('p','',"Every box has coins, sometimes GEMS (rare) and SKIN CARD rewards (each one is several cards of one skin). Collect enough cards of an EPIC, LEGENDARY or MYTHIC skin to unlock it. Very rarely a box holds a LEVEL TICKET: use it here for x2 or x4 level metres for your next 3 runs. Win free boxes from BOX TASKS (Tuesday, Thursday and Saturday), by clearing a stage's goal for the first time, and from mystery boxes floating in the sky."));
+ for(const k of BOX_ORDER){const B=BOXES[k];info.append(el('small','',`${B.name}: ${B.coins[0]}-${B.coins[1]} coins · gems ${Math.round(B.gems[0]*100)}% · each card reward ${oddsText(B)}${B.sure?' (the first is always legendary or mythic)':''} · x2 ticket ${+(B.tickets[0]*100).toFixed(1)}% · x4 ticket ${+(B.tickets[1]*100).toFixed(1)}%`))}list.append(info);
  list.append(el('h4','box-head','CARD COLLECTION'));const col=el('div','card-col');
  for(const id of SKIN_ORDER){if(!isCardSkin(id))continue;const sk=SKINS[id],r=RARITY[sk.rarity],own=save.skins.includes(id),need=CARD_NEED[sk.rarity],have=Math.min(need,cardsOf(id)),chip=el('button','card-chip'+(own?' own':''));chip.style.setProperty('--ca',r.a);chip.style.setProperty('--cb',r.b);
   const bar=el('i','bo-bar'),f=el('s');f.style.width=(own?100:have/need*100)+'%';bar.append(f);chip.append(el('b','',sk.name),bar,el('small','',own?'UNLOCKED ✓':`${have} / ${need} CARDS`));chip.onclick=()=>{storeTab='skins';storePick=id;skinPop[id]=performance.now()/1000;renderStore()};col.append(chip)}
