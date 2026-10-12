@@ -389,7 +389,7 @@ function updateCritters(dt){for(const h of critters){if(h.dormant){if(critterPos
 function drawCritters(){for(const h of critters){if(h.dormant)continue;const p=critterPos(h);if(p.y<-80||p.y>H+80)continue;if(h.kind==='bird')drawBird(h,p.x,p.y);else if(h.kind==='bat')drawBat(h,p.x,p.y);else if(h.kind==='monkey')drawMonkey(h,p);else drawDrone(h,p.x,p.y)}}
 function drawCritterWarnings(){for(const h of critters){if(h.dormant||h.knocked||!h.lead)continue;const p=critterPos(h);if(p.x>-10&&p.x<W+10||p.y<60||p.y>H-60)continue;const left=p.x<0;ctx.save();ctx.globalAlpha=.6+.4*Math.sin(t*16);ctx.translate(left?22:W-22,p.y);ctx.scale(left?-1:1,1);ctx.fillStyle='#ff4d5e';ctx.strokeStyle=INK;ctx.lineWidth=3.5;ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(14,0);ctx.lineTo(-6,-14);ctx.lineTo(-6,14);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}}
 const hitsCritter=h=>{if(h.dormant||h.knocked)return false;const p=critterPos(h);return Math.hypot(p.x-x*W,p.y-(balloonY()-5))<h.r+24};
-function updateWeather(dt){const weather=weatherNow=weatherAt(flightTime);wind=weather.force;if(!stage.wind)return;
+function updateWeather(dt){const weather=weatherNow=weatherAt(flightTime);wind=weather.force+(boss&&boss.wind?boss.wind.dir*.42:0);if(!stage.wind)return;
  $('#weather').textContent=weather.warning?`GUST INCOMING ${weather.dir>0?'→':'←'}`:weather.active?`STRONG WIND ${weather.dir>0?'→':'←'}`:'CALM AIR';
  $('#weather').classList.toggle('gust',weather.active||weather.warning);
  if(weather.active){leafClock+=dt;while(leafClock>.075){leafClock-=.075;leaves.push({x:weather.dir>0?-20:SW+20,y:Math.random()*H,dir:weather.dir,speed:140+Math.random()*170,angle:Math.random()*6,size:4+Math.random()*5,phase:Math.random()*6})}}else leafClock=0;

@@ -303,16 +303,44 @@ boss you beat (BOSS_FIRST and BOSS_GAP in bosses.js; a BOSS timer counts down in
    boss, +100 with the Golden King skin); they all fly into your balloon, then the
    course resumes. Repeat wins against a stage's boss also make it slightly faster.
 
-Bosses and weapons:
-- Thunder King (Sunny Sky): lightning strikes, hail fans, wind gusts.
-- Tiki Titan (Jungle Island): fire darts, coconut rain, fire ring.
-- Bat Queen (Crystal Cave): sonic rings, falling stalactites, homing bats.
-- Mecha Crusher (Robo Factory): aimed lasers, homing missiles, bouncing saws.
-- UFO Overlord (Outer Space): plasma fans, tractor-beam sweep, triple bursts.
-- Star Devourer (Deep Universe): star spirals, black hole pull with meteors, cosmic rings.
-Attacks are tuned to be escapable: shots are slow and few, rings leave a wide gap,
-falling objects leave at least three free lanes, lasers, strikes and sweeps flash
-a one-second warning, homing only lasts about a second, and fights are short.
+Bosses, weapons and SPECIAL SKILLS. Every boss has three weapons of its own and one special skill that no other
+boss uses (ATTACKS in bosses.js). The special skill comes with a SPECIAL SKILL banner: first when the boss's stamina
+drops below 70, again just after it gets enraged, then every 16 seconds.
+- THUNDER KING (Sunny Sky):
+  - LIGHTNING strikes down a flashing column.
+  - A TORNADO funnel crosses the screen and drags you towards it.
+  - A GUST blows you sideways (wind streaks show it) while leaves and branches fly across.
+  - Special CHAIN LIGHTNING: two storm orbs joined by a crackling arc sweep down the screen; get outside them.
+- TIKI TITAN (Jungle Island):
+  - A BOOMERANG axe loops out to where you were and comes back.
+  - COCONUT BOMBS fall and burst into flying splinters.
+  - LAVA GEYSERS erupt from the bottom after bubbling (the first one under you).
+  - Special FIRE BREATH: a cone of fire sweeps across below the mask; "GET LOW!" and fly under its reach.
+- BAT QUEEN (Crystal Cave):
+  - SONIC SCREAM rings with a gap.
+  - STALACTITES drop from the ceiling.
+  - A homing BAT SWARM.
+  - Special BLACKOUT: the lights go out except a small glow around you, and bats hunt you in the dark,
+    showing only their glowing red eyes.
+- MECHA CRUSHER (Robo Factory):
+  - Aimed LASER eyes.
+  - HOMING MISSILES.
+  - Bouncing SAW BLADES.
+  - Special PISTON PRESS: giant pistons slam in from both sides at your height, leaving one gap (green arrows),
+    or get out of the striped row.
+- UFO OVERLORD (Outer Space):
+  - A sweeping TRACTOR BEAM.
+  - MINI SAUCERS fly out and zap straight down, one of them following you.
+  - A PLASMA BOMB splits into six shots.
+  - Special ABDUCTION: a beam locks on, follows you and lifts you up; a red ring fills while you are in it, and
+    if it fills you are abducted. Fly out sideways.
+- STAR DEVOURER (Deep Universe):
+  - A BLACK HOLE pulls you in, then bursts into stars.
+  - A spinning two-armed STAR SPIRAL.
+  - COMETS streak across the screen at your height after a side warning.
+  - Special CONSTELLATION: stars appear around you, dotted lines join them, then they turn into laser lines.
+Everything is tuned to be escapable: each weapon warns first (flashing columns, outlines, arrows or dotted lines),
+falling objects leave free lanes, and homing only lasts a moment.
 
 Fatalities (one per skin): Classic – Balloon Slam, Gumball – Bubble Trap,
 Funny Clown – Pie Party, Toy Robot – Laser Eyes, Watermelon – Seed Storm,
