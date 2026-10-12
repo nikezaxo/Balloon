@@ -216,10 +216,13 @@ Like PUBG Mobile, every level needs more than the one before (levelNeed in cosme
 
 - The level number sits on a badge at the bottom right of your avatar frame, everywhere your avatar shows: the menu,
   your profile, the rankings, the season board, clans, the results screen and your player card, and other players
-  see it too. The badge changes with your tier: ROOKIE 1-9 (bronze, round), PILOT 10-19 (silver) and ACE 20-29
-  (gold, hexagon), CAPTAIN 30-49 (teal) and COMMANDER 50-69 (purple, shield), LEGEND 70-99 (red with a crown) and
-  SKY MASTER at 100 (a shimmering rainbow crown).
-- PROFILE shows your level, tier and a bar towards the next level; player cards show the same for other players.
+  see it too. Only the number shows; the badge's look changes as you climb: 1-9 bronze circle, 10-19 silver and
+  20-29 gold hexagon, 30-49 teal and 50-69 purple shield, 70-99 red with a crown, and 100 a shimmering rainbow crown.
+- PROFILE shows "LEVEL 23" and a bar towards the next level; player cards show the same for other players.
+- LEVEL TICKETS: very rarely a box holds a x2 or x4 LEVEL TICKET (Sky Box 1.5% / 0.3%, Storm Box 4% / 1%, Legend Box
+  10% / 3%). Use one in the store's BOXES tab and your next 3 runs add two or four times their metres to your level
+  (one boost at a time). PROFILE shows the boost and the runs left, and the results screen marks boosted runs
+  ("x2 BOOST").
 - The results screen shows the metres the run added and how far it is to the next level. A new level shows
   "LEVEL UP!" and pays 50 + 25 × the new level in coins (and 10 gems every 10 levels).
 - Players from before levels start from what their save shows they flew (their best altitudes or this season's
@@ -409,11 +412,11 @@ boss; P or Escape pauses.
   lists. Cards beyond what a skin needs, or once every card skin is unlocked, come as coins (a SPARE CARDS reward). Skins you already owned stay yours.
 - Boxes (BOXES in boxes.js; the store lists these odds too):
 
-  | Box | Price | Coins | Gems | Card rewards | Each reward: epic / legendary / mythic |
-  |---|---|---|---|---|---|
-  | SKY BOX | 250 coins | 60-140 | 3% chance, 1-2 | 2 | 76% / 20% / 4% |
-  | STORM BOX | 750 coins | 180-360 | 8% chance, 2-4 | 3 | 55% / 35% / 10% |
-  | LEGEND BOX | 40 gems | 400-800 | 12% chance, 3-6 | 4 (the first always legendary or mythic) | 30% / 45% / 25% |
+  | Box | Price | Coins | Gems | Card rewards | Each reward: epic / legendary / mythic | Level ticket x2 / x4 |
+  |---|---|---|---|---|---|---|
+  | SKY BOX | 250 coins | 60-140 | 3% chance, 1-2 | 2 | 76% / 20% / 4% | 1.5% / 0.3% |
+  | STORM BOX | 750 coins | 180-360 | 8% chance, 2-4 | 3 | 55% / 35% / 10% | 4% / 1% |
+  | LEGEND BOX | 40 gems | 400-800 | 12% chance, 3-6 | 4 (the first always legendary or mythic) | 30% / 45% / 25% | 10% / 3% |
 
 - Free boxes: BOX TASKS (Tuesday, Thursday and Saturday, see Tasks), the first clear of each campaign stage's goal,
   and MYSTERY BOXES that float through the sky in about a third of runs (at most two a day): grab one to keep it.

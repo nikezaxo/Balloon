@@ -825,3 +825,13 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .res-level-mid small{display:block;font-size:10px;font-weight:900;color:#e6ebff;margin-top:2px}
 .res-level.up{border-color:#ffd23f;box-shadow:0 0 16px #ffd23f99;animation:pulse .8s ease-in-out 3 alternate}
 @media(prefers-reduced-motion:reduce){.store-tab.on .st-ico,.res-level.up{animation:none}}
+/* Level tickets */
+.ticket-sec{margin-bottom:6px}
+.ticket-active{margin:0 0 6px;text-align:center;font-family:var(--title);font-size:15px;color:#7ef08f;text-shadow:var(--stroke)}
+.ticket-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.ticket-card{display:flex;flex-direction:column;align-items:center;gap:3px;width:150px;padding:8px 8px 10px;background:radial-gradient(circle at 50% 30%,#2fd0b066,#1b124088 70%);border:3px solid #7ef0d0;border-radius:16px;box-shadow:0 0 14px #2fd0b066,0 4px 0 var(--ink)}
+.ticket-card.x4{background:radial-gradient(circle at 50% 30%,#ff6ad666,#1b124088 70%);border-color:#ffd23f;box-shadow:0 0 18px #ff6ad688,0 4px 0 var(--ink)}
+.ticket-card b{font-family:var(--title);font-weight:400;font-size:15px;text-shadow:var(--stroke)}
+.ticket-card small{font-size:10px;font-weight:900;color:#e6ebff}
+.ticket-card .buy{margin-top:3px;font-size:15px}
+.level-boost{display:inline-block;margin-top:4px;padding:1px 8px 2px;font-family:var(--title);font-size:12px;background:linear-gradient(#8ff09c,#2fbf4f);border:2px solid var(--ink);border-radius:8px;text-shadow:var(--stroke)}

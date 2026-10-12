@@ -52,6 +52,12 @@ const playerLevel=()=>levelOf(save.totalM).level;
 const LEVEL_TIERS=[{from:1,name:'ROOKIE',c:['#ffe2bf','#c8782a'],shape:'round'},{from:10,name:'PILOT',c:['#ffffff','#8f9db8'],shape:'hex'},{from:20,name:'ACE',c:['#fff3a0','#e89a00'],shape:'hex'},
  {from:30,name:'CAPTAIN',c:['#c8fff4','#14a394'],shape:'shield'},{from:50,name:'COMMANDER',c:['#e2d4ff','#6a3cf0'],shape:'shield'},{from:70,name:'LEGEND',c:['#ffd6d6','#e0203c'],shape:'crown'},{from:100,name:'SKY MASTER',c:['#fff6b0','#ff7ad9'],shape:'crown',rainbow:true}];
 const levelTier=L=>LEVEL_TIERS.filter(t=>L>=t.from).pop();
+// Level tickets (very rare, from boxes): using a x2 or x4 ticket multiplies the metres your next TICKET_RUNS runs
+// add to your level. One boost at a time.
+const TICKET_RUNS=3;
+const ticketCount=m=>(save.tickets||{})['x'+m]||0;
+const activeBoost=()=>save.boost&&save.boost.runs>0?save.boost:null;
+function useTicket(m){if(activeBoost()||ticketCount(m)<1)return false;save.tickets={...(save.tickets||{}),['x'+m]:ticketCount(m)-1};save.boost={mult:m,runs:TICKET_RUNS};persist();return true}
 // Each new level pays coins (and gems every 10 levels).
 const levelReward=L=>({coins:50+25*L,gems:L%10===0?10:0});
 // Players from before levels start from what their save already shows they flew. This is not saved here on
@@ -161,11 +167,11 @@ function nameEl(name,gold,tag,cls='rank-name'){const b=el('b',cls+(gold?' gold-n
 // shows it, animated, with a BUY button, so players can see exactly how it looks before buying.
 let profileTab='avatars',cosPreview=null;
 // Level, tier and the bar towards the next level (for your profile; player cards use the same box).
-function levelBox(meters,level){const lv=levelOf(meters),L=level||lv.level,tier=levelTier(L),box=el('div','level-box'),bar=el('i','level-bar'),fill=el('s');box.style.setProperty('--la',tier.c[0]);box.style.setProperty('--lb',tier.c[1]);
- box.append(el('b','level-title',`LEVEL ${L} · ${tier.name}`));if(meters!==undefined&&meters!==null){if(lv.need){fill.style.width=Math.min(100,lv.into/lv.need*100)+'%';bar.append(fill);box.append(bar,el('small','',`${(lv.need-lv.into).toLocaleString()} m TO LEVEL ${L+1} · ${Math.floor(meters).toLocaleString()} m FLOWN`))}else{fill.style.width='100%';bar.append(fill);box.append(bar,el('small','',`MAX LEVEL · ${Math.floor(meters).toLocaleString()} m FLOWN`))}}return box}
+function levelBox(meters,level,boost){const lv=levelOf(meters),L=level||lv.level,tier=levelTier(L),box=el('div','level-box'),bar=el('i','level-bar'),fill=el('s');box.style.setProperty('--la',tier.c[0]);box.style.setProperty('--lb',tier.c[1]);
+ box.append(el('b','level-title',`LEVEL ${L}`));if(boost)box.append(el('span','level-boost',`x${boost.mult} LEVEL BOOST · ${boost.runs} RUN${boost.runs>1?'S':''} LEFT`));if(meters!==undefined&&meters!==null){if(lv.need){fill.style.width=Math.min(100,lv.into/lv.need*100)+'%';bar.append(fill);box.append(bar,el('small','',`${(lv.need-lv.into).toLocaleString()} m TO LEVEL ${L+1} · ${Math.floor(meters).toLocaleString()} m FLOWN`))}else{fill.style.width='100%';bar.append(fill);box.append(bar,el('small','',`MAX LEVEL · ${Math.floor(meters).toLocaleString()} m FLOWN`))}}return box}
 function renderProfile(){const list=$('#panel-list'),c=myCos(),look=myLook(),scroll=list.scrollTop,pv=cosPreview,shown={...look,...(pv?pv.look:{})};$('#panel-title').textContent='PROFILE';list.replaceChildren();
  const head=el('div','profile-head'+(pv?' previewing':'')),info=el('div','profile-info'),big=el('div','profile-big');big.append(avatarEl(shown,pv?110:92,'big'));if(pv)big.append(el('span','preview-tag','PREVIEW'));head.append(big);
- const name=typeof online!=='undefined'?online.displayName():'Player';info.append(nameEl(name,shown.gold,save.clan&&save.clan.tag,'profile-name'),levelBox(save.totalM));
+ const name=typeof online!=='undefined'?online.displayName():'Player';info.append(nameEl(name,shown.gold,save.clan&&save.clan.tag,'profile-name'),levelBox(save.totalM,0,activeBoost()));
  if(pv&&pv.season){info.append(el('small','profile-note',pv.name),el('small','profile-note',seasonGoal(pv.tier)));const back=el('button','mini-btn','STOP PREVIEW');back.onclick=()=>{cosPreview=null;renderProfile()};info.append(back)}
  else if(pv){info.append(el('small','profile-note',`${pv.name} · ${pv.price} GEMS`));const buy=el('button','buy big gem');buy.innerHTML=`BUY ${iconHTML('gem')}${pv.price}`;buy.onclick=()=>{if((save.gems||0)<pv.price){buy.classList.remove('nope');void buy.offsetWidth;buy.classList.add('nope');gameSound.effect('warn');buy.innerHTML=`NEED ${iconHTML('gem')}${pv.price-(save.gems||0)}`;return}save.gems-=pv.price;pv.apply();cosPreview=null;gameSound.effect('buy');confetti(24);cosChanged()};
   const back=el('button','mini-btn','STOP PREVIEW');back.onclick=()=>{cosPreview=null;renderProfile()};info.append(buy,back)}
