@@ -42,8 +42,8 @@ and only a few buttons sit around the edges.
   above the balloon) or the banner to change stage, left for the next one; the small arrows,
   the dots and the Left/Right keys work too. The hint under the dots disappears after your first
   swipe.
-- CUT THE ROPE (swipe across it below the balloon) to fly, or press Space or Enter. There is no
-  PLAY button: the menu flies away, an iris in the stage colours opens from the balloon and the
+- CUT THE ROPE (swipe across it below the balloon, where a dot slides along a dashed line) to fly, or press
+  Space or Enter. There is no PLAY button or text label: the menu flies away, an iris in the stage colours opens from the balloon and the
   stage badge spins in. The game goes full screen where the browser allows (not iPhone Safari).
 - Bottom bar: STORE (skins, boxes and lives; a red badge counts unopened boxes), TASKS (red dot when a reward is ready), MAP (Campaign or
   Free Run, see Modes), RANKS (weekly tournament, all-time, Free Run and your bests; the badge shows
@@ -60,8 +60,7 @@ The MAP button (the big middle button of the bottom bar), or a tap on the stage 
   10,000 m, Robo Factory 15,000 m, Outer Space 25,000 m and Deep Universe 40,000 m (STAGE_GOALS in game.js).
   Reaching a stage's goal CLEARS it and unlocks the next stage mid-flight ("STAGE CLEAR! JUNGLE ISLAND
   UNLOCKED"), and the first clear of each stage pays a box (Sky Box for the first two, Storm Box for the
-  next three, Legend Box for Deep Universe). The altitude banners show the goal ("2,000 m · GOAL 3,000 m"),
-  the menu banner shows it under the stage name and the map shows a goal bar for each stage. Locked stages
+  next three, Legend Box for Deep Universe). The menu banner shows the goal under the stage name and the map shows a goal bar for each stage. Locked stages
   show a padlock on the map, the banner and the page dots with what opens them ("REACH 3,000 m IN SUNNY
   SKY"); cutting the rope on a locked stage does nothing. Stages you had already played or cleared stay
   open. Campaign runs count for the stage's best, stars, and the weekly and all-time boards.
@@ -92,7 +91,7 @@ Kept clean so the sky stays clear: the score with its three stars and the bar to
 at the top left, coins and pause at the top right, power-up timers under them and the BOOST button at
 the bottom. A rainbow x2 timer shows while the rainbow star's double score lasts, the boss
 timer only in the last 20 seconds before a boss, and the wind only when a gust is coming or blowing.
-Your altitude pops up as a big "1,000 m" banner at every 1,000 metres. During the tutorial the HUD also
+Your altitude pops up as a big banner only every 100,000 metres (MILESTONE in game.js). During the tutorial the HUD also
 shows the altitude, stage name, wind, speed and the boss timer all the time.
 
 ## Stages
@@ -350,14 +349,15 @@ boss; P or Escape pauses.
 - Smashing ledges or drones, or bonking creatures while boosted, earns a coin.
 
 ## Boxes and skin cards
-- A box holds coins, sometimes GEMS (rare) and stacks of SKIN CARDS. EPIC, LEGENDARY and MYTHIC skins are not sold
+- A box holds coins, sometimes GEMS (rare) and SKIN CARD rewards (each one is several cards of one skin). EPIC, LEGENDARY and MYTHIC skins are not sold
   any more: collect enough cards of one to unlock it. The rarer the skin, the more cards it needs and the rarer its
-  cards are: EPIC 10 cards, LEGENDARY 20, MYTHIC 30 (CARD_NEED in boxes.js). Cards usually go to the locked skin
-  you are closest to, sometimes to any locked skin of that rarity. Spare cards (for skins you already have) turn
-  into coins. Skins you already owned stay yours.
+  cards are: EPIC 10 cards, LEGENDARY 20, MYTHIC 30 (CARD_NEED in boxes.js). Each card reward goes to a different locked skin
+  when it can (usually the one you are closest to). If you already have every skin of the rarity that was rolled,
+  the reward comes from the nearest rarity that still has locked skins, so a box always gives the card rewards it
+  lists. Cards beyond what a skin needs, or once every card skin is unlocked, come as coins (a SPARE CARDS reward). Skins you already owned stay yours.
 - Boxes (BOXES in boxes.js; the store lists these odds too):
 
-  | Box | Price | Coins | Gems | Card stacks | Each stack: epic / legendary / mythic |
+  | Box | Price | Coins | Gems | Card rewards | Each reward: epic / legendary / mythic |
   |---|---|---|---|---|---|
   | SKY BOX | 250 coins | 60-140 | 3% chance, 1-2 | 2 | 76% / 20% / 4% |
   | STORM BOX | 750 coins | 180-360 | 8% chance, 2-4 | 3 | 55% / 35% / 10% |
@@ -424,6 +424,10 @@ Coins, skins, cards, boxes, lives, bests, high scores and stars are saved in the
 - Starting climb speed: 130 m/s (game-world units), scaled slightly per stage.
 - Speed increases without a cap: (130 + 1.4 × √altitude) × stage speed.
 - Hitting a ledge, cave wall or creature pops the balloon unless shielded or boosted.
+- Some ledges slide in and out from the sides, and the higher you fly the harder they get: every 4th ledge
+  moves at first, every 3rd from 6,000 m and every 2nd from 15,000 m, sliding faster (about four times as fast
+  by 20,000 m) and reaching a little further. Birds, bats and drones crossing from the sides also speed up
+  with altitude (up to 70% faster).
 - Each creature group gets its own widened gap: monkeys hang above a ledge on its
   own side, away from the flight path, and flocks and drones cross mid-gap.
 - Off-screen objects are discarded, keeping memory bounded.

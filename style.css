@@ -79,7 +79,7 @@ button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 /* Main menu */
 .menu{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:calc(12px + var(--top)) 14px 14px;background:linear-gradient(#1b1240b0,#1b124000 62%);animation:fadeIn .4s;pointer-events:none}
 .menu>*{pointer-events:auto}
-.menu .logo,.cut-hint{pointer-events:none}
+.menu .logo{pointer-events:none}
 .menu[hidden]{display:none}
 @keyframes fadeIn{from{opacity:0}}
 .menu-top{width:100%;max-width:560px;display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -135,7 +135,7 @@ button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .boost-item small{font-family:var(--title);font-size:12px;letter-spacing:.8px;color:var(--yellow)}
 button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
 
-@media(prefers-reduced-motion:reduce){.stage-icon,.cut-hint .ico,.logo,.hand,.hint strong,.air-warning,.flight-info .gust,.overlay h2,.record-badge,.record-badge::before,.btn.huge,.boost-btn.ready{animation:none}}
+@media(prefers-reduced-motion:reduce){.stage-icon,.logo,.hand,.hint strong,.air-warning,.flight-info .gust,.overlay h2,.record-badge,.record-badge::before,.btn.huge,.boost-btn.ready{animation:none}}
 
 /* Menu wallet */
 .wallet-row{display:flex;gap:8px}
@@ -206,8 +206,6 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .side-btn.green{background:linear-gradient(#7ef08f,#2fbf4f);box-shadow:inset 0 -6px 0 #1f8f39,inset 0 3px 0 #c9ffd2,0 6px 0 var(--ink)}
 .side-btn.purple{background:linear-gradient(#b48cff,#7a3cff);box-shadow:inset 0 -6px 0 #5521c9,inset 0 3px 0 #e2d4ff,0 6px 0 var(--ink)}
 .side-btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
-.cut-hint{margin-top:1.4vh;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:900;text-shadow:0 2px 0 var(--ink),1px 0 0 var(--ink),-1px 0 0 var(--ink)}
-.cut-hint .ico{width:26px;height:26px;animation:snip .7s ease-in-out infinite alternate}
 @keyframes snip{to{transform:rotate(-18deg) scale(1.1)}}
 .menu.leaving{animation:menuOut .28s ease-in forwards;pointer-events:none}
 .menu.leaving>*{pointer-events:none}
@@ -615,7 +613,6 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .swipe-hint .ico{width:14px;height:14px}
 @keyframes nudge{50%{transform:translateX(6px)}}
 .menu-space{flex:1}
-.menu .cut-hint{margin:0 0 10px;padding:4px 12px 5px;font-family:var(--title);font-size:15px;font-weight:400;letter-spacing:.6px;background:#1b1240aa;border-radius:12px;animation:pulse .7s ease-in-out infinite alternate}
 .nav-bar{width:calc(100% + 28px);max-width:600px;display:flex;justify-content:space-around;align-items:flex-end;gap:2px;padding:7px 6px calc(8px + env(safe-area-inset-bottom));background:linear-gradient(#2c1f78f0,#1b1240f5);border-top:3px solid var(--ink);border-radius:20px 20px 0 0;box-shadow:0 -4px 0 #ffffff22 inset}
 .nav-btn{position:relative;flex:1;max-width:84px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:2px 0;color:#fff;background:none;border:0;font-family:var(--title)}
 .nav-ico{width:46px;height:46px;display:grid;place-items:center;padding:7px;background:linear-gradient(#6fc1ff,#2f86ff);border:3px solid var(--ink);border-radius:15px;box-shadow:inset 0 -4px 0 #1d5fd0,0 4px 0 var(--ink)}
@@ -671,7 +668,6 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 @keyframes handRing{0%,40%{opacity:0;transform:scale(.4)}50%{opacity:.9}100%{opacity:0;transform:scale(1.6)}}
 @keyframes handSwipe{0%{transform:translateX(-90px);opacity:0}15%{opacity:1}75%{transform:translateX(90px);opacity:1}100%{transform:translateX(90px);opacity:0}}
 @keyframes handDrag{0%,100%{transform:translateX(-70px) scale(.95)}50%{transform:translateX(70px) scale(.95)}}
-.game-shell.tut-rope .menu .cut-hint{visibility:hidden}
 .game-shell.in-menu .coach,.game-shell.ready .coach{bottom:auto;top:31%}
 /* Dialog (accounts and usernames) */
 .ask{z-index:12}
