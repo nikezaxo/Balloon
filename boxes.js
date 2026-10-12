@@ -28,17 +28,24 @@ function refreshBoxUi(){const d=$('#store-dot'),n=boxTotal();if(!d)return;d.hidd
 // ---- Rolling ----
 const rint=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 function pickOdds(o){let r=Math.random();for(const k in o){r-=o[k];if(r<0)return k}return Object.keys(o)[0]}
-// Cards go to a locked skin of the rolled rarity: usually the one closest to unlocking, sometimes any of them.
-function cardTarget(rar,extra){const left=id=>CARD_NEED[rar]-cardsOf(id)-(extra[id]||0),open=SKIN_ORDER.filter(id=>SKINS[id].rarity===rar&&!save.skins.includes(id)&&left(id)>0);
- if(!open.length)return null;if(Math.random()<.6){const most=Math.min(...open.map(left));return pick(open.filter(id=>left(id)===most))}return pick(open)}
-function rollBox(kind){const B=BOXES[kind],coins={type:'coins',n:rint(...B.coins),spare:0},items=[coins],extra={},cards={};
+// Cards go to a locked skin of the rolled rarity, a different one for each card reward when it can: usually the
+// one closest to unlocking, sometimes any of them.
+function cardTarget(rar,extra){const left=id=>CARD_NEED[rar]-cardsOf(id)-(extra[id]||0);let open=SKIN_ORDER.filter(id=>SKINS[id].rarity===rar&&!save.skins.includes(id)&&left(id)>0);
+ if(!open.length)return null;const fresh=open.filter(id=>!extra[id]);if(fresh.length)open=fresh;
+ if(Math.random()<.6){const most=Math.min(...open.map(left));return pick(open.filter(id=>left(id)===most))}return pick(open)}
+// When every skin of the rolled rarity is unlocked, the card reward comes from the nearest rarity that still has
+// locked skins, so a box always gives the card rewards it promises until every card skin is unlocked.
+const CARD_FALLBACK={epic:['legendary','mythic'],legendary:['epic','mythic'],mythic:['legendary','epic']};
+function rollBox(kind){const B=BOXES[kind],items=[{type:'coins',n:rint(...B.coins)}],extra={},cards=[];let spare=0;
  if(Math.random()<B.gems[0])items.push({type:'gems',n:rint(B.gems[1],B.gems[2])});
- for(let k=0;k<B.stacks;k++){const rar=k===0&&B.sure?(Math.random()<B.sure?'mythic':'legendary'):pickOdds(B.odds),id=cardTarget(rar,extra);let n=rint(...B.amt[rar]);
-  if(!id){coins.spare+=n*CARD_DUP[rar];continue}const room=CARD_NEED[rar]-cardsOf(id)-(extra[id]||0);if(n>room){coins.spare+=(n-room)*CARD_DUP[rar];n=room}
-  extra[id]=(extra[id]||0)+n;if(cards[id])cards[id].n+=n;else cards[id]={type:'card',id,rar,n}}
- coins.n+=coins.spare;
+ for(let k=0;k<B.stacks;k++){let rar=k===0&&B.sure?(Math.random()<B.sure?'mythic':'legendary'):pickOdds(B.odds),id=null;
+  for(const r of [rar,...CARD_FALLBACK[rar]]){id=cardTarget(r,extra);if(id){rar=r;break}}let n=rint(...B.amt[rar]);
+  if(!id){spare+=n*CARD_DUP[rar];continue}const room=CARD_NEED[rar]-cardsOf(id)-(extra[id]||0);if(n>room){spare+=(n-room)*CARD_DUP[rar];n=room}
+  extra[id]=(extra[id]||0)+n;cards.push({type:'card',id,rar,n})}
+ // Cards beyond what a skin needs (or for a collection that is complete) come as coins, revealed on their own.
+ if(spare)items.push({type:'coins',n:spare,spare:true});
  // Rarest last, so the best card is the final reveal.
- items.push(...Object.values(cards).sort((a,b)=>CARD_RANK[a.rar]-CARD_RANK[b.rar]||a.n-b.n));return items}
+ items.push(...cards.sort((a,b)=>CARD_RANK[a.rar]-CARD_RANK[b.rar]||a.n-b.n));return items}
 // Rewards are saved before the show starts, so closing the game mid-show loses nothing.
 function applyBox(items){save.cards={...(save.cards||{})};
  for(const it of items){if(it.type==='coins')save.coins+=it.n;else if(it.type==='gems')save.gems=(save.gems||0)+it.n;
@@ -99,7 +106,7 @@ function drawBoxArt(c,kind,x,y,s,{lift=0,lidOff=false,open=false,glowCol='#fffff
 const RAR_COL={coins:['#fff3a0','#ffb300'],gems:['#ffc4f2','#c81f8f'],epic:['#dcc0ff','#7a3cf0'],legendary:['#ffe27a','#ff8a00'],mythic:['#ffb8ee','#b020d0']};
 const rarOf=it=>it.type==='card'?it.rar:it.type;
 function itemCol(it,now){if(rarOf(it)==='mythic'){const h=now*90%360;return [hueHex(h,.78),hueHex((h+60)%360,.5)]}return RAR_COL[rarOf(it)]}
-const itemLabel=it=>it.type==='card'?(RARITY[it.rar]||{}).name||'CARD':it.type==='gems'?'RARE GEMS!':'COINS';
+const itemLabel=it=>it.type==='card'?(RARITY[it.rar]||{}).name||'CARD':it.type==='gems'?'RARE GEMS!':it.spare?'SPARE CARDS':'COINS';
 const itemName=it=>it.type==='card'?SKINS[it.id].name.toUpperCase():'';
 function drawGem(c,k){c.save();c.scale(k,k);c.beginPath();c.moveTo(-14,-23);c.lineTo(14,-23);c.lineTo(27,-7);c.lineTo(0,26);c.lineTo(-27,-7);c.closePath();c.fillStyle=vgrad(c,-23,26,['#ffc4f2','#c81f8f']);c.fill();c.lineWidth=3.5;c.strokeStyle=BX_INK;c.stroke();
  c.lineWidth=2;c.beginPath();c.moveTo(-27,-7);c.lineTo(27,-7);c.moveTo(-14,-23);c.lineTo(-7,-7);c.lineTo(0,26);c.lineTo(7,-7);c.lineTo(14,-23);c.moveTo(-7,-7);c.lineTo(0,-23);c.lineTo(7,-7);c.stroke();
@@ -216,7 +223,7 @@ function boxSummary(R){R.phase='summary';R.t=0;$('#bo-skip').hidden=true;const s
  R.items.forEach((it,k)=>{const [a,b]=RAR_COL[rarOf(it)],tile=el('div','bo-tile'+(it.unlock?' new':''));tile.style.setProperty('--ca',a);tile.style.setProperty('--cb',b);tile.style.animationDelay=k*.08+'s';
   if(it.type==='card'){const cv=document.createElement('canvas');cv.width=120;cv.height=120;const c=cv.getContext('2d'),main=ctx;ctx=c;c.translate(60,66);c.scale(1.05,1.05);drawSkinShow(it.id,performance.now()/1000,1,0);ctx=main;tile.append(cv)}
   else{const i=el('span','bo-ico');i.innerHTML=icon(it.type==='gems'?'gem':'coin');tile.append(i)}
-  tile.append(el('b','',`+${it.n.toLocaleString()}`),el('small','',it.type==='card'?SKINS[it.id].name:it.type==='gems'?'GEMS':it.spare?'COINS + SPARE CARDS':'COINS'));
+  tile.append(el('b','',`+${it.n.toLocaleString()}`),el('small','',it.type==='card'?SKINS[it.id].name:it.type==='gems'?'GEMS':it.spare?'COINS FOR SPARE CARDS':'COINS'));
   if(it.type==='card'){const need=CARD_NEED[it.rar],bar=el('i','bo-bar'),f=el('s');f.style.width=Math.min(100,it.to/need*100)+'%';bar.append(f);tile.append(bar,el('small','bo-prog',it.unlock?'UNLOCKED!':`${Math.min(it.to,need)} / ${need}`))}
   if(it.unlock)tile.append(el('span','bo-new','NEW!'));grid.append(tile)});
  sum.hidden=false;const btns=$('#bo-btns');btns.replaceChildren();const more=BOX_ORDER.find(k=>k===R.kind&&boxCount(k)>0)||BOX_ORDER.find(k=>boxCount(k)>0);
@@ -239,11 +246,11 @@ function renderBoxShop(list){boxTiles=[];
   for(const k of BOX_ORDER){const n=boxCount(k);if(!n)continue;const t=el('div','box-card mine');t.style.setProperty('--glow',BOXES[k].glow);t.append(boxTile(k),el('b','',BOXES[k].name),el('span','box-count',`x${n}`));const b=el('button','buy go','OPEN');b.onclick=()=>openBox(k);t.append(b);row.append(t)}
   mine.append(row);list.append(mine)}
  list.append(el('h4','box-head','BUY A BOX'));const shop=el('div','box-row');
- for(const k of BOX_ORDER){const B=BOXES[k],t=el('div','box-card');t.style.setProperty('--glow',B.glow);t.append(boxTile(k),el('b','',B.name),el('small','',B.sure?`${B.stacks} STACKS · 1 LEGENDARY+`:`${B.stacks} CARD STACKS`));
+ for(const k of BOX_ORDER){const B=BOXES[k],t=el('div','box-card');t.style.setProperty('--glow',B.glow);t.append(boxTile(k),el('b','',B.name),el('small','',`COINS + ${B.stacks} CARD REWARDS${B.sure?' · 1 LEGENDARY+':''}`));
   const b=el('button','buy'+(B.price.gems?' gem':''));b.innerHTML=B.price.gems?iconHTML('gem')+B.price.gems:iconHTML('coin')+B.price.coins;b.onclick=()=>{const need=B.price.gems||B.price.coins,have=B.price.gems?(save.gems||0):save.coins;if(have<need)return notEnough(b,need,!!B.price.gems);openBox(k,'buy')};t.append(b);shop.append(t)}
  list.append(shop);
- const info=el('div','box-info');info.append(el('p','',"Every box has coins, sometimes GEMS (rare) and stacks of SKIN CARDS. Collect enough cards of an EPIC, LEGENDARY or MYTHIC skin to unlock it. Win free boxes from BOX TASKS (Tuesday, Thursday and Saturday), by clearing a stage's goal for the first time, and from mystery boxes floating in the sky."));
- for(const k of BOX_ORDER){const B=BOXES[k];info.append(el('small','',`${B.name}: ${B.coins[0]}-${B.coins[1]} coins · gems ${Math.round(B.gems[0]*100)}% · each stack ${oddsText(B)}${B.sure?' (the first stack is always legendary or mythic)':''}`))}list.append(info);
+ const info=el('div','box-info');info.append(el('p','',"Every box has coins, sometimes GEMS (rare) and SKIN CARD rewards (each one is several cards of one skin). Collect enough cards of an EPIC, LEGENDARY or MYTHIC skin to unlock it. Win free boxes from BOX TASKS (Tuesday, Thursday and Saturday), by clearing a stage's goal for the first time, and from mystery boxes floating in the sky."));
+ for(const k of BOX_ORDER){const B=BOXES[k];info.append(el('small','',`${B.name}: ${B.coins[0]}-${B.coins[1]} coins · gems ${Math.round(B.gems[0]*100)}% · each card reward ${oddsText(B)}${B.sure?' (the first is always legendary or mythic)':''}`))}list.append(info);
  list.append(el('h4','box-head','CARD COLLECTION'));const col=el('div','card-col');
  for(const id of SKIN_ORDER){if(!isCardSkin(id))continue;const sk=SKINS[id],r=RARITY[sk.rarity],own=save.skins.includes(id),need=CARD_NEED[sk.rarity],have=Math.min(need,cardsOf(id)),chip=el('button','card-chip'+(own?' own':''));chip.style.setProperty('--ca',r.a);chip.style.setProperty('--cb',r.b);
   const bar=el('i','bo-bar'),f=el('s');f.style.width=(own?100:have/need*100)+'%';bar.append(f);chip.append(el('b','',sk.name),bar,el('small','',own?'UNLOCKED ✓':`${have} / ${need} CARDS`));chip.onclick=()=>{storeTab='skins';storePick=id;skinPop[id]=performance.now()/1000;renderStore()};col.append(chip)}

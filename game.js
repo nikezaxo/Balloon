@@ -18,6 +18,8 @@ const RAINBOW_EVERY=300,RAINBOW_TIME=30;let scoreX2=0,scoreExtra=0,lastBase=0,ne
 let runBoxes=[],skyBoxAt=-1;
 const PICKUPS=['magnet','shield','nitro','double'];
 const DOUBLE_TIME=15;
+// Altitude banners show only every MILESTONE metres, to keep the screen clear.
+const MILESTONE=100000;
 const MEDALS=[{at:1000,tone:'bronze',name:'BRONZE'},{at:2500,tone:'silver',name:'SILVER'},{at:5000,tone:'gold',name:'GOLD'}];
 const LIFE_PRICE=80,MAX_LIVES=9;
 // Score: 10 points per metre plus bonuses. Stars come from bosses defeated in one run (revives included):
@@ -57,7 +59,7 @@ const stageUnlocked=i=>i<=0||stageCleared(STAGES[i-1].id)||!!save.best[STAGES[i]
 const unlockText=i=>`REACH ${stageGoal(STAGES[i-1].id).toLocaleString()} m IN ${STAGES[i-1].name}`;
 const stageBest=()=>runMode==='free'?(save.freeAlt||0):(save.best[stage.id]||0);
 function reset(mode='ready'){state=mode;alt=0;x=.5;vx=0;target=null;pointer=null;lift=0;vy=0;liftTarget=null;drag=null;obstacles=[];coins=[];critters=[];particles=[];leaves=[];flightTime=0;spin=0;wind=0;weatherNow=null;leafClock=0;coinCount=0;shownCoins=0;banked=0;nextObstacle=450;spawnIndex=0;keys.clear();boss=null;caveWallScale=1;nextBossTime=BOSS_FIRST;rewardCoins=[];coinCursor=330;rushCursor=0;rushCount=0;prevLedge={a:0,c:.5};rowId=0;rowCount=0;rowBreaks=0;rows=new Map();rowStreak=0;coinMult=1;bestMult=1;scoreX2=0;scoreExtra=0;lastBase=0;nextRainbow=RAINBOW_EVERY;runBoxes=[];skyBoxAt=-1;runMode=save.mode==='free'?'free':'campaign';if(runMode==='free')stage=STAGES[0];$('#versus').hidden=true;$('#boss-bar').hidden=true;$('#fatality').hidden=true;
- shake=0;flash=0;timeScale=1;slowTimer=0;deathTimer=0;popups=[];rings=[];flyers=[];streaks=[];combo=0;comboTimer=0;bestCombo=0;nearMisses=0;smashes=0;squash=0;squashV=0;mood='happy';moodTimer=0;danger=0;ropeCut=null;nextMilestone=1000;passedBest=false;goalHit=false;medalsHit=0;eventsSeen=new Set();grow=1;revives=0;
+ shake=0;flash=0;timeScale=1;slowTimer=0;deathTimer=0;popups=[];rings=[];flyers=[];streaks=[];combo=0;comboTimer=0;bestCombo=0;nearMisses=0;smashes=0;squash=0;squashV=0;mood='happy';moodTimer=0;danger=0;ropeCut=null;nextMilestone=MILESTONE;passedBest=false;goalHit=false;medalsHit=0;eventsSeen=new Set();grow=1;revives=0;
  energy=0;boost=null;speedMult=1;shield=0;magnet=0;doubler=0;invuln=0;showcase=null;powerCount=0;bonus=0;starsHit=0;starFlyers=[];bossKills=0;$('#results').hidden=true;if(typeof seasonNewRun==='function')seasonNewRun();
  generateCourse();$('#weather').textContent=stage.wind?'CALM AIR':stage.calm;$('#weather').classList.remove('gust');$('#hint').hidden=mode!=='ready';$('#menu').hidden=mode!=='menu';$('#menu').classList.remove('leaving');transition=null;$('#overlay').hidden=true;$('#panel').hidden=true;panelKind=null;$('#pause').innerHTML=icon('pause');$('#pause').setAttribute('aria-label','Pause game');$('#announce').replaceChildren();refreshMeta()}
 function refreshMeta(){const b=stageBest();$('#best').innerHTML=b?`${iconHTML('trophy')}BEST ${b.toLocaleString()} m`:'NO RECORD YET';$('#hint-stage').textContent=stage.name;$('#zone').textContent=stage.name;$('#hint-icon').innerHTML=icon(stage.icon);$('#zone-icon').innerHTML=icon(stage.icon);$('#menu-coins').textContent=save.coins.toLocaleString();$('#menu-gems').textContent=(save.gems||0).toLocaleString();$('#menu-lives').textContent=save.lives;if(typeof myLook==='function'){const pf=$('#profile-face'),lk=myLook(),key=lk.avatar+lk.frame;if(pf.dataset.look!==key){pf.dataset.look=key;pf.replaceChildren(avatarEl(lk,44))}}if(typeof refreshSeasonUi==='function')refreshSeasonUi();if(typeof refreshBoxUi==='function')refreshBoxUi();updatePicker()}
@@ -260,7 +262,7 @@ function revive(){if(state!=='dead'||save.lives<=0)return;save.lives--;persist()
  announce('REVIVED!',`${save.lives} ${save.lives===1?'LIFE':'LIVES'} LEFT`,'record','heart');gameSound.effect('power');sayVoice('revive',{force:true,delay:.2});burst(x*W,by,18,{type:'heart',colors:['#ff4d5e','#ff7a9a','#ffffff'],speed:[90,260],size:[6,10],life:[.6,1.1],drag:1.5});rings.push({x:x*W,y:by,max:120,life:0,dur:.6,color:'#ff7a9a',width:7});refreshMeta()}
 
 // ---- Course ----
-function spike(o){const yy=camY()+(alt-o.a)*worldScale;const len=W*(o.length*(stage.reach||1)+(o.moving?Math.sin(t*.8+o.phase)*.065:0))*(o.leaving===undefined?1:Math.max(0,1-o.leaving/.6));return {y:yy,len,side:o.side}}
+function spike(o){const yy=camY()+(alt-o.a)*worldScale;const len=W*(o.length*(stage.reach||1)+(o.moving?Math.sin(t*(o.spd||.8)+o.phase)*(o.amp||.065):0))*(o.leaving===undefined?1:Math.max(0,1-o.leaving/.6));return {y:yy,len,side:o.side}}
 function drawObstacle(o){if(o.broken)return;const z=spike(o);if(z.y<-80||z.y>H+80)return;ctx.save();ctx.translate(o.side?W:0,z.y);ctx.scale(o.side?-1:1,1);ctx.lineJoin='round';ctx.lineCap='round';stage.ledge(o,z.len,stage.look);ctx.restore()}
 // Project a rotating 3D surface onto the 2D canvas, cel-shaded into three tones.
 const shape=lat=>({r:29*Math.cos(lat)*(1-.16*Math.sin(lat)),y:33*Math.sin(lat)-5});
@@ -333,10 +335,14 @@ function weatherAt(seconds){if(!stage.wind)return {warning:false,active:false,di
 function flightSpeed(height){return (130+1.4*Math.sqrt(Math.max(0,height)))*stage.speed}
 function weightedPick(kinds){let total=0;for(const k of kinds)total+=POWERS[k].weight;let r=Math.random()*total;for(const k of kinds){r-=POWERS[k].weight;if(r<=0)return k}return kinds[0]}
 // Generate just ahead of the player; discard objects below the screen.
+// Moving ledges slide in and out from the sides. The higher you fly, the more of them move (every 4th ledge,
+// then every 3rd from 6,000 m and every 2nd from 15,000 m), the faster they slide and the further they reach.
+const ledgeMoves=(i,a)=>i>5&&i%(a<6000?4:a<15000?3:2)===0;
+const ledgeSpeed=a=>.8+Math.min(2.6,a/8000),ledgeAmp=a=>.065+Math.min(.035,a/500000);
 function generateCourse(){if(boss)return;const horizon=alt+H/worldScale+flightSpeed(alt)*2.5;
- while(nextObstacle<horizon){const i=spawnIndex++,a=nextObstacle,o={a,side:i%2,length:.25+(Math.sin(i*4.7)+1)*.105,moving:i>5&&i%4===0,phase:i*1.8,root:i%3===0};obstacles.push(o);
+ while(nextObstacle<horizon){const i=spawnIndex++,a=nextObstacle,moving=ledgeMoves(i,a),o={a,side:i%2,length:.25+(Math.sin(i*4.7)+1)*.105,moving,spd:ledgeSpeed(a),amp:moving?ledgeAmp(a):0,phase:i*1.8,root:i%3===0};obstacles.push(o);
   // The safe path runs through the middle of the open space beside each ledge.
-  const reach=o.length*(stage.reach||1)+(o.moving?.065:0)+.03;let c=o.side?(1-reach)/2:(1+reach)/2;if(stage.walls)c=clamp(c,caveWall(a,0)+.12,1-caveWall(a,1)-.12);
+  const reach=o.length*(stage.reach||1)+o.amp+.03;let c=o.side?(1-reach)/2:(1+reach)/2;if(stage.walls)c=clamp(c,caveWall(a,0)+.12,1-caveWall(a,1)-.12);
   layCoins(prevLedge,{a,c});prevLedge={a,c};
   const gap=Math.max(300,flightSpeed(a)*1.65);nextObstacle+=gap+(i>=3?spawnCritters(i,a,i%2,gap):0)}
  const floor=alt-H/worldScale-100;obstacles=obstacles.filter(o=>o.a>floor);coins=coins.filter(c=>!c.collected&&c.a>floor)}
@@ -363,7 +369,7 @@ function drawRainbowStar(cx,cy,r){ctx.save();ctx.translate(cx,cy);ctx.lineJoin='
 // Creatures: bird flocks (sky), swinging monkeys (jungle, cave), bats (cave) and patrol drones (factory).
 // Each one gets the gap above ledge a to itself, widened by the returned extra distance. Monkeys hang
 // above that ledge, on its side, where the balloon never needs to be; flyers cross mid-gap.
-function spawnCritters(i,a,side,gap){const r=Math.random(),add=o=>critters.push({kx:0,ky:0,kvx:0,kvy:0,spin:0,knocked:false,dormant:false,phase:rand(0,TAU),vx:0,...o});
+function spawnCritters(i,a,side,gap){const r=Math.random(),fast=1+Math.min(.7,a/30000),add=o=>critters.push({kx:0,ky:0,kvx:0,kvy:0,spin:0,knocked:false,dormant:false,phase:rand(0,TAU),...o,vx:(o.vx||0)*fast});
  const flock=(kind,count,speed,size,extra)=>{const from=Math.random()<.5?0:1,mid=a+(gap+extra)/2;for(let j=0;j<count;j++){const row=Math.ceil(j/2),sgn=j%2?1:-1;add({kind,a:mid+(j?sgn*row*18:0),ox:row*.09,side:from,vx:(from?-1:1)*speed,r:size,dormant:true,lead:j===0})}return extra};
  const monkey=()=>{add({kind:'monkey',a:a+125,x:side?.82:.18,r:15});return 140};
  if(stage.critters==='birds'&&i%6===4)return flock('bird',3,.16,10,300);
@@ -465,11 +471,11 @@ function checkStars(){if(starsHit>=STAR_BOSSES.length||bossKills<STAR_BOSSES[sta
 function checkProgress(){if(boss)return;
  // Campaign: reaching the stage's goal altitude the first time clears it and opens the next stage (and pays a box).
  if(runMode==='campaign'&&!goalHit&&alt>=stageGoal(stage.id)){goalHit=true;if(!stageCleared(stage.id)){save.cleared=save.cleared||{};save.cleared[stage.id]=true;const next=STAGES[STAGES.indexOf(stage)+1];if(typeof goalBox==='function')goalBox(stage.id);persist();
-   announce('STAGE CLEAR!',next?`${next.name} UNLOCKED`:'EVERY STAGE CLEARED','record','trophy');gameSound.effect('record');confetti(40);nextMilestone=Math.max(nextMilestone,Math.floor(alt/1000)*1000+1000);return}}
- if(medalsHit<MEDALS.length&&alt>=MEDALS[medalsHit].at){const m=MEDALS[medalsHit++];if(stageBest()<m.at){announce(`${m.name} MEDAL`,'NEW MEDAL!','record','medal',m.tone);gameSound.effect('record');confetti(30);nextMilestone=Math.max(nextMilestone,Math.floor(alt/1000)*1000+1000);return}}
+   announce('STAGE CLEAR!',next?`${next.name} UNLOCKED`:'EVERY STAGE CLEARED','record','trophy');gameSound.effect('record');confetti(40);nextMilestone=Math.max(nextMilestone,Math.floor(alt/MILESTONE)*MILESTONE+MILESTONE);return}}
+ if(medalsHit<MEDALS.length&&alt>=MEDALS[medalsHit].at){const m=MEDALS[medalsHit++];if(stageBest()<m.at){announce(`${m.name} MEDAL`,'NEW MEDAL!','record','medal',m.tone);gameSound.effect('record');confetti(30);nextMilestone=Math.max(nextMilestone,Math.floor(alt/MILESTONE)*MILESTONE+MILESTONE);return}}
  if(stage.id==='space')for(const ev of spaceEvents())if(!eventsSeen.has(ev.key)){eventsSeen.add(ev.key);announce(ev.e.label,'LOOK!','milestone');gameSound.effect('zone');return}
  if(!passedBest&&stageBest()>0&&alt>stageBest()){passedBest=true;announce('NEW BEST!','KEEP GOING','record','trophy');gameSound.effect('record');confetti(24);return}
- if(alt>=nextMilestone){const goal=runMode==='campaign'&&!stageCleared(stage.id)?stageGoal(stage.id):0;announce(`${nextMilestone.toLocaleString()} m`,goal>nextMilestone?`GOAL ${goal.toLocaleString()} m`:'ALTITUDE','milestone');gameSound.effect('milestone');nextMilestone+=1000;bump($('.hud-alt'))}}
+ if(alt>=nextMilestone){announce(`${nextMilestone.toLocaleString()} m`,'ALTITUDE','milestone');gameSound.effect('milestone');nextMilestone+=MILESTONE;bump($('.hud-alt'))}}
 function drawRope(){const tied=state==='ready'||state==='menu'||(state==='paused'&&previousState==='ready');ctx.lineCap='round';
  if(tied){const r=rope(),sway=Math.sin(t*2)*4,path=()=>{ctx.beginPath();ctx.moveTo(r.a.x,r.a.y);ctx.quadraticCurveTo(r.a.x+7+sway,r.a.y+35,r.b.x,r.b.y)};
   path();ctx.strokeStyle=INK;ctx.lineWidth=7;ctx.stroke();ctx.strokeStyle='#e0b37a';ctx.lineWidth=3.5;ctx.stroke();ctx.setLineDash([2,6]);ctx.strokeStyle='#8a5f33';ctx.stroke();ctx.setLineDash([]);
