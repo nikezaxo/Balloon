@@ -17,7 +17,9 @@ const AVATARS={
  eagle:{name:'Golden Eagle',season:'gold',anim:true,bg:['#fff3a0','#c98a00']},
  pilot:{name:'Mech Pilot',season:'titanium',anim:true,bg:['#bff4ff','#1f5a6e']},
  fox:{name:'Crystal Fox',season:'diamond',anim:true,bg:['#e8fbff','#2a7ad8']},
- legend:{name:'Star Legend',season:'legend',anim:true,bg:['#c49aff','#2a0e5e']}};
+ legend:{name:'Star Legend',season:'legend',anim:true,bg:['#c49aff','#2a0e5e']},
+ // Level path reward: never sold, claimed at LEVEL 90 in TASKS > LEVEL.
+ aurora:{name:'Aurora Spirit',level:90,anim:true,bg:['#2a1a7a','#05031a']}};
 const FRAMES={
  basic:{name:'Classic',price:0},
  wood:{name:'Wood',price:0},
@@ -34,7 +36,9 @@ const FRAMES={
  sGold:{name:'Gold Season',season:'gold',anim:true},
  sTitan:{name:'Titanium Season',season:'titanium',anim:true},
  sDiamond:{name:'Diamond Season',season:'diamond',anim:true},
- legend:{name:'Star Legend',season:'legend',anim:true}};
+ legend:{name:'Star Legend',season:'legend',anim:true},
+ // Level path reward: claimed at LEVEL 100.
+ skyCrown:{name:'Crown of the Skies',level:100,anim:true}};
 const SEASON_NAMES={bronze:'BRONZE',silver:'SILVER',gold:'GOLD',titanium:'TITANIUM',diamond:'DIAMOND',legend:'STAR LEGEND'};
 const seasonGoal=tier=>tier==='legend'?'Season reward: finish a season as a STAR LEGEND to win it.':`Season reward: finish a season in ${SEASON_NAMES[tier]} or higher to win it.`;
 const GOLD_NAME_PRICE=500,CLAN_PRICE=100;
@@ -58,8 +62,41 @@ const TICKET_RUNS=3;
 const ticketCount=m=>(save.tickets||{})['x'+m]||0;
 const activeBoost=()=>save.boost&&save.boost.runs>0?save.boost:null;
 function useTicket(m){if(activeBoost()||ticketCount(m)<1)return false;save.tickets={...(save.tickets||{}),['x'+m]:ticketCount(m)-1};save.boost={mult:m,runs:TICKET_RUNS};persist();return true}
-// Each new level pays coins (and gems every 10 levels).
-const levelReward=L=>({coins:50+25*L,gems:L%10===0?10:0});
+// ---- Level path: a reward for every level from 2 to 100, claimed in TASKS > LEVEL ----
+// Coins on every level, coins and gems every 5th, a bigger pack every 10th; big packs at 60, 70 and 80, the animated
+// Aurora Spirit avatar at 90 and the animated Crown of the Skies frame at 100.
+function levelPrize(L){if(L===100)return {frame:'skyCrown'};if(L===90)return {avatar:'aurora'};if(L===80)return {coins:10000,gems:250};if(L===70)return {coins:8000,gems:180};if(L===60)return {coins:6000,gems:120};
+ if(L%10===0)return {coins:500+50*L,gems:L};if(L%5===0)return {coins:Math.round((100+20*L)/10)*10,gems:3+Math.floor(L/10)};return {coins:Math.round((60+15*L)/10)*10}}
+const levelClaimed=L=>(save.levelClaimed||[]).includes(L);
+function levelClaimable(){const lv=playerLevel();let n=0;for(let L=2;L<=lv;L++)if(!levelClaimed(L))n++;return n}
+function claimLevel(L){if(L<2||L>playerLevel()||levelClaimed(L))return null;const r=levelPrize(L),c=myCos();save.levelClaimed=[...(save.levelClaimed||[]),L];if(r.coins)save.coins+=r.coins;if(r.gems)save.gems=(save.gems||0)+r.gems;for(const id of [r.avatar,r.frame])if(id&&!c.own.includes(id))c.own.push(id);persist();refreshMeta();return r}
+// Reward chips (coins, gems, or the avatar or frame itself) for a level card.
+function prizeEl(r,size=50){const box=el('div','lvl-prize');if(r.avatar||r.frame){box.append(avatarEl(r.avatar?{avatar:r.avatar,frame:'basic'}:{avatar:myLook().avatar,frame:r.frame},size),el('small','lvl-item',(AVATARS[r.avatar]||FRAMES[r.frame]).name.toUpperCase()));return box}
+ if(r.coins)box.insertAdjacentHTML('beforeend',`<span>${iconHTML('coin')}${r.coins.toLocaleString()}</span>`);if(r.gems)box.insertAdjacentHTML('beforeend',`<span class="gem">${iconHTML('gem')}${r.gems}</span>`);return box}
+// The LEVEL tab: a winding road from level 1 at the bottom to level 100 at the top, through the stage skies.
+const LVL_STEP=96,lvlX=L=>50+27*Math.sin(L*.75);
+function renderLevelPath(list){const lv=levelOf(save.totalM),cur=lv.level,head=el('div','lvl-head'),info=el('div','lvl-info'),bar=el('i','level-bar'),fill=el('s'),n=levelClaimable();
+ fill.style.width=(lv.need?Math.min(100,lv.into/lv.need*100):100)+'%';bar.append(fill);info.append(el('b','',`LEVEL ${cur}`),bar,el('small','',lv.need?`${(lv.need-lv.into).toLocaleString()} m TO LEVEL ${cur+1}`:'MAX LEVEL'));head.append(avatarEl(myLook(),48),info);
+ if(n){const all=el('button','mini-btn go',`CLAIM ALL (${n})`);all.onclick=()=>{let got=null;for(let L=2;L<=cur;L++){const r=claimLevel(L);if(r&&(r.avatar||r.frame))got=got||r}gameSound.effect('buy');confetti(40);renderTasks();if(got)levelItemDialog(got)};head.append(all)}
+ list.append(head,el('p','rank-note','Fly to level up. Every level has a reward: claim it here. Big rewards at 60, 70 and 80, a new animated avatar at 90 and an animated frame at 100.'));
+ const top=60,height=(MAX_LEVEL-1)*LVL_STEP+top*2,map=el('div','lvl-map'),yOf=L=>(MAX_LEVEL-L)*LVL_STEP+top;map.style.height=height+'px';
+ // The road: a curve through every level, gold up to your level.
+ const pts=L=>`${lvlX(L)} ${yOf(L)}`,road=to=>{let d=`M${pts(1)}`;for(let L=2;L<=to;L++){const ym=(yOf(L-1)+yOf(L))/2;d+=` C${lvlX(L-1)} ${ym} ${lvlX(L)} ${ym} ${pts(L)}`}return d};
+ map.insertAdjacentHTML('beforeend',`<svg class="lvl-road" viewBox="0 0 100 ${height}" preserveAspectRatio="none"><path d="${road(MAX_LEVEL)}" class="r-edge"/><path d="${road(MAX_LEVEL)}" class="r-base"/><path d="${road(cur)}" class="r-done"/><path d="${road(MAX_LEVEL)}" class="r-dash"/></svg>`);
+ let curNode=null;
+ for(let L=1;L<=MAX_LEVEL;L++){const x=lvlX(L),big=L%10===0,special=L>=60&&big,reached=L<=cur,claimed=levelClaimed(L),node=el('div','lvl-node'+(reached?' reached':'')+(L===cur?' cur':'')+(big?' big':'')+(special?' special':''));node.style.left=x+'%';node.style.top=yOf(L)+'px';
+  const tier=levelTier(L);node.style.setProperty('--la',tier.c[0]);node.style.setProperty('--lb',tier.c[1]);node.append(el('b','lvl-dot',String(L)));
+  if(L>1){const r=levelPrize(L),card=el('div','lvl-card '+(x>50?'left':'right')+(claimed?' claimed':reached?' ready':''));card.append(prizeEl(r,special?56:44));
+   if(claimed)card.append(el('span','lvl-state done','✓'));else if(reached){const b=el('button','mini-btn go','CLAIM');b.onclick=e=>{e.stopPropagation();const got=claimLevel(L);if(!got)return;gameSound.effect('buy');confetti(special?50:18);renderTasks();if(got.avatar||got.frame)levelItemDialog(got)};card.append(b)}
+   else card.insertAdjacentHTML('beforeend',`<span class="lvl-state lock">${icon('lock')}</span>`);node.append(card)}
+  else node.append(el('span','lvl-start','START'));
+  if(L===cur){const me=el('div','lvl-me');me.append(avatarEl(myLook(),40));node.append(me);curNode=node}
+  map.append(node)}
+ list.append(map);
+ // Open at your level (only on the first render, later re-renders keep the scroll).
+ if(!list.dataset.lvlOpened){list.dataset.lvlOpened='1';requestAnimationFrame(()=>{if(curNode)list.scrollTop=Math.max(0,map.offsetTop+parseFloat(curNode.style.top)-list.clientHeight/2)})}}
+async function levelItemDialog(r){const id=r.avatar||r.frame,item=AVATARS[r.avatar]||FRAMES[r.frame],res=await askDialog({ribbon:'LEVEL REWARD',title:item.name,text:`You unlocked the ${r.avatar?'animated avatar':'animated frame'} ${item.name}! Wear it now?`,buttons:[{label:'WEAR IT',cls:'green',value:true},{label:'LATER',cls:'blue',value:false}]});
+ if(res.value){const c=myCos();if(r.avatar)c.avatar=id;else c.frame=id;persist();refreshMeta();if(typeof online!=='undefined'&&online.publish)online.publish();if(panelKind==='tasks')renderTasks()}}
 // Players from before levels start from what their save already shows they flew. This is not saved here on
 // purpose: persisting at start-up would stamp the save as newer than the cloud copy and stop it being restored.
 if(save.totalM===undefined){const st=((save.tasks||{}).st||{}).meters||0,bests=Object.values(save.best||{}).reduce((a,v)=>a+(Math.floor(v)||0),0);save.totalM=Math.max(st,bests)}
@@ -73,7 +110,7 @@ function levelBadge(c,L,t){const tier=levelTier(L),r=19.5;c.save();c.translate(2
  if(tier.shape==='crown'){c.beginPath();c.moveTo(-r*.8,-r*.72);c.lineTo(-r*.95,-r*1.35);c.lineTo(-r*.4,-r*1.0);c.lineTo(0,-r*1.5);c.lineTo(r*.4,-r*1.0);c.lineTo(r*.95,-r*1.35);c.lineTo(r*.8,-r*.72);c.closePath();c.fillStyle='#ffd23f';c.fill();c.stroke()}
  c.fillStyle='rgba(255,255,255,.4)';c.beginPath();c.ellipse(-r*.3,-r*.42,r*.45,r*.2,-.4,0,TAU);c.fill();
  const txt=String(L),fs=txt.length>2?15:txt.length>1?19.5:22;c.font=`${fs}px ${FONT}`;c.textAlign='center';c.textBaseline='middle';c.lineWidth=4.2;c.strokeStyle=INK;c.strokeText(txt,0,1.8);c.fillStyle='#fff';c.fillText(txt,0,1.8);c.restore()}
-const ownsCos=id=>{const item=AVATARS[id]||FRAMES[id];return !!item&&((!item.gems&&!item.season)||myCos().own.includes(id))};
+const ownsCos=id=>{const item=AVATARS[id]||FRAMES[id];return !!item&&((!item.gems&&!item.season&&!item.level)||myCos().own.includes(id))};
 
 function face(eyeY,{eye=4.5,gap=10,smile=true,blink=false}={}){ctx.fillStyle=INK;for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*gap,eyeY,eye*.8,blink?.8:eye,0,0,TAU);ctx.fill();if(!blink){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s*gap+1.3,eyeY-1.6,1.4,0,TAU);ctx.fill();ctx.fillStyle=INK}}
  if(smile){ctx.strokeStyle=INK;ctx.lineWidth=2.6;ctx.lineCap='round';ctx.beginPath();ctx.arc(0,eyeY+5,7,.2*Math.PI,.8*Math.PI);ctx.stroke()}}
@@ -115,6 +152,15 @@ const AVATAR_ART={
   ctx.fillStyle='#ffffff';ctx.beginPath();ctx.moveTo(-12,4);ctx.quadraticCurveTo(0,0,12,4);ctx.quadraticCurveTo(6,16,0,20);ctx.quadraticCurveTo(-6,16,-12,4);ctx.fill();ctx.strokeStyle='rgba(42,122,216,.5)';ctx.lineWidth=1.2;for(const [a,b,c,d] of [[-23,-8,-8,-2],[23,-8,8,-2],[0,-20,0,-8]]){ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke()}ctx.strokeStyle=INK;ctx.lineWidth=2.5;
   const blink=(t%3)<.12;for(const s of [-1,1]){ctx.fillStyle=INK;ctx.beginPath();ctx.ellipse(s*8,-5,3,blink?.8:4,s*.3,0,TAU);ctx.fill()}blob(0,12,2.6,INK);
   const sp=Math.max(0,Math.sin(t*2.6));ctx.globalAlpha=sp;ctx.fillStyle='#fff';star(14,-16,6*sp,1.4,4);ctx.fill();ctx.globalAlpha=1},
+ // Aurora Spirit: a glowing spirit under waving aurora ribbons, with a crown of light that flickers.
+ aurora(t){for(let k=0;k<3;k++){ctx.beginPath();for(let px=-38;px<=38;px+=4){const py=-20+k*8+Math.sin(px*.12+t*2.2+k*1.3)*5;px===-38?ctx.moveTo(px,py):ctx.lineTo(px,py)}ctx.strokeStyle=['rgba(120,255,200,.6)','rgba(110,200,255,.55)','rgba(210,140,255,.55)'][k];ctx.lineWidth=7;ctx.stroke()}
+  ctx.fillStyle='#fff';for(let i=0;i<8;i++){const tw=.4+.6*Math.abs(Math.sin(t*3+i*1.7));ctx.globalAlpha=tw;ctx.beginPath();ctx.arc((hash(i*5.1)-.5)*62,(hash(i*2.7)-.5)*62,1.3,0,TAU);ctx.fill()}ctx.globalAlpha=1;ctx.strokeStyle=INK;ctx.lineWidth=2.5;
+  glow(0,4,32,'#9ff7ff',.55+.2*Math.sin(t*3));
+  for(let i=0;i<5;i++){const a=-Math.PI/2+(i-2)*.4,f=1+.22*Math.sin(t*7+i*1.9);ctx.save();ctx.rotate(a+Math.PI/2);ctx.fillStyle=i%2?'#c49aff':'#7ef0e0';ctx.beginPath();ctx.moveTo(-5,-13);ctx.quadraticCurveTo(-5,-13-12*f,0,-15-16*f);ctx.quadraticCurveTo(5,-13-12*f,5,-13);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}
+  blob(0,5,18,'#eafcff');ctx.fillStyle='rgba(159,247,255,.35)';ctx.beginPath();ctx.ellipse(0,12,12,6,0,0,TAU);ctx.fill();
+  const blink=(t%3.4)<.12;for(const s of [-1,1]){ctx.save();ctx.translate(s*7,2);ctx.rotate(s*-.25);ctx.fillStyle='#2ad8e0';ctx.beginPath();ctx.ellipse(0,0,4.2,blink?.8:5.5,0,0,TAU);ctx.fill();if(!blink){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-1.2,-2,1.6,0,TAU);ctx.fill()}ctx.restore()}
+  ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,11,3.5,.15*Math.PI,.85*Math.PI);ctx.stroke();cheeks(10,11);
+  const sp=Math.max(0,Math.sin(t*2.4));ctx.globalAlpha=sp;ctx.fillStyle='#fff';star(15,-14,6*sp,1.4,4);ctx.fill();ctx.globalAlpha=1},
  legend(t){ctx.save();ctx.rotate(t*.4);for(let i=0;i<12;i++){ctx.rotate(TAU/12);ctx.fillStyle=i%2?'rgba(255,230,128,.5)':'rgba(255,255,255,.35)';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(40,-4);ctx.lineTo(40,4);ctx.closePath();ctx.fill()}ctx.restore();
   const p=1+.06*Math.sin(t*3);ctx.save();ctx.scale(p,p);ctx.fillStyle='#ffe680';star(0,4,24,11,5);ctx.fill();ctx.stroke();ctx.restore();face(3,{gap:6,eye:3});cheeks(9,10);
   ctx.save();ctx.translate(0,-21);ctx.fillStyle='#c46aff';ctx.beginPath();ctx.moveTo(-9,4);ctx.lineTo(-11,-6);ctx.lineTo(-4,-1);ctx.lineTo(0,-9);ctx.lineTo(4,-1);ctx.lineTo(11,-6);ctx.lineTo(9,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}};
@@ -140,6 +186,12 @@ const FRAME_ART={
  sTitan(t){frameRing('#d8fbff','#1f5a6e');frameGlow('#5fe8ff',.25+.2*Math.sin(t*3));ctx.lineWidth=1.4;for(let i=0;i<6;i++){const a=i*TAU/6+t*.3;ctx.save();ctx.translate(Math.cos(a)*41.5,Math.sin(a)*41.5);ctx.rotate(a);ctx.fillStyle='#bff4ff';ctx.beginPath();for(let k=0;k<6;k++)ctx.lineTo(Math.cos(k*TAU/6)*4,Math.sin(k*TAU/6)*4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}ctx.lineWidth=2.5;seasonBadge('#5fb8c8','#1f5a6e')},
  sDiamond(t){const g=ctx.createLinearGradient(-48,-48,48,48);g.addColorStop(0,'#ffffff');g.addColorStop(.5,'#7fe0ff');g.addColorStop(1,'#2a7ad8');frameRingFill(g);ctx.strokeStyle='rgba(27,18,64,.4)';ctx.lineWidth=1.2;for(let i=0;i<20;i++){const a=i*TAU/20;ctx.beginPath();ctx.moveTo(Math.cos(a)*35.5,Math.sin(a)*35.5);ctx.lineTo(Math.cos(a+TAU/40)*47.5,Math.sin(a+TAU/40)*47.5);ctx.stroke()}ctx.strokeStyle=INK;ctx.lineWidth=2.5;
   for(let i=0;i<4;i++){const a=i*TAU/4-Math.PI/4,tw=.6+.4*Math.sin(t*3+i);ctx.save();ctx.translate(Math.cos(a)*42,Math.sin(a)*42);ctx.rotate(a);ctx.fillStyle='#e8fbff';ctx.beginPath();ctx.moveTo(0,-6*tw-2);ctx.lineTo(4,0);ctx.lineTo(0,6*tw+2);ctx.lineTo(-4,0);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}frameShine(t*1.4,'rgba(255,255,255,.9)');seasonBadge('#7fe0ff','#2a7ad8')},
+ // Crown of the Skies: a turning gold-and-rainbow ring with small feathered wings, a jewelled crown and orbiting stars.
+ skyCrown(t){const f=Math.sin(t*4)*.15;for(const s of [-1,1])for(let k=0;k<3;k++){ctx.save();ctx.translate(s*41,6+k*7);ctx.rotate(s*(-.5+k*.35+f));ctx.fillStyle=k%2?'#fff6d0':'#ffffff';ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(s*6,-5,s*9,-1);ctx.quadraticCurveTo(s*6,3,0,3);ctx.closePath();ctx.fill();ctx.lineWidth=1.6;ctx.stroke();ctx.restore()}ctx.lineWidth=2.5;
+  const g=ctx.createConicGradient?ctx.createConicGradient(t*1.4,0,0):null;if(g){['#ffe680','#ff7ad9','#7ae0ff','#ffe680','#c49aff','#ffe680'].forEach((c,i,a)=>g.addColorStop(i/(a.length-1),c));frameRingFill(g)}else frameRing('#ffe680','#ff7ad9');
+  frameGlow('#fff3a0',.25+.2*Math.sin(t*4));frameShine(t*1.3,'rgba(255,255,255,.9)');
+  ctx.fillStyle='#fff';for(let i=0;i<6;i++){const a=t*.9+i*TAU/6,tw=.5+.5*Math.abs(Math.sin(t*3+i));ctx.globalAlpha=tw;star(Math.cos(a)*41.5,Math.sin(a)*41.5,2.5+tw*3,1,4);ctx.fill()}ctx.globalAlpha=1;
+  ctx.save();ctx.translate(0,-45+Math.sin(t*3)*1.2);ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.moveTo(-14,6);ctx.lineTo(-16,-8);ctx.lineTo(-7,-1);ctx.lineTo(0,-12);ctx.lineTo(7,-1);ctx.lineTo(16,-8);ctx.lineTo(14,6);ctx.closePath();ctx.fill();ctx.stroke();for(const [gx,gc] of [[-8,'#44d9ff'],[0,'#ff4d5e'],[8,'#7ef08f']]){ctx.fillStyle=gc;ctx.beginPath();ctx.arc(gx,2,2.6,0,TAU);ctx.fill();ctx.lineWidth=1.4;ctx.stroke()}ctx.restore()},
  legend(t){const g=ctx.createConicGradient?ctx.createConicGradient(t*1.2,0,0):null;if(g){['#c46aff','#ffe680','#ff7ad9','#7a3cff','#ffe680','#c46aff'].forEach((c,i,a)=>g.addColorStop(i/(a.length-1),c));frameRingFill(g)}else frameRing('#ffe680','#7a3cff');
   ctx.fillStyle='#fff';for(let i=0;i<8;i++){const a=-t*.8+i*TAU/8,tw=.4+.6*Math.abs(Math.sin(t*3+i));ctx.globalAlpha=tw;star(Math.cos(a)*41.5,Math.sin(a)*41.5,2+tw*3,1,4);ctx.fill()}ctx.globalAlpha=1;frameGlow('#ffe680',.2+.15*Math.sin(t*4));
   ctx.save();ctx.translate(0,-46);ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.moveTo(-11,5);ctx.lineTo(-13,-7);ctx.lineTo(-5,-1);ctx.lineTo(0,-10);ctx.lineTo(5,-1);ctx.lineTo(13,-7);ctx.lineTo(11,5);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();seasonBadge('#c46aff','#3a1580',true)}};
@@ -172,7 +224,7 @@ function levelBox(meters,level,boost){const lv=levelOf(meters),L=level||lv.level
 function renderProfile(){const list=$('#panel-list'),c=myCos(),look=myLook(),scroll=list.scrollTop,pv=cosPreview,shown={...look,...(pv?pv.look:{})};$('#panel-title').textContent='PROFILE';list.replaceChildren();
  const head=el('div','profile-head'+(pv?' previewing':'')),info=el('div','profile-info'),big=el('div','profile-big');big.append(avatarEl(shown,pv?110:92,'big'));if(pv)big.append(el('span','preview-tag','PREVIEW'));head.append(big);
  const name=typeof online!=='undefined'?online.displayName():'Player';info.append(nameEl(name,shown.gold,save.clan&&save.clan.tag,'profile-name'),levelBox(save.totalM,0,activeBoost()));
- if(pv&&pv.season){info.append(el('small','profile-note',pv.name),el('small','profile-note',seasonGoal(pv.tier)));const back=el('button','mini-btn','STOP PREVIEW');back.onclick=()=>{cosPreview=null;renderProfile()};info.append(back)}
+ if(pv&&(pv.season||pv.lvl)){info.append(el('small','profile-note',pv.name),el('small','profile-note',pv.lvl?`Level reward: reach LEVEL ${pv.lvl} and claim it in TASKS > LEVEL.`:seasonGoal(pv.tier)));const back=el('button','mini-btn','STOP PREVIEW');back.onclick=()=>{cosPreview=null;renderProfile()};info.append(back)}
  else if(pv){info.append(el('small','profile-note',`${pv.name} · ${pv.price} GEMS`));const buy=el('button','buy big gem');buy.innerHTML=`BUY ${iconHTML('gem')}${pv.price}`;buy.onclick=()=>{if((save.gems||0)<pv.price){buy.classList.remove('nope');void buy.offsetWidth;buy.classList.add('nope');gameSound.effect('warn');buy.innerHTML=`NEED ${iconHTML('gem')}${pv.price-(save.gems||0)}`;return}save.gems-=pv.price;pv.apply();cosPreview=null;gameSound.effect('buy');confetti(24);cosChanged()};
   const back=el('button','mini-btn','STOP PREVIEW');back.onclick=()=>{cosPreview=null;renderProfile()};info.append(buy,back)}
  else{const bestAll=Math.max(0,...Object.values(save.scores||{})),stars=Object.values(save.stars||{}).reduce((a,b)=>a+b,0);info.append(el('small','',`BEST ${bestAll.toLocaleString()} · ${stars} STARS`));if(save.clan)info.append(el('small','profile-clan',`CLAN: ${save.clan.name}`));
@@ -185,11 +237,11 @@ function renderProfile(){const list=$('#panel-list'),c=myCos(),look=myLook(),scr
   list.append(box,el('p','rank-note','A gold name shines on the leaderboards, in your clan and on your profile. Tap it to try it on.'));list.scrollTop=scroll;return}
  const cat=profileTab==='avatars'?AVATARS:FRAMES,grid=el('div','cos-grid');
  for(const [id,item] of Object.entries(cat)){const owned=ownsCos(id),on=(profileTab==='avatars'?look.avatar:look.frame)===id&&!pv,trying=pv&&pv.id===id,card=el('button','cos-card'+(on?' on':'')+(owned?'':' locked')+(item.anim?' anim':'')+(item.season?' season':'')+(trying?' trying':''));
-  card.append(avatarEl(profileTab==='avatars'?{avatar:id,frame:look.frame}:{avatar:look.avatar,frame:id},64),el('small','',item.name),priceTag(item.gems||0,owned,on,trying,item.season));
-  card.onclick=()=>{const isAvatar=profileTab==='avatars';if(!owned){cosPreview={id,name:item.name.toUpperCase(),price:item.gems,season:item.season&&SEASON_NAMES[item.season],tier:item.season,look:isAvatar?{avatar:id}:{frame:id},apply(){c.own.push(id);if(isAvatar)c.avatar=id;else c.frame=id}};gameSound.effect('on');renderProfile();list.scrollTop=0;return}
+  card.append(avatarEl(profileTab==='avatars'?{avatar:id,frame:look.frame}:{avatar:look.avatar,frame:id},64),el('small','',item.name),priceTag(item.gems||0,owned,on,trying,item.season,item.level));
+  card.onclick=()=>{const isAvatar=profileTab==='avatars';if(!owned){cosPreview={id,name:item.name.toUpperCase(),price:item.gems,season:item.season&&SEASON_NAMES[item.season],tier:item.season,lvl:item.level,look:isAvatar?{avatar:id}:{frame:id},apply(){c.own.push(id);if(isAvatar)c.avatar=id;else c.frame=id}};gameSound.effect('on');renderProfile();list.scrollTop=0;return}
    cosPreview=null;gameSound.effect('on');if(isAvatar)c.avatar=id;else c.frame=id;cosChanged()};grid.append(card)}
  list.append(grid,el('p','rank-note','Tap any gem item to try it on. Gems come from the weekly top 10, tasks and seasons. Trophy items are season rewards: finish a season in that rank to win them.'));list.scrollTop=scroll}
-function priceTag(gems,owned,on,trying,season){const s=el('span','cos-price'+(on?' on':owned?' own':'')+(trying?' trying':'')+(season&&!owned?' season':''));if(on)s.textContent='IN USE';else if(owned)s.textContent=gems||season?'OWNED':'FREE';else if(trying)s.textContent='TRYING ON';else if(season)s.innerHTML=iconHTML('trophy')+SEASON_NAMES[season];else s.innerHTML=iconHTML('gem')+gems;return s}
+function priceTag(gems,owned,on,trying,season,level){const s=el('span','cos-price'+(on?' on':owned?' own':'')+(trying?' trying':'')+((season||level)&&!owned?' season':''));if(on)s.textContent='IN USE';else if(owned)s.textContent=gems||season||level?'OWNED':'FREE';else if(trying)s.textContent='TRYING ON';else if(level)s.innerHTML=iconHTML('crown')+`LEVEL ${level}`;else if(season)s.innerHTML=iconHTML('trophy')+SEASON_NAMES[season];else s.innerHTML=iconHTML('gem')+gems;return s}
 function cosShort(card,need){card.classList.remove('nope');void card.offsetWidth;card.classList.add('nope');gameSound.effect('warn');const p=card.querySelector('.cos-price');if(p){const old=p.innerHTML;p.innerHTML=`NEED ${iconHTML('gem')}${need-(save.gems||0)}`;setTimeout(()=>{if(p.isConnected)p.innerHTML=old},1200)}}
 function cosChanged(){persist();refreshMeta();renderProfile();if(typeof online!=='undefined')online.publish();if(typeof refreshOnline==='function')refreshOnline(false)}
 refreshMeta();

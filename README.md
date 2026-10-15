@@ -224,7 +224,23 @@ Like PUBG Mobile, every level needs more than the one before (levelNeed in cosme
   (one boost at a time). PROFILE shows the boost and the runs left, and the results screen marks boosted runs
   ("x2 BOOST").
 - The results screen shows the metres the run added and how far it is to the next level. A new level shows
-  "LEVEL UP!" and pays 50 + 25 × the new level in coins (and 10 gems every 10 levels).
+  "LEVEL UP!" and "REWARD READY · TASKS > LEVEL".
+- LEVEL PATH (TASKS > LEVEL, like PUBG Mobile's level rewards): a winding road from level 1 at the bottom to level 100
+  at the top, climbing through the stage skies from Sunny Sky to Deep Universe. Your avatar stands on your current
+  level and the road is gold up to it. Every level from 2 to 100 has a reward card; reached levels show CLAIM (or
+  CLAIM ALL at the top) and the TASKS button's red dot counts the rewards waiting (levelPrize in cosmetics.js):
+
+  | Levels | Reward |
+  |---|---|
+  | most levels | coins (60 + 15 × level, rounded) |
+  | every 5th | coins (100 + 20 × level) and gems (3 + level / 10) |
+  | 10, 20, 30, 40, 50 | 500 + 50 × level coins and as many gems as the level (for example 1,000 coins + 10 gems at 10) |
+  | 60 / 70 / 80 | 6,000 coins + 120 gems / 8,000 coins + 180 gems / 10,000 coins + 250 gems |
+  | 90 | AURORA SPIRIT, an animated avatar: a glowing spirit under waving aurora ribbons with a flickering crown of light |
+  | 100 | CROWN OF THE SKIES, an animated frame: a turning gold-and-rainbow ring with feathered wings, a jewelled crown and orbiting stars |
+
+  Claiming the avatar or frame asks whether to wear it now. Both are never sold; in PROFILE they show "LEVEL 90" and
+  "LEVEL 100" until claimed. Claimed rewards are saved to your account.
 - Players from before levels start from what their save shows they flew (their best altitudes or this season's
   total, whichever is bigger). Signed-in players' levels are saved to their account and public profile.
 
