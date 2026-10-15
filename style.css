@@ -876,3 +876,6 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .lvl-state{font-family:var(--title);font-size:15px;color:#7ef08f;text-shadow:var(--stroke)}
 .lvl-state.lock{width:18px;height:18px;opacity:.8}.lvl-state.lock svg{width:18px;height:18px}
 @media(prefers-reduced-motion:reduce){.lvl-node.special .lvl-dot,.lvl-me{animation:none}}
+/* Tasks: big tabs like the store's */
+.task-tabs{margin-bottom:8px}.task-tabs .store-tab{min-height:66px}.task-tabs .store-tab .st-ico,.task-tabs .store-tab .st-ico svg{width:32px;height:32px}
+.task-tabs .store-tab.level:not(.on){background:linear-gradient(160deg,#ff9a3c,#c8501a)}

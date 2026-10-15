@@ -225,7 +225,7 @@ Like PUBG Mobile, every level needs more than the one before (levelNeed in cosme
   ("x2 BOOST").
 - The results screen shows the metres the run added and how far it is to the next level. A new level shows
   "LEVEL UP!" and "REWARD READY · TASKS > LEVEL".
-- LEVEL PATH (TASKS > LEVEL, like PUBG Mobile's level rewards): a winding road from level 1 at the bottom to level 100
+- LEVEL PATH (TASKS > LEVEL, the orange third tab with a red count of rewards waiting; like PUBG Mobile's level rewards): a winding road from level 1 at the bottom to level 100
   at the top, climbing through the stage skies from Sunny Sky to Deep Universe. Your avatar stands on your current
   level and the road is gold up to it. Every level from 2 to 100 has a reward card; reached levels show CLAIM (or
   CLAIM ALL at the top) and the TASKS button's red dot counts the rewards waiting (levelPrize in cosmetics.js):
