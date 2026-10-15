@@ -82,6 +82,8 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
   const cc=cloud.cos;if(cc&&typeof cc==='object'){const c=myCos();c.own=[...new Set([...c.own,...(Array.isArray(cc.own)?cc.own:[])])].filter(id=>AVATARS[id]||FRAMES[id]);c.goldOwned=c.goldOwned||!!cc.goldOwned;if((cloud.updated||0)>=(save.updated||0)){if(AVATARS[cc.avatar])c.avatar=cc.avatar;if(FRAMES[cc.frame])c.frame=cc.frame;c.gold=!!cc.gold}}
   if((cloud.updated||0)>(save.updated||0)){if(cloud.clan&&typeof cloud.clan==='object')save.clan=cloud.clan;if(cloud.clanReq&&typeof cloud.clanReq==='object')save.clanReq=cloud.clanReq}
   // Free Run records keep the best of both; cleared campaign stages add up.
+  // Claimed level rewards add up (each level can only be claimed once).
+  if(Array.isArray(cloud.levelClaimed)){const set=new Set([...(save.levelClaimed||[]),...cloud.levelClaimed.filter(L=>Number.isInteger(L)&&L>=2&&L<=100)]);save.levelClaimed=[...set].sort((a,b)=>a-b)}
   // Lifetime metres (player level) keep the larger total.
   {const n=num(cloud.totalM,0,1e10);if(n!==null)save.totalM=Math.max(save.totalM||0,n)}
   for(const k of ['freeBest','freeAlt']){const n=num(cloud[k],0,1e9);if(n!==null)save[k]=Math.max(save[k]||0,n)}

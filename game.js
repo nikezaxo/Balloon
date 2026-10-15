@@ -104,7 +104,7 @@ function askDialog({ribbon='ACCOUNT',title,text='',input=null,buttons,validate})
 // Beginner tutorial (tutorial.js): while it is on, the HUD shows its full labels and coach tips appear.
 const tutorialOn=()=>save.tut==='on';
 function el(tag,cls='',text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
-function openPanel(kind){panelKind=kind;previews=[];storePick=save.skin;const list=$('#panel-list');list.replaceChildren();
+function openPanel(kind){panelKind=kind;previews=[];storePick=save.skin;const list=$('#panel-list');list.replaceChildren();delete list.dataset.lvlOpened;
  if(kind==='store')renderStore();
  else if(kind==='ranks')renderRanks();
  else if(kind==='profile'){cosPreview=null;renderProfile()}
@@ -221,14 +221,14 @@ function showResult(){bank();const a=Math.floor(alt),free=runMode==='free',recor
  resultsBoxes();if(save.lives>0){$('#revive').hidden=false;$('#revive').innerHTML=`${iconHTML('heart')}REVIVE (${save.lives})`}else $('#revive').hidden=true;
  results={score:sc,stars,high,record,age:0,shown:-1,lit:0,done:false,tick:0,confetti:0,rank:undefined};resFx=[];refreshMeta();resultsOnline()}
 // Player level: the metres of this run (only the new ones after a revive) go to the lifetime total; each new level
-// pays its reward and shows on the results screen.
+// shows on the results screen; its reward waits in TASKS > LEVEL.
 // A level ticket boost multiplies the run's metres; the run counts against the boost once, on its first results.
 function creditLevel(a){if(typeof levelOf!=='function')return;const raw=Math.max(0,a-levelCredited);levelCredited=Math.max(levelCredited,a);
  if(!runBoost){const bst=activeBoost();runBoost=bst?bst.mult:1;if(bst&&--bst.runs<=0)save.boost=null}const add=raw*runBoost;const before=levelOf(save.totalM).level;save.totalM=(save.totalM||0)+add;const after=levelOf(save.totalM).level;
- const ups=[];for(let L=before+1;L<=after;L++){const r=levelReward(L);save.coins+=r.coins;save.gems=(save.gems||0)+r.gems;ups.push({L,...r})}resultsLevel(add,ups,runBoost)}
+ const ups=[];for(let L=before+1;L<=after;L++)ups.push(L);resultsLevel(add,ups,runBoost)}
 function resultsLevel(add,ups,mult=1){const box=$('#res-level');if(typeof levelOf!=='function'){box.hidden=true;return}const lv=levelOf(save.totalM),tier=levelTier(lv.level);box.hidden=false;box.replaceChildren();box.style.setProperty('--la',tier.c[0]);box.style.setProperty('--lb',tier.c[1]);
  const up=ups.length?ups[ups.length-1]:null,bar=el('i','level-bar'),fill=el('s');fill.style.width=(lv.need?Math.min(100,lv.into/lv.need*100):100)+'%';bar.append(fill);
- box.append(avatarEl(myLook(),34),el('div','res-level-mid'));const mid=box.lastChild;mid.append(el('b','',(up?`LEVEL UP! LEVEL ${lv.level}`:`LEVEL ${lv.level}`)+(mult>1?` · x${mult} BOOST`:'')),bar,el('small','',up?`+${ups.reduce((n,u)=>n+u.coins,0)} COINS${ups.some(u=>u.gems)?` · +${ups.reduce((n,u)=>n+u.gems,0)} GEMS`:''}`:`+${add.toLocaleString()} m · ${lv.need?(lv.need-lv.into).toLocaleString()+' m TO NEXT':'MAX LEVEL'}`));
+ box.append(avatarEl(myLook(),34),el('div','res-level-mid'));const mid=box.lastChild;mid.append(el('b','',(up?`LEVEL UP! LEVEL ${lv.level}`:`LEVEL ${lv.level}`)+(mult>1?` · x${mult} BOOST`:'')),bar,el('small','',up?`REWARD${ups.length>1?'S':''} READY · TASKS > LEVEL`:`+${add.toLocaleString()} m · ${lv.need?(lv.need-lv.into).toLocaleString()+' m TO NEXT':'MAX LEVEL'}`));
  box.classList.toggle('up',!!up);if(up&&!box.dataset.cheered){box.dataset.cheered='1';setTimeout(()=>{gameSound.effect('record');confetti(30)},1600)}if(!up)delete box.dataset.cheered}
 // Boxes found or won in this run can be opened right from the results.
 function resultsBoxes(){const b=$('#res-box'),n=typeof boxTotal==='function'?boxTotal():0;b.hidden=!runBoxes.length||!n;if(!b.hidden)b.innerHTML=`${iconHTML('box')}OPEN ${n>1?`${n} BOXES`:'BOX'}!`}
