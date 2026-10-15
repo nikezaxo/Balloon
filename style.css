@@ -879,3 +879,5 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 /* Tasks: big tabs like the store's */
 .task-tabs{margin-bottom:8px}.task-tabs .store-tab{min-height:66px}.task-tabs .store-tab .st-ico,.task-tabs .store-tab .st-ico svg{width:32px;height:32px}
 .task-tabs .store-tab.level:not(.on){background:linear-gradient(160deg,#ff9a3c,#c8501a)}
+/* The Tasks tabs stay at the top while the list (or the long level map) scrolls under them. */
+.task-tabs{position:sticky;top:-4px;z-index:6;margin:-4px -4px 8px;padding:6px 4px 10px;background:linear-gradient(#4683fa 80%,#4683fa00)}
