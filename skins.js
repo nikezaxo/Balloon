@@ -3,16 +3,16 @@
 // dots are decorations placed on the sphere, so they turn with the balloon.
 const SKINS={
  classic:{name:'Classic',price:0,rarity:'common',about:'Bobs along happily, blowing hearts.',gores:[['#ff7a86','#ff3b52','#c41d3d'],['#ffe680','#ffc21a','#d98a00']]},
- gumball:{name:'Gumball',price:150,rarity:'common',about:'Bouncy pink gum that blows bubbles.',gores:[['#ffc6e6','#ff7ac0','#d94a98']],dots:'sprinkles',gloss:true},
- clown:{name:'Funny Clown',price:200,rarity:'rare',about:'Wobbly, goofy and full of confetti.',gores:[['#ff8a8a','#ff4d5e','#c41d3d'],['#ffffff','#eceaf6','#b9b6cf'],['#8fd8ff','#3d9bff','#1f5fc4'],['#fff08a','#ffd23f','#d99400']],face:'goofy',extras:['hair','nose']},
- toy:{name:'Toy Robot',price:250,rarity:'rare',about:'Clanky robot moves, sparks and laser eyes.',gores:[['#9cd8ff','#3d8bff','#2350b8'],['#d4dbe8','#9aa6bd','#6b7690']],face:'robot',dots:'rivets',extras:['antenna']},
- melon:{name:'Watermelon',price:300,rarity:'rare',about:'Spins like a top and splashes juice.',gores:[['#8be38f','#3fbf55','#23863a'],['#c5f7a8','#8fdc6e','#55a83e']],dots:'seeds'},
+ gumball:{name:'Gumball',price:3000,rarity:'common',about:'Bouncy pink gum that blows bubbles.',gores:[['#ffc6e6','#ff7ac0','#d94a98']],dots:'sprinkles',gloss:true},
+ clown:{name:'Funny Clown',price:4500,rarity:'rare',about:'Wobbly, goofy and full of confetti.',gores:[['#ff8a8a','#ff4d5e','#c41d3d'],['#ffffff','#eceaf6','#b9b6cf'],['#8fd8ff','#3d9bff','#1f5fc4'],['#fff08a','#ffd23f','#d99400']],face:'goofy',extras:['hair','nose']},
+ toy:{name:'Toy Robot',price:6000,rarity:'rare',about:'Clanky robot moves, sparks and laser eyes.',gores:[['#9cd8ff','#3d8bff','#2350b8'],['#d4dbe8','#9aa6bd','#6b7690']],face:'robot',dots:'rivets',extras:['antenna']},
+ melon:{name:'Watermelon',price:7500,rarity:'rare',about:'Spins like a top and splashes juice.',gores:[['#8be38f','#3fbf55','#23863a'],['#c5f7a8','#8fdc6e','#55a83e']],dots:'seeds'},
  monster:{name:'Monster',price:400,rarity:'epic',about:'Growls, shakes and drips slime.',gores:[['#c4ff8a','#7ad83f','#3f8f1d']],face:'monster',dots:'spots',extras:['horns']},
  ninja:{name:'Ninja',price:500,rarity:'epic',about:'Dashes in a blink and leaves smoke.',gores:[['#5a5a78','#34344c','#1a1a2c']],face:'ninja',extras:['headband']},
  galaxy:{name:'Galaxy',price:700,rarity:'legendary',about:'A swirl of stars that bends space.',gores:[['#8a6cff','#5232c4','#24125e'],['#4d7bff','#2846b8','#101d5c']],dots:'stars'},
  gold:{name:'Golden King',price:1000,rarity:'legendary',about:'Royal shine, glitter and a crown.',gores:[['#fff6b8','#ffd23f','#c98a00']],dots:'sparkle',extras:['crown'],gloss:true},
  // Talking characters: each has a big set of lines and chats on its own while flying.
- dog:{name:'Sleepy Dog',price:350,rarity:'rare',about:'Would rather be napping. Mumbles and yawns all flight long.',gores:[['#f0c890','#cf9455','#8e5a28']],face:'sleepy',patch:'dog',extras:['dogears','snout','nightcap']},
+ dog:{name:'Sleepy Dog',price:9000,rarity:'rare',about:'Would rather be napping. Mumbles and yawns all flight long.',gores:[['#f0c890','#cf9455','#8e5a28']],face:'sleepy',patch:'dog',extras:['dogears','snout','nightcap']},
  chicks:{name:'Chick Trio',price:450,rarity:'epic',about:'Three noisy chicks sharing one balloon. Peep peep peep!',gores:[['#fff3a0','#ffd84a','#e0a800']],face:'chick',extras:['tuft','minichicks']},
  fox:{name:'Sly Fox',price:600,rarity:'epic',about:'A sneaky fox with big plans and an even bigger mouth.',gores:[['#ffb36b','#ff7a1f','#c24e0a']],face:'sly',patch:'fox',extras:['foxtail','foxears','snout','whiskers']},
  wolf:{name:'Grumpy Wolf',price:800,rarity:'legendary',about:'Huffs, puffs and grumbles about absolutely everything.',gores:[['#d4d9e4','#9aa2b6','#5f667c']],face:'grump',patch:'wolf',extras:['wolfears','snout']},

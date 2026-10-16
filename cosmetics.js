@@ -8,11 +8,11 @@ const AVATARS={
  frog:{name:'Froggy',price:0,bg:['#e2f4ff','#8ac6ff']},
  bot:{name:'Bot',price:0,bg:['#e6dcff','#9a7aff']},
  balloon:{name:'Balloon',price:0,bg:['#fff3c4','#ffc44d']},
- phoenix:{name:'Phoenix',gems:150,anim:true,bg:['#ff8a3c','#5a0a0a']},
- ghost:{name:'Ghost',gems:150,anim:true,bg:['#4a3a9a','#0c0626']},
- alien:{name:'Alien',gems:200,anim:true,bg:['#1f5a3a','#020a10']},
- dragon:{name:'Dragon',gems:250,anim:true,bg:['#7a2aa8','#1a0626']},
- lion:{name:'Lion King',gems:300,anim:true,bg:['#fff1a0','#e08a00']},
+ phoenix:{name:'Phoenix',gems:1200,anim:true,bg:['#ff8a3c','#5a0a0a']},
+ ghost:{name:'Ghost',gems:1200,anim:true,bg:['#4a3a9a','#0c0626']},
+ alien:{name:'Alien',gems:1600,anim:true,bg:['#1f5a3a','#020a10']},
+ dragon:{name:'Dragon',gems:2000,anim:true,bg:['#7a2aa8','#1a0626']},
+ lion:{name:'Lion King',gems:2500,anim:true,bg:['#fff1a0','#e08a00']},
  // Season rewards: never sold, won by finishing a season in that tier or higher.
  eagle:{name:'Golden Eagle',season:'gold',anim:true,bg:['#fff3a0','#c98a00']},
  pilot:{name:'Mech Pilot',season:'titanium',anim:true,bg:['#bff4ff','#1f5a6e']},
@@ -25,12 +25,12 @@ const FRAMES={
  wood:{name:'Wood',price:0},
  sky:{name:'Cloud',price:0},
  leaf:{name:'Leafy',price:0},
- gold:{name:'Golden Laurel',gems:200,anim:true},
- fire:{name:'Inferno',gems:250,anim:true},
- rainbow:{name:'Rainbow',gems:250,anim:true},
- electric:{name:'Thunder',gems:300,anim:true},
- galaxy:{name:'Galaxy',gems:350,anim:true},
- diamond:{name:'Diamond',gems:400,anim:true},
+ gold:{name:'Golden Laurel',gems:1500,anim:true},
+ fire:{name:'Inferno',gems:1800,anim:true},
+ rainbow:{name:'Rainbow',gems:1800,anim:true},
+ electric:{name:'Thunder',gems:2200,anim:true},
+ galaxy:{name:'Galaxy',gems:2700,anim:true},
+ diamond:{name:'Diamond',gems:3500,anim:true},
  sBronze:{name:'Bronze Season',season:'bronze',anim:true},
  sSilver:{name:'Silver Season',season:'silver',anim:true},
  sGold:{name:'Gold Season',season:'gold',anim:true},
@@ -41,7 +41,7 @@ const FRAMES={
  skyCrown:{name:'Crown of the Skies',level:100,anim:true}};
 const SEASON_NAMES={bronze:'BRONZE',silver:'SILVER',gold:'GOLD',titanium:'TITANIUM',diamond:'DIAMOND',legend:'STAR LEGEND'};
 const seasonGoal=tier=>tier==='legend'?'Season reward: finish a season as a STAR LEGEND to win it.':`Season reward: finish a season in ${SEASON_NAMES[tier]} or higher to win it.`;
-const GOLD_NAME_PRICE=500,CLAN_PRICE=100;
+const GOLD_NAME_PRICE=2000,CLAN_PRICE=300;
 const myCos=()=>{const c=save.cos||(save.cos={own:[],avatar:'sunny',frame:'basic',gold:false,goldOwned:false});c.own=c.own||[];return c};
 // The look other players see: avatar, frame and whether the name is gold.
 const myLook=()=>{const c=myCos();return {avatar:AVATARS[c.avatar]?c.avatar:'sunny',frame:FRAMES[c.frame]?c.frame:'basic',gold:!!(c.gold&&c.goldOwned),level:playerLevel()}};
@@ -225,7 +225,7 @@ function renderProfile(){const list=$('#panel-list'),c=myCos(),look=myLook(),scr
  const head=el('div','profile-head'+(pv?' previewing':'')),info=el('div','profile-info'),big=el('div','profile-big');big.append(avatarEl(shown,pv?110:92,'big'));if(pv)big.append(el('span','preview-tag','PREVIEW'));head.append(big);
  const name=typeof online!=='undefined'?online.displayName():'Player';info.append(nameEl(name,shown.gold,save.clan&&save.clan.tag,'profile-name'),levelBox(save.totalM,0,activeBoost()));
  if(pv&&(pv.season||pv.lvl)){info.append(el('small','profile-note',pv.name),el('small','profile-note',pv.lvl?`Level reward: reach LEVEL ${pv.lvl} and claim it in TASKS > LEVEL.`:seasonGoal(pv.tier)));const back=el('button','mini-btn','STOP PREVIEW');back.onclick=()=>{cosPreview=null;renderProfile()};info.append(back)}
- else if(pv){info.append(el('small','profile-note',`${pv.name} · ${pv.price} GEMS`));const buy=el('button','buy big gem');buy.innerHTML=`BUY ${iconHTML('gem')}${pv.price}`;buy.onclick=()=>{if((save.gems||0)<pv.price){buy.classList.remove('nope');void buy.offsetWidth;buy.classList.add('nope');gameSound.effect('warn');buy.innerHTML=`NEED ${iconHTML('gem')}${pv.price-(save.gems||0)}`;return}save.gems-=pv.price;pv.apply();cosPreview=null;gameSound.effect('buy');confetti(24);cosChanged()};
+ else if(pv){info.append(el('small','profile-note',`${pv.name} · ${pv.price.toLocaleString()} GEMS`));const buy=el('button','buy big gem');buy.innerHTML=`BUY ${iconHTML('gem')}${pv.price.toLocaleString()}`;buy.onclick=()=>{if((save.gems||0)<pv.price){buy.classList.remove('nope');void buy.offsetWidth;buy.classList.add('nope');gameSound.effect('warn');buy.innerHTML=`NEED ${iconHTML('gem')}${pv.price-(save.gems||0)}`;return}save.gems-=pv.price;pv.apply();cosPreview=null;gameSound.effect('buy');confetti(24);cosChanged()};
   const back=el('button','mini-btn','STOP PREVIEW');back.onclick=()=>{cosPreview=null;renderProfile()};info.append(buy,back)}
  else{const bestAll=Math.max(0,...Object.values(save.scores||{})),stars=Object.values(save.stars||{}).reduce((a,b)=>a+b,0);info.append(el('small','',`BEST ${bestAll.toLocaleString()} · ${stars} STARS`));if(save.clan)info.append(el('small','profile-clan',`CLAN: ${save.clan.name}`));
   if(typeof online!=='undefined'&&online.configured()&&!online.user)info.append(el('small','profile-note','Playing as a guest. Sign up in Settings so other players can see your look.'))}
@@ -242,7 +242,7 @@ function renderProfile(){const list=$('#panel-list'),c=myCos(),look=myLook(),scr
   card.onclick=()=>{const isAvatar=profileTab==='avatars';if(!owned){cosPreview={id,name:item.name.toUpperCase(),price:item.gems,season:item.season&&SEASON_NAMES[item.season],tier:item.season,lvl:item.level,look:isAvatar?{avatar:id}:{frame:id},apply(){c.own.push(id);if(isAvatar)c.avatar=id;else c.frame=id}};gameSound.effect('on');renderProfile();list.scrollTop=0;return}
    cosPreview=null;gameSound.effect('on');if(isAvatar)c.avatar=id;else c.frame=id;cosChanged()};grid.append(card)}
  list.append(grid,el('p','rank-note','Tap any gem item to try it on. Gems come from the weekly top 10, tasks and seasons. Trophy items are season rewards: finish a season in that rank to win them.'));list.scrollTop=scroll}
-function priceTag(gems,owned,on,trying,season,level){const s=el('span','cos-price'+(on?' on':owned?' own':'')+(trying?' trying':'')+((season||level)&&!owned?' season':''));if(on)s.textContent='IN USE';else if(owned)s.textContent=gems||season||level?'OWNED':'FREE';else if(trying)s.textContent='TRYING ON';else if(level)s.innerHTML=iconHTML('crown')+`LEVEL ${level}`;else if(season)s.innerHTML=iconHTML('trophy')+SEASON_NAMES[season];else s.innerHTML=iconHTML('gem')+gems;return s}
+function priceTag(gems,owned,on,trying,season,level){const s=el('span','cos-price'+(on?' on':owned?' own':'')+(trying?' trying':'')+((season||level)&&!owned?' season':''));if(on)s.textContent='IN USE';else if(owned)s.textContent=gems||season||level?'OWNED':'FREE';else if(trying)s.textContent='TRYING ON';else if(level)s.innerHTML=iconHTML('crown')+`LEVEL ${level}`;else if(season)s.innerHTML=iconHTML('trophy')+SEASON_NAMES[season];else s.innerHTML=iconHTML('gem')+gems.toLocaleString();return s}
 function cosShort(card,need){card.classList.remove('nope');void card.offsetWidth;card.classList.add('nope');gameSound.effect('warn');const p=card.querySelector('.cos-price');if(p){const old=p.innerHTML;p.innerHTML=`NEED ${iconHTML('gem')}${need-(save.gems||0)}`;setTimeout(()=>{if(p.isConnected)p.innerHTML=old},1200)}}
 function cosChanged(){persist();refreshMeta();renderProfile();if(typeof online!=='undefined')online.publish();if(typeof refreshOnline==='function')refreshOnline(false)}
 refreshMeta();
