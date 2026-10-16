@@ -1,4 +1,4 @@
-# Skybound — Balloon Arcade
+# Fly Up — Balloon Arcade
 
 A full-screen, touch-friendly balloon arcade game. Pick one of six stages, cut the
 rope and climb as high as you can.
@@ -186,7 +186,7 @@ With online play switched on:
   cloud. LOG IN signs in to an account they already have.
 - An account that has a username never asks for one again, whether you log out and back in or switch
   devices. Only an older account that never picked one is asked once, when you log in.
-- Signing up with a Google account that already has a Skybound account asks first: CANCEL (stay a guest,
+- Signing up with a Google account that already has a Fly Up account asks first: CANCEL (stay a guest,
   nothing changes) or SIGN IN with that account (skins and best scores from this device are added to it).
   Nothing is written to the cloud until the account is confirmed.
 - SIGN OUT (Settings, after a confirmation) saves the latest progress to the account, then wipes it from
@@ -622,6 +622,6 @@ Coins, skins, cards, boxes, lives, bests, high scores and stars are saved in the
   and give it a selection pose in SKIN_POSES.
 
 ## License
-Copyright (c) 2026 nikezaxo. All rights reserved. Skybound's code, art, sounds and other content are not open
+Copyright (c) 2026 nikezaxo. All rights reserved. Fly Up's code, art, sounds and other content are not open
 source: being public on GitHub gives nobody permission to copy, modify, reuse, host or share any of it without the
 owner's written permission. See [LICENSE](LICENSE). You are welcome to play the game at https://nikezaxo.github.io/Balloon/.
