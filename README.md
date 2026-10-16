@@ -445,6 +445,11 @@ boss; P or Escape pauses.
   power with a cinematic intro — the action freezes, rays spin and the balloon
   zooms in with sunglasses — then a rocket engine smashes through everything for
   3.5 seconds.
+- HOLDING ITS BREATH: through the engine boost and turbo (and their intros), and while it gulps
+  a beaten boss's coins, every skin takes a big breath and holds it. It swells up rounder and
+  about a sixth bigger from its knot, trembling a little, with puffed-out cheeks and pressed lips
+  (sunglasses stay on). Grabbing coins then makes it swell a little more instead of squeezing it
+  thin. When the boost ends or the last coin is in, it lets the air out with a small puff.
 - Rare power-ups (in every eighth gap between coin rows): coin magnet, bubble shield, turbo and
   DOUBLE COINS (every coin counts twice for 15 seconds; the coin
   counter glows and an x2 timer shows in the HUD).
