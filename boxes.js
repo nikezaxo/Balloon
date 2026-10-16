@@ -54,7 +54,7 @@ function applyBox(items){save.cards={...(save.cards||{})};
  for(const it of items){if(it.type==='coins')save.coins+=it.n;else if(it.type==='gems')save.gems=(save.gems||0)+it.n;
   else if(it.type==='ticket'){const k='x'+it.mult;save.tickets={...(save.tickets||{}),[k]:((save.tickets||{})[k]||0)+1}}
   else{it.from=cardsOf(it.id);it.to=it.from+it.n;save.cards[it.id]=it.to;if(it.to>=CARD_NEED[it.rar]&&!save.skins.includes(it.id)){save.skins.push(it.id);it.unlock=true}}}
- save.boxesOpened=(save.boxesOpened||0)+1;persist();refreshMeta()}
+ save.boxesOpened=(save.boxesOpened||0)+1;persist();if(typeof checkMedals==='function')checkMedals();refreshMeta()}
 // src: 'stock' (a box you have), 'buy' (pay for it now) or 'gift' (a reward opened straight away).
 function openBox(kind,src='stock'){const B=BOXES[kind];if(boxRun||!B)return false;
  if(src==='stock'){if(boxCount(kind)<1)return false;save.boxes={...save.boxes,[kind]:boxCount(kind)-1}}

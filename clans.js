@@ -102,6 +102,7 @@ function showProfile(uid,fallback){if(!online.configured())return;const card=$('
 function playerCard(body,p,partial){body.replaceChildren();const head=el('div','pc-head'),who=el('div','pc-who');head.append(avatarEl(p,92,'big'));who.append(nameEl(p.name,p.gold,p.clanTag,'profile-name'));
  if(p.clanName)who.append(el('small','profile-clan',`CLAN: ${p.clanName}`));who.append(el('small','',`FLIES: ${((SKINS[p.skin]||{}).name||'Classic').toUpperCase()}`));head.append(who);body.append(head);
  if(p.level&&typeof levelBox==='function')body.append(levelBox(p.meters,p.level));
+ if(p.medals&&typeof medalRow==='function'){const r=medalRow(p.medals);if(r)body.append(el('small','clan-label pc-medal-label','MEDALS'),r)}
  if(typeof tierOf==='function'){const sn=seasonOf(),r=p.seasonId===sn.id&&p.sp>0?tierOf(p.sp,p.legend):null,box=el('div','pc-season'),t=el('div','pc-season-text');
   box.append(emblemEl(r||{tier:TIERS[0],ti:0},50,!!(r&&r.legend)));t.append(el('small','',`SEASON ${sn.n} RANK`));if(r)t.append(rankLabel(r),el('b','pc-sp',`${p.sp.toLocaleString()} SP`));else t.append(el('b','pc-sp','NOT RANKED YET'));box.append(t);if(!r)box.classList.add('none');body.append(box);
   // Past seasons: "S1:6:8400" = season 1, finished in tier 6 (Star Legend) with 8,400 SP.
