@@ -84,7 +84,8 @@ function trackTask(stat,amount=1){if(!amount)return;seasonState();if(typeof life
  for(const d of t.daily){const def=DAILY_TASKS[d.k];if(def.stat!==stat||d.c)continue;const goal=def.goals[d.g],was=d.p;d.p=max?Math.max(d.p,amount):d.p+amount;if(was<goal&&d.p>=goal){seasonToast.push(`TASK DONE: ${def.text(goal).toUpperCase()}`);if(seasonRun)seasonRun.done++}}
  const bt=t.boxTask;if(bt&&!bt.c&&BOX_TASKS[bt.k].stat===stat){const goal=BOX_TASKS[bt.k].goal,w=bt.p;bt.p=max?Math.max(bt.p,amount):bt.p+amount;if(w<goal&&bt.p>=goal){seasonToast.push('BOX TASK DONE! CLAIM YOUR BOX');if(seasonRun)seasonRun.done++}}
  const was=t.st[stat]||0;t.st[stat]=max?Math.max(was,amount):was+amount;for(const s of SEASON_TASKS)if(s.stat===stat&&was<s.goal&&t.st[stat]>=s.goal&&!t.sc.includes(s.id)){seasonToast.push(`SEASON TASK DONE: ${s.text.toUpperCase()}`);if(seasonRun)seasonRun.done++}
- if(state==='flying'&&seasonToast.length){for(const msg of seasonToast)popup(x*W,balloonY()-120,msg,'#7ef08f',18);seasonToast=[];gameSound.effect('milestone')}}
+ // Task notices show in flight only during the tutorial; otherwise the results screen reports them.
+ if(state==='flying'&&seasonToast.length){if(typeof tipsOn==='function'&&tipsOn()){for(const msg of seasonToast)popup(x*W,balloonY()-120,msg,'#7ef08f',18);gameSound.effect('milestone')}seasonToast=[]}}
 const tasksReady=()=>{seasonState();const t=save.tasks;return t.daily.filter(d=>!d.c&&d.p>=DAILY_TASKS[d.k].goals[d.g]).length+SEASON_TASKS.filter(s=>!t.sc.includes(s.id)&&(t.st[s.stat]||0)>=s.goal).length+(!t.bonus&&t.daily.every(d=>d.c)?1:0)+(t.boxTask&&!t.boxTask.c&&t.boxTask.p>=BOX_TASKS[t.boxTask.k].goal?1:0)+(typeof levelClaimable==='function'?levelClaimable():0)};
 // Rewards: coins, gems and season points; season points can promote you, and each new division pays out.
 let rankUps=[];

@@ -95,7 +95,7 @@ const tornadoTop=()=>boss?boss.y+40:0,tornadoHalf=(s,y)=>s.w*.5*(1.4-.8*clamp((y
 function segDist(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy||1,k=clamp(((px-ax)*dx+(py-ay)*dy)/l,0,1);return Math.hypot(px-ax-dx*k,py-ay-dy*k)}
 const ATTACKS={
  // THUNDER KING: lightning strikes, a tornado that drags you towards it, and gusts that blow you (and storm debris) sideways.
- lightning(b){for(let i=0;i<2;i++)later(b,i*.7,()=>{bossShot(b,{kind:'strike',style:'bolt',x:i<1?x*W:rand(.15,.85)*W,w:40,warn:1,dur:.28});gameSound.effect('zap')});return 15},
+ lightning(b){for(let i=0;i<2;i++)later(b,i*.9,()=>{bossShot(b,{kind:'strike',style:'bolt',x:i<1?x*W:rand(.15,.85)*W,w:38,warn:1.25,dur:.26});gameSound.effect('zap')});return 15},
  tornado(b){const fromLeft=x>.5;bossShot(b,{kind:'tornado',x0:fromLeft?W*.1:W*.9,x1:fromLeft?W*.78:W*.22,x:fromLeft?W*.1:W*.9,w:54,warn:1.1,dur:3.4/b.sp,pull:.35});gameSound.effect('nitro');return 15},
  gust(b){const dir=x>.5?1:-1;b.wind={dir,time:2.6};popup(W/2,H*.45,dir>0?'GUST >>>':'<<< GUST','#bff4ff',34);gameSound.effect('boost');
   const offs=[0,-85,85].sort(()=>Math.random()-.5);for(let i=0;i<3;i++)later(b,.35+i*.6,()=>{const y=clamp(balloonY()+offs[i],H*.46,H*.84);bossShot(b,{style:i===1?'branch':'leaf',x:dir>0?-30:W+30,y,vx:dir*165*b.sp,vy:rand(-15,15),r:11,life:4})});return 14},
@@ -121,55 +121,51 @@ const ATTACKS={
  comets(b){for(let i=0;i<3;i++)later(b,i*.7,()=>{const fromLeft=Math.random()<.5;bossShot(b,{kind:'comet',y:clamp(balloonY()+rand(-60,60),H*.46,H*.84),dir:fromLeft?1:-1,x:fromLeft?-80:W+80,v:560*b.sp,r:12,warn:.8})});gameSound.effect('whoosh');return 15},
  // ---- Special skills (one per boss) ----
  // Thunder King: two storm orbs joined by a crackling arc sweep down the screen (a second sweep once enraged); get outside them.
- chain(b){for(let i=0;i<(b.rage?2:1);i++)later(b,i*2.2,()=>{const c=rand(.35,.65)*W;bossShot(b,{kind:'chain',c,y:b.y+40*b.scale,vy:100*b.sp,d0:rand(.08,.11)*W,d1:.2*W,ph:rand(0,TAU),r:13});gameSound.effect('zap')});return 18},
+ chain(b){for(let i=0;i<(b.rage?2:1);i++)later(b,i*2.2,()=>{const c=rand(.35,.65)*W;bossShot(b,{kind:'chain',c,y:b.y+40*b.scale,vy:100*b.sp,d0:rand(.07,.1)*W,d1:.17*W,ph:rand(0,TAU),r:13});gameSound.effect('zap')});return 18},
  // Tiki Titan: a cone of fire sweeps across below it; fly low, out of its reach.
  breath(b){const fromLeft=Math.random()<.5,m=mouth(b);bossShot(b,{kind:'breath',x:m.x,y:m.y,a0:Math.PI*(fromLeft?.85:.15),a1:Math.PI*(fromLeft?.15:.85),ang:Math.PI*(fromLeft?.85:.15),half:.2,len:H*.4,warn:1.1,dur:2.2});gameSound.effect('roar');return 18},
  // Bat Queen: the lights go out, only a little glow around you, and bats with glowing eyes hunt you in the dark.
- blackout(b){b.dark={t:0,dur:5.2};popup(W/2,H*.5,'LIGHTS OUT!','#ff9ad5',34);for(let i=0;i<4;i++)later(b,.8+i*.8,()=>{const fromLeft=i%2===0;bossShot(b,{style:'eyebat',x:fromLeft?-20:W+20,y:rand(H*.45,H*.8),vx:(fromLeft?1:-1)*110*b.sp,vy:0,r:10,home:2.4,turn:1.5,life:5})});gameSound.effect('sting');return 18},
+ blackout(b){b.dark={t:0,dur:5.2};if(tipsOn())popup(W/2,H*.5,'LIGHTS OUT!','#ff9ad5',34);for(let i=0;i<4;i++)later(b,.8+i*.8,()=>{const fromLeft=i%2===0;bossShot(b,{style:'eyebat',x:fromLeft?-20:W+20,y:rand(H*.45,H*.8),vx:(fromLeft?1:-1)*110*b.sp,vy:0,r:10,home:2.4,turn:1.5,life:5})});gameSound.effect('sting');return 18},
  // Mecha Crusher: giant pistons slam in from both sides at your height, leaving one gap.
  press(b){for(let i=0;i<2;i++)later(b,i*1.6,()=>{bossShot(b,{kind:'press',y:clamp(balloonY()+rand(-30,30),H*.48,H*.82),band:46,gap:rand(.25,.75)*W,gw:100,warn:1.1,slam:.14,hold:.5,back:.3,k:0});gameSound.effect('siren')});return 18},
  // UFO Overlord: a beam locks on and follows you, lifting you up; stay in it too long and you are abducted.
- abduct(b){bossShot(b,{kind:'abduct',x:x*W,w:86,warn:.9,dur:3.2,pull:H*.5,held:0});popup(W/2,H*.5,'ESCAPE THE BEAM!','#7cf08a',28);gameSound.effect('zap');return 18},
+ abduct(b){bossShot(b,{kind:'abduct',x:x*W,w:86,warn:.9,dur:3.2,pull:H*.5,held:0});if(tipsOn())popup(W/2,H*.5,'ESCAPE THE BEAM!','#7cf08a',28);gameSound.effect('zap');return 18},
  // Star Devourer: stars appear around you, then laser lines join them like a constellation.
  constellation(b){const pts=[];for(let i=0;i<5;i++){let p,tries=0;do{p={x:rand(.1,.9)*W,y:rand(H*.46,H*.84)};tries++}while(tries<25&&pts.some(q=>Math.hypot(q.x-p.x,q.y-p.y)<90));pts.push(p)}pts.sort((a,c)=>a.x-c.x);bossShot(b,{kind:'stars',pts,warn:1.3,dur:1.1});gameSound.effect('star',2);return 18}};
 
-// ---------- Free Run boss ranks ----------
-// Every boss wears a rank badge. In Free Run each win brings it back one rank higher the next time (kept on your
-// account): angrier, better armoured, shinier and tougher, from SERGEANT I up to GENERAL. Campaign bosses show their
-// rank from how often you beat them (up to LIEUTENANT I), without getting any harder than before.
-const BOSS_RANKS=['SERGEANT I','SERGEANT II','SERGEANT III','LIEUTENANT I','LIEUTENANT II','LIEUTENANT III','CAPTAIN I','CAPTAIN II','CAPTAIN III','GENERAL'];
-const bossRankOf=id=>Math.min(BOSS_RANKS.length,((save.freeRanks||{})[id]||0)+1);
-const campaignRankOf=id=>Math.min(4,((save.bossWins||{})[id]||0)+1);
-// 0 sergeant (bronze chevrons), 1 lieutenant (steel armour, silver bars), 2 captain (gold armour, stars), 3 general.
-const rankTier=r=>r>=10?3:r>=7?2:r>=4?1:0,BOSS_RANK_COLS=[['#ffcf9a','#c9712a','#ff6a3a'],['#eef3fb','#8a96ae','#9fc4ff'],['#fff3a0','#e0a000','#ffd23f'],['#ffd0f4','#d94ae0','#ff4fd8']];
-// Drawn over the boss art inside its buffer: armour tint, a red flush that deepens with rank, and a moving shine.
-function rankTint(r,t){const tier=rankTier(r);ctx.save();ctx.globalCompositeOperation='source-atop';
- if(tier)ctx.fillStyle=['','rgba(165,185,220,.24)','rgba(255,196,50,.28)','rgba(255,80,60,.26)'][tier],ctx.fillRect(-180,-180,360,360);
- ctx.fillStyle=`rgba(255,30,30,${Math.min(.16,.025*(r-1))})`;ctx.fillRect(-180,-180,360,360);
- const k=(t*.45)%1.8-.4;ctx.rotate(-.5);ctx.fillStyle=`rgba(255,255,255,${.22+.08*tier})`;ctx.fillRect(-200+k*400,-300,22+8*tier,600);ctx.fillRect(-170+k*400,-300,6+2*tier,600);ctx.restore()}
-// Behind the boss: a glow in the rank colour (with turning rays from captain up).
-function rankAura(r,t){const tier=rankTier(r),c=BOSS_RANK_COLS[tier][2];if(tier>=2)sunburst(0,0,200,14,c,.13+.05*(tier-2),.35);glow(0,0,175,c,Math.min(.55,.16+.035*r))}
-// In front: angry steam puffs (from rank II) and a throbbing anger mark (from rank III), and the rank badge at the
-// bottom right (like a level badge).
-function rankBadge(r,t){const tier=rankTier(r),[c0,c1]=BOSS_RANK_COLS[tier],n=tier===3?1:(r-1)%3+1;
+// ---------- Boss ranks ----------
+// Every boss has five rank levels, SERGEANT I to V, shown by the same chevron badge on every boss (one chevron per
+// level). Each game starts at level I. Campaign: every boss you beat comes back one level higher, and beating the
+// level V boss wins the stage. Free Run: each lap through the six stages raises every boss one level, and after a
+// lap of level V bosses it starts again at level I, so a Free Run never ends. Higher levels look angrier and better
+// armoured and fight harder.
+const BOSS_MAX=5,BOSS_RANKS=['SERGEANT I','SERGEANT II','SERGEANT III','SERGEANT IV','SERGEANT V'];
+const bossRankNow=()=>runMode==='free'?freeLap%BOSS_MAX+1:Math.min(BOSS_MAX,bossKills+1);
+// Drawn over the boss art inside its buffer: a red flush from level III, steel armour at IV and gold at V, with a moving shine.
+function rankTint(r,t){ctx.save();ctx.globalCompositeOperation='source-atop';
+ if(r>=4)ctx.fillStyle=r>=5?'rgba(255,196,50,.28)':'rgba(165,185,220,.24)',ctx.fillRect(-180,-180,360,360);
+ if(r>=3)ctx.fillStyle=`rgba(255,30,30,${.05+.03*(r-3)})`,ctx.fillRect(-180,-180,360,360);
+ if(r>=4){const k=(t*.45)%1.8-.4;ctx.rotate(-.5);ctx.fillStyle=`rgba(255,255,255,${r>=5?.34:.26})`;ctx.fillRect(-200+k*400,-300,r>=5?34:26,600);ctx.fillRect(-170+k*400,-300,8,600)}ctx.restore()}
+// Behind the boss from level IV: a glow (with turning rays at level V).
+function rankAura(r,t){if(r<4)return;const c=r>=5?'#ffd23f':'#9fc4ff';if(r>=5)sunburst(0,0,200,14,c,.16,.35);glow(0,0,175,c,r>=5?.42:.28)}
+// In front: steam puffs from level II, a throbbing anger mark from level III, and the rank badge at the bottom
+// right (like a level badge): the same bronze shield on every boss with one chevron per level.
+function rankBadge(r,t){
  if(r>=2)for(const s of [-1,1]){const q=(t*.9+(s>0?.5:0))%1;ctx.save();ctx.globalAlpha=(1-q)*.85;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s*(78+q*16),-82-q*34,7+q*9,0,TAU);ctx.fill();ctx.restore()}
  if(r>=3){const p=1+.15*Math.sin(t*9);ctx.save();ctx.translate(64,-74);ctx.scale(p,p);ctx.strokeStyle='#ff2a3a';ctx.lineWidth=4.5;ctx.lineCap='round';for(let i=0;i<4;i++){ctx.rotate(Math.PI/2);ctx.beginPath();ctx.moveTo(3,-3);ctx.quadraticCurveTo(9,-3,10,-9);ctx.stroke()}ctx.restore()}
- ctx.save();ctx.translate(86,64);ctx.rotate(Math.sin(t*1.6)*.06);const g=ctx.createLinearGradient(0,-24,0,28);g.addColorStop(0,c0);g.addColorStop(1,c1);
- ctx.beginPath();ctx.moveTo(-23,-21);ctx.lineTo(23,-21);ctx.lineTo(23,3);ctx.quadraticCurveTo(23,21,0,30);ctx.quadraticCurveTo(-23,21,-23,3);ctx.closePath();ctx.fillStyle=g;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.lineJoin='round';ctx.stroke();
- ctx.fillStyle=INK;ctx.strokeStyle=INK;ctx.lineCap='round';
- if(tier===0)for(let i=0;i<n;i++){const y=-8+i*9-(n-1)*2;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-12,y+6);ctx.lineTo(0,y-2);ctx.lineTo(12,y+6);ctx.stroke()}
- else if(tier===1)for(let i=0;i<n;i++)ctx.fillRect(-13,-10+i*9-(n-1)*2,26,5.5);
- else if(tier===2)for(let i=0;i<n;i++){ctx.fillStyle='#fff';star(n===1?0:(i-(n-1)/2)*13,2,7.5,3.2,5);ctx.fill();ctx.lineWidth=2;ctx.stroke()}
- else{glow(0,2,26,'#fff3a0',.8);ctx.fillStyle='#ffe46b';star(0,3,15,6.5,5);ctx.fill();ctx.lineWidth=2.5;ctx.stroke()}ctx.restore()}
+ ctx.save();ctx.translate(86,62);ctx.rotate(Math.sin(t*1.6)*.06);if(r>=5)glow(0,4,40,'#ffd23f',.55);const g=ctx.createLinearGradient(0,-24,0,30);g.addColorStop(0,'#ffe0a8');g.addColorStop(1,'#c9712a');
+ ctx.beginPath();ctx.moveTo(-24,-23);ctx.lineTo(24,-23);ctx.lineTo(24,3);ctx.quadraticCurveTo(24,23,0,33);ctx.quadraticCurveTo(-24,23,-24,3);ctx.closePath();ctx.fillStyle=g;ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=4;ctx.lineJoin='round';ctx.stroke();
+ ctx.strokeStyle=INK;ctx.lineWidth=4.2;ctx.lineCap='round';const n=Math.max(1,Math.min(BOSS_MAX,r)),gap=6.2;
+ for(let i=0;i<n;i++){const y=4-(n-1)*gap/2+i*gap,hw=11-Math.max(0,y-8)*.25;ctx.beginPath();ctx.moveTo(-hw,y+5);ctx.lineTo(0,y-2);ctx.lineTo(hw,y+5);ctx.stroke()}ctx.restore()}
 // The boss art with its rank look (rank I is the plain art with its one-chevron badge).
 function rankedArt(b,o){const r=b.rank||0;if(r<2){b.def.art(o);if(r)rankBadge(r,o.t);return}if(!bossBuf)bossBuf=document.createElement('canvas');bossBuf.width=720;bossBuf.height=720;const c=bossBuf.getContext('2d'),main=ctx;c.setTransform(2,0,0,2,360,360);ctx=c;b.def.art(o);rankTint(r,o.t);ctx=main;rankAura(r,o.t);ctx.drawImage(bossBuf,-180,-180,360,360);rankBadge(r,o.t)}
 
 // ---------- Fight flow ----------
 // Difficulty: tier is how many bosses this run has beaten (up to 11), level how often this stage's boss was beaten
 // before (up to 3). sp speeds up shots and attacks, tough scales the stamina each attack costs, drain is stamina per second.
-// In Free Run the boss's rank sets level instead and adds a little more on top for every rank.
-function startBoss(){const def=BOSSES[stage.id]||BOSSES.sky,free=runMode==='free',rank=free?bossRankOf(stage.id):campaignRankOf(stage.id),up=free?rank-1:0,level=free?Math.min(3,up):save.bossWins&&save.bossWins[stage.id]?Math.min(3,save.bossWins[stage.id]):0,tier=Math.min(11,bossKills);
- boss={def,rank,phase:'clear',age:0,animT:0,clock:0,x:W/2,y:-220,scale:Math.min(1,W/430),stamina:100,shots:[],timers:[],cool:1.2,last:-1,attack:0,level,tier,sp:Math.min(1.75,.95+.055*tier+.03*level+.03*up),tough:.36-.01*tier-.007*up,drain:Math.max(.45,.8-.02*tier-.02*up),combo:Math.min(.8,.35+.04*tier),rage:false,rageAt:0,specials:0,nextSpecial:0,dark:null,pace:1,wind:null,fatal:null,hidden:false,freeze:false};
+// The rank level (I to V) sets the difficulty; the Thunder King, the first boss players meet, is a little gentler.
+function startBoss(){const def=BOSSES[stage.id]||BOSSES.sky,rank=bossRankNow(),up=rank-1,level=up,tier=Math.min(11,bossKills),ease=def===BOSSES.sky?.86:1;
+ boss={def,rank,phase:'clear',age:0,animT:0,clock:0,x:W/2,y:-220,scale:Math.min(1,W/430),stamina:100,shots:[],timers:[],cool:1.2,last:-1,attack:0,level,tier,sp:(.88+.08*up)*ease,tough:.36-.012*up,drain:.8-.035*up,combo:Math.min(.7,(.28+.08*up)*ease),rage:false,rageAt:0,specials:0,nextSpecial:0,dark:null,pace:1,wind:null,fatal:null,hidden:false,freeze:false};
  for(const o of obstacles)if(o.leaving===undefined)o.leaving=0;for(const h of critters){if(h.dormant)h.gone=true;else knock(h,critterPos(h))}critters=critters.filter(h=>!h.gone);
  closeCoinRow();announce('WARNING!','BOSS INCOMING','power','skull');announcer('boss');gameSound.effect('siren');shake=Math.max(shake,6)}
 function setPhase(p){boss.phase=p;boss.age=0}
@@ -228,7 +224,7 @@ function updateBoss(dt,real){caveWallScale+=((boss&&boss.phase!=='done'?.15:1)-c
  if(b.phase==='fight'){b.clock+=dt;b.x+=(homeX-b.x)*Math.min(1,dt*3);b.y+=(homeY-b.y)*Math.min(1,dt*3);
   for(const tm of b.timers)if(b.clock>=tm.at){tm.done=true;tm.fn()}b.timers=b.timers.filter(tm=>!tm.done);
   b.stamina-=dt*b.drain;if(b.dark&&(b.dark.t+=dt)>b.dark.dur)b.dark=null;
-  if(!b.rage&&b.stamina<50){b.rage=true;b.rageAt=b.clock;b.sp*=1.15;announce('ENRAGED!','IT GETS FASTER','power','skull');gameSound.effect('roar');bossVoice('taunt');shake=Math.max(shake,12)}
+  if(!b.rage&&b.stamina<50){b.rage=true;b.rageAt=b.clock;b.sp*=1.15;if(tipsOn())announce('ENRAGED!','IT GETS FASTER','power','skull');gameSound.effect('roar');bossVoice('taunt');shake=Math.max(shake,12)}
   if((b.cool-=dt)<=0&&b.stamina>0&&specialDue(b)){const sp=b.def.special;b.specials++;b.nextSpecial=b.clock+16-Math.min(5,Math.max(0,(b.rank||1)-1)*.6);announce(sp.name,'SPECIAL SKILL','power','skull');bossVoice('taunt');gameSound.effect('sting');shake=Math.max(shake,10);b.stamina-=ATTACKS[sp.id](b)*b.tough;b.attack=1;b.cool=rand(4,4.6)/b.sp}
   else if(b.cool<=0&&b.stamina>0){const k=pickAttack(b);b.stamina-=ATTACKS[b.def.attacks[k]](b)*b.tough;b.attack=1;b.cool=rand(3,3.6)/b.sp*(b.rage?.75:1);
    // Enraged bosses chain a second, different attack.
@@ -270,14 +266,14 @@ function bossHit(s){if(smashing()){if(isBullet(s)){s.dead=true;burst(s.x,s.y,8,{
 function startFatality(){if(!boss||boss.phase!=='tired'||state!=='flying')return;const def=FATALITIES[save.skin]||FATALITIES.classic;setPhase('fatality');boss.fatal={def,p:0,pose:{},balloon:null,fired:new Set(),at(th,fn){if(this.p>=th&&!this.fired.has(th)){this.fired.add(th);fn()}}};announce(def.name,'FATALITY!','fatal','skull');gameSound.effect('fatality');announcer('fatality');sayVoice('fatality',{force:true,delay:1.1});bossVoice('defeat',1.4);shake=Math.max(shake,8)}
 function bossDefeated(){const b=boss,reward=500+100*b.level+(save.skin==='gold'?100:0);spawnRewardCoins(b,reward);bonus+=PTS.boss;bossKills++;tally('bosses');popup(W/2,H*.5,`+${PTS.boss.toLocaleString()}`,'#fff',40);
  save.bossWins=save.bossWins||{};save.bossWins[stage.id]=(save.bossWins[stage.id]||0)+1;
- if(runMode==='free'){save.freeRanks=save.freeRanks||{};save.freeRanks[stage.id]=(save.freeRanks[stage.id]||0)+1}
- {const nr=runMode==='free'?bossRankOf(stage.id):campaignRankOf(stage.id);if(nr>(b.rank||1))later(b,1.6,()=>popup(W/2,H*.62,`${b.def.name} WILL RETURN AS ${BOSS_RANKS[nr-1]}!`,BOSS_RANK_COLS[rankTier(nr)][2],20))}
+ // Boss medals: the highest rank level each boss has been beaten at.
+ save.bossTop=save.bossTop||{};save.bossTop[stage.id]=Math.max(save.bossTop[stage.id]||0,b.rank||1);if(typeof checkMedals==='function')checkMedals();
  // Campaign: beating a stage's boss clears it and unlocks the next stage.
  persist();
  announce('BOSS DEFEATED!',`+${reward} COINS`,'record','trophy');confetti(50);gameSound.effect('record');sayVoice('win',{force:true,delay:.3});b.hidden=true;b.shots=[];setPhase('done')}
 // Free Run: after each boss the run flies on into the next stage (and back to the first after the last).
-function nextFreeStage(){const next=STAGES[(STAGES.indexOf(stage)+1)%STAGES.length];stage=next;caveWallScale=0;transition={age:0,dur:1.2};refreshMeta();announce(next.name,'NEXT STAGE','stage',next.icon);gameSound.effect('zone');if(sound)preloadVoices()}
-function endBoss(){boss=null;if(runMode==='free')nextFreeStage();nextBossTime=flightTime+BOSS_GAP;nextObstacle=alt+H/worldScale*.95;prevLedge={a:nextObstacle-300,c:.5};coinCursor=Math.max(coinCursor,nextObstacle-260)}
+function nextFreeStage(){const next=STAGES[(STAGES.indexOf(stage)+1)%STAGES.length];if(next===STAGES[0])freeLap++;stage=next;caveWallScale=0;transition={age:0,dur:1.2};refreshMeta();announce(next.name,'NEXT STAGE','stage',next.icon);gameSound.effect('zone');if(sound)preloadVoices()}
+function endBoss(){const r=boss&&boss.rank;boss=null;if(runMode==='campaign'&&r>=BOSS_MAX){conquer();return}if(runMode==='free')nextFreeStage();nextBossTime=flightTime+BOSS_GAP;nextObstacle=alt+H/worldScale*.95;prevLedge={a:nextObstacle-300,c:.5};coinCursor=Math.max(coinCursor,nextObstacle-260)}
 // Boss reward: coins burst out across the screen, hang for a moment, then all fly into the balloon.
 function spawnRewardCoins(b,n){const cx=b.x,cy=Math.max(60,b.y);for(let i=0;i<n;i++){const a=rand(0,TAU),sp=rand(60,560);rewardCoins.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-40,age:0,hold:rand(.7,1.3),phase:rand(0,TAU)})}}
 function updateRewardCoins(real){if(!rewardCoins.length)return;const bx=x*W,by=balloonY()-5;let got=0;
@@ -307,7 +303,7 @@ function drawShot(s){ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
  else if(s.kind==='boomer'){ctx.translate(s.x,s.y);glow(0,0,26,'#ffb020',.35);ctx.rotate(s.age*15);ctx.fillStyle='#c98a4a';ctx.strokeStyle=INK;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-19,9);ctx.quadraticCurveTo(-7,-15,0,-15);ctx.quadraticCurveTo(7,-15,19,9);ctx.lineTo(12,13);ctx.quadraticCurveTo(4,-4,0,-4);ctx.quadraticCurveTo(-4,-4,-12,13);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='#ff4d5e';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-12,2);ctx.lineTo(-8,-6);ctx.moveTo(12,2);ctx.lineTo(8,-6);ctx.stroke()}
  else if(s.kind==='geyser'){if(s.age<s.warn){const a=.4+.3*Math.sin(s.age*26);ctx.fillStyle=`rgba(255,90,30,${a*.25})`;ctx.fillRect(s.x-s.w/2,s.top,s.w,H-s.top);ctx.strokeStyle=INK;ctx.lineWidth=2;for(let k=0;k<4;k++){ctx.fillStyle=k%2?'#ffb020':'#ff5a1f';ctx.beginPath();ctx.arc(s.x+Math.sin(s.age*9+k*2)*s.w*.35,H-8-((s.age*60+k*14)%30),5+k%2*3,0,TAU);ctx.fill();ctx.stroke()}}
   else{const top=H-(H-s.top)*Math.min(1,(s.age-s.warn)/.15),fade=Math.max(0,Math.min(1,(s.warn+s.dur-s.age)/.2));ctx.globalAlpha=fade;const g=ctx.createLinearGradient(0,top,0,H);g.addColorStop(0,'#fff3a0');g.addColorStop(.25,'#ffb020');g.addColorStop(1,'#d8360c');ctx.fillStyle=g;ctx.strokeStyle=INK;ctx.lineWidth=4;const wob=k=>Math.sin(s.age*30+k)*4;ctx.beginPath();ctx.moveTo(s.x-s.w/2+wob(0),H);ctx.lineTo(s.x-s.w/2+wob(1),top+14);ctx.quadraticCurveTo(s.x,top-24,s.x+s.w/2+wob(2),top+14);ctx.lineTo(s.x+s.w/2+wob(3),H);ctx.closePath();ctx.fill();ctx.stroke();ctx.lineWidth=2;for(let k=0;k<5;k++){ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.arc(s.x+Math.sin(s.age*12+k*1.7)*s.w*.7,top-10-((s.age*120+k*20)%50),4,0,TAU);ctx.fill();ctx.stroke()}}}
- else if(s.kind==='breath'){ctx.translate(s.x,s.y);const lo=Math.min(s.a0,s.a1)-s.half,hi=Math.max(s.a0,s.a1)+s.half;if(s.age<s.warn){const a=.5+.4*Math.sin(s.age*24);ctx.fillStyle=`rgba(255,120,40,${a*.16})`;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,s.len,lo,hi);ctx.closePath();ctx.fill();ctx.setLineDash([10,8]);ctx.strokeStyle=`rgba(255,80,40,${a})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,s.len,lo,hi);ctx.stroke();ctx.setLineDash([]);ctx.font=`26px ${FONT}`;ctx.textAlign='center';ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeText('GET LOW!',0,s.len+36);ctx.fillStyle=`rgba(255,255,255,${Math.min(1,a+.3)})`;ctx.fillText('GET LOW!',0,s.len+36)}
+ else if(s.kind==='breath'){ctx.translate(s.x,s.y);const lo=Math.min(s.a0,s.a1)-s.half,hi=Math.max(s.a0,s.a1)+s.half;if(s.age<s.warn){const a=.5+.4*Math.sin(s.age*24);ctx.fillStyle=`rgba(255,120,40,${a*.16})`;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,s.len,lo,hi);ctx.closePath();ctx.fill();ctx.setLineDash([10,8]);ctx.strokeStyle=`rgba(255,80,40,${a})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,s.len,lo,hi);ctx.stroke();ctx.setLineDash([]);if(tipsOn()){ctx.font=`26px ${FONT}`;ctx.textAlign='center';ctx.strokeStyle=INK;ctx.lineWidth=5;ctx.strokeText('GET LOW!',0,s.len+36);ctx.fillStyle=`rgba(255,255,255,${Math.min(1,a+.3)})`;ctx.fillText('GET LOW!',0,s.len+36)}}
   else{const L=s.len*(1+.05*Math.sin(s.age*40)),g=ctx.createRadialGradient(0,0,10,0,0,L);g.addColorStop(0,'rgba(255,255,220,.95)');g.addColorStop(.35,'rgba(255,200,40,.92)');g.addColorStop(.8,'rgba(255,90,20,.78)');g.addColorStop(1,'rgba(200,30,10,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,L,s.ang-s.half,s.ang+s.half);ctx.closePath();ctx.fill();ctx.fillStyle='#ffe680';for(let k=0;k<8;k++){const d=((s.age*300+k*L/8)%L),a=s.ang+Math.sin(s.age*20+k)*s.half*.8;ctx.beginPath();ctx.arc(Math.cos(a)*d,Math.sin(a)*d,3+d/L*5,0,TAU);ctx.fill()}}}
  else if(s.kind==='chain'&&s.xa!==undefined){const n=Math.max(4,Math.round((s.xb-s.xa)/22)),pts=[[s.xa,s.y]];for(let i=1;i<n;i++)pts.push([s.xa+(s.xb-s.xa)*i/n,s.y+(Math.random()-.5)*18]);pts.push([s.xb,s.y]);
   for(const [w,c] of [[18,'rgba(255,240,120,.35)'],[8,INK],[5,'#ffe14a'],[2,'#ffffff']]){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.beginPath();pts.forEach(([px,py],i)=>i?ctx.lineTo(px,py):ctx.moveTo(px,py));ctx.stroke()}

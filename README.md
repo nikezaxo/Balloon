@@ -70,7 +70,8 @@ The MAP button (the big middle button of the bottom bar), or a tap on the stage 
   open. Campaign runs count for the stage's best, stars, and the weekly and all-time boards.
 - FREE RUN: one endless run through every stage. It starts at Sunny Sky; after each boss the run flies
   straight on into the next stage (new backdrop, ledges, creatures and boss), and after Deep Universe it
-  starts again at Sunny Sky, tougher every time. Its bosses have ranks (see BOSS RANKS under Boss fights). It has its own record (FREE RUN in MY BESTS) and its own
+  starts again at Sunny Sky. Each lap its bosses rank up one level (I to V, then back to I; see BOSS RANKS under
+  Boss fights), so it never ends. It has its own record (FREE RUN in MY BESTS) and its own
   world ranking by highest score (the FREE RUN tab of the rankings, freerun/{uid} in Firestore); it
   does not change your stage records. The banner reads FREE RUN with your best; change mode on the map.
 
@@ -97,6 +98,12 @@ the bottom. A rainbow x2 timer shows while the rainbow star's double score lasts
 timer only in the last 20 seconds before a boss, and the wind only when a gust is coming or blowing.
 Your altitude pops up as a big banner only every 100,000 metres (MILESTONE in game.js). During the tutorial the HUD also
 shows the altitude, stage name, wind, speed and the boss timer all the time.
+Messages are kept to what matters (boss warnings and special skills, rewards, stars, medals, records, stage clear,
+revives). Tips and "something appeared" notices show only while the tutorial is on (tipsOn in game.js): the stage
+banner at the start, MYSTERY BOX / RAINBOW STAR appearing, BOOST READY, ENGINE BOOST, COIN RUSH, energy counts,
+SHIELD OFF, DOUBLE COINS OVER, space events (astronaut, UFO and so on), ENRAGED, LIGHTS OUT, ESCAPE THE BEAM, GET
+LOW and task notices in flight (the results screen still reports finished tasks). A mystery box you grab shows a
+small "+1 BOX".
 
 ## Stages
 Every stage is endless, with its own best altitude and medals
@@ -149,7 +156,8 @@ Every run scores points (PTS in game.js):
 - 50,000 for defeating a boss
 
 Stars come from bosses defeated in ONE run (revives keep the count; STAR_BOSSES in game.js):
-beat 3 bosses for 1 star, 6 for 2 stars and 12 for 3 stars. The HUD shows the score with
+beat 1 boss for 1 star, 3 for 2 stars and 5 for 3 stars (in the campaign the fifth is the level V boss, which
+conquers the stage). The HUD shows the score with
 three stars that light up as you earn them (a star flies from the balloon into the meter)
 and a bar towards the next star; when the boss timer shows it counts your kills towards it
 (for example "BOSS 0:12 · 2/3"). Stars you earned before this rule stay earned.
@@ -271,7 +279,8 @@ Like PUBG Mobile, every level needs more than the one before (levelNeed in cosme
   total, whichever is bigger). Signed-in players' levels are saved to their account and public profile.
 
 ## Medals
-Open PROFILE > MEDALS to see the 12 medals. Each one is earned by doing a task over and over, and has five
+Open PROFILE > MEDALS to see the 18 medals: 12 for tasks and one for each of the six bosses. Each task medal is earned
+by doing a task over and over, and has five
 levels. Finishing a level moves the medal up to the next one with a harder goal (SKY EXPLORER I, then II, then III and so on):
 
 | Medal | Task | I | II | III | IV | V |
@@ -289,11 +298,15 @@ levels. Finishing a level moves the medal up to the next one with a harder goal 
 | TASK MASTER | daily tasks done | 15 | 60 | 150 | 400 | 900 |
 | TREASURE HUNTER | boxes opened | 3 | 20 | 60 | 150 | 400 |
 
+Boss medals: THUNDER KING, TIKI TITAN, BAT QUEEN, MECHA CRUSHER, UFO OVERLORD and STAR DEVOURER. Each medal level is
+earned by beating that boss at that rank level (SERGEANT I for level I up to SERGEANT V for level V), in the campaign
+or in Free Run.
+
 - Higher levels look cooler: I is a round BRONZE medal, II a scalloped SILVER one, III a starburst GOLD one,
   IV is FIRE GOLD (animated flame colours, flames and sparks) and V is ROYAL FIRE (fire gold with a halo, wings
   and a crown). Each level pays once: 100 coins, 300 coins, 10 gems, 25 gems, then 60 gems.
 - Medals you have not earned yet are faded grey with a "?" until their first level. Each card shows its level,
-  a progress bar and the next goal; the top shows how many of the 60 medal levels you own.
+  a progress bar and the next goal; the top shows how many of the 90 medal levels you own.
 - Tap a medal to open it big: it spins round in 3D (front, edge, the back with an embossed star, front again),
   with its five levels in a row underneath and what the next level needs.
 - A medal earned mid-run pops up in flight ("MEDAL! SMASHER III"); the results screen shows it with its reward
@@ -395,26 +408,27 @@ boss you beat (BOSS_FIRST and BOSS_GAP in bosses.js; a BOSS timer counts down in
 3. The boss drops in and attacks. Dodge its weapons; each attack and the passing
    time drain its stamina bar slowly (a fight lasts about 40 seconds). Below half
    stamina it gets ENRAGED: the bar turns red, it attacks faster and often chains a
-   second attack right after the first. Every boss you beat in the same run makes the
-   next one faster and more likely to combo (the bar shows which boss of the run it is,
-   e.g. #3). Boosts and shields protect you as usual.
+   second attack right after the first. The boss's rank level (below) sets how fast it
+   attacks and how often it combos. Boosts and shields protect you as usual.
 4. At zero stamina the boss is TIRED (dizzy and sweating). Tap FATALITY (or press
    F, Space or Enter) to finish it with your skin's fatality.
-5. Defeat bursts 500 coins across the screen (+100 per earlier win against that
-   boss, +100 with the Golden King skin); they all fly into your balloon, then the
-   course resumes. Repeat wins against a stage's boss also make it slightly faster.
+5. Defeat bursts 500 coins across the screen (+100 for each rank level above I,
+   +100 with the Golden King skin); they all fly into your balloon, then the course
+   resumes.
 
-BOSS RANKS. Every boss wears a rank badge at its bottom right (BOSS_RANKS in bosses.js): SERGEANT I, II and III
-(bronze chevrons), LIEUTENANT I, II and III (silver bars), CAPTAIN I, II and III (gold stars) and GENERAL (a big glowing
-star). The rank shows in the boss bar and the versus splash ("JUNGLE BOSS · SERGEANT II").
-- FREE RUN: every boss starts at SERGEANT I, and each time you beat it there it comes back one rank higher the next
-  time you meet it ("TIKI TITAN WILL RETURN AS SERGEANT II!"), kept on your account. Each rank looks angrier, better
-  armoured and shinier: steam puffs from rank II, a throbbing anger mark from rank III, steel armour from lieutenant,
-  gold armour with turning rays from captain and a glowing aura at general, with a shine sweeping across. Each rank
-  also attacks faster, loses stamina more slowly and uses its special skill more often. The FREE RUN tab of the
-  map lists every boss's rank.
-- CAMPAIGN: a boss's rank grows with how often you have beaten it (up to LIEUTENANT I) and looks the part, but it
-  gets no harder than before.
+BOSS RANKS. Every boss has five rank levels, SERGEANT I to V (BOSS_RANKS in bosses.js), shown by the same bronze
+shield badge at its bottom right on every boss, with one chevron per level, and in the boss bar and the versus splash
+("JUNGLE BOSS · SERGEANT II"). Every game starts at level I:
+- CAMPAIGN: each boss you beat comes back one level higher (I, II, III, IV, V). Beating the level V boss CONQUERS
+  the stage: the run ends in celebration with "CONQUERED!" and three stars.
+- FREE RUN: the first lap through the six stages has every boss at level I, the second lap level II, and so on up
+  to level V; after a lap of level V bosses it starts again at level I, so a Free Run never ends.
+- Higher levels look angrier and better armoured: steam puffs from level II, a throbbing anger mark and a red flush
+  from level III, steel armour with a sweeping shine at level IV, and gold armour with turning rays and a glow at
+  level V. They also attack faster, combo more and lose stamina more slowly. The Thunder King (the first boss
+  players meet) is a little gentler at every level: its attacks are slower, its second lightning strike is not
+  aimed at you and its chain lightning spans at most about a third of the screen.
+- BOSS MEDALS: each boss has its own medal (PROFILE > MEDALS), one medal level for every rank level you beat it at.
 
 Bosses, weapons and SPECIAL SKILLS. Every boss has three weapons of its own and one special skill that no other
 boss uses (ATTACKS in bosses.js). The special skill comes with a SPECIAL SKILL banner: first when the boss's stamina
@@ -425,7 +439,7 @@ drops below 70, again just after it gets enraged, then every 16 seconds.
     so fly to that edge.
   - A GUST blows you sideways (wind streaks show it) while leaves and branches fly across.
   - Special CHAIN LIGHTNING: two storm orbs joined by a crackling arc sweep slowly down the screen (a second sweep
-    once enraged). The arc never spans more than 40% of the width, so there is always room beside it.
+    once enraged). The arc never spans more than about a third of the width, so there is always room beside it.
 - TIKI TITAN (Jungle Island):
   - A BOOMERANG axe loops out to where you were and comes back (two once enraged).
   - COCONUT BOMBS fall and burst high up into five slower splinters, leaving time to dodge.
