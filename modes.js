@@ -17,11 +17,8 @@ function renderMap(){const list=$('#panel-list'),tab=mapTab||(save.mode==='free'
    card.onclick=()=>{if(!open){card.classList.remove('nope');void card.offsetWidth;card.classList.add('nope');gameSound.effect('warn');return}save.mode='campaign';persist();closePanel();if(stage!==s)setStage(i);else reset('menu');gameSound.effect('on')};path.append(card)});
   list.append(path)}
  else{const best=save.freeBest||0,card=el('div','free-card'),tx=el('div','free-text');card.innerHTML=`<span class="free-ico">${icon('rocket')}</span>`;
-  tx.append(el('b','','FREE RUN'),el('p','','One endless run through all six stages. Beat each boss to fly on to the next stage. After Deep Universe it starts again, tougher.'),el('small','free-best',best?`YOUR BEST ${best.toLocaleString()}`:'NO FREE RUN YET'));card.append(tx);list.append(card);
+  tx.append(el('b','','FREE RUN'),el('p','','One endless run through all six stages. Beat each boss to fly on to the next stage. Every lap the bosses rank up one level, SERGEANT I to V, then it starts again at level I: it never ends.'),el('small','free-best',best?`YOUR BEST ${best.toLocaleString()}`:'NO FREE RUN YET'));card.append(tx);list.append(card);
   const rank=el('p','rank-note','Free Run has its own world ranking, by highest score.');list.append(rank);
   if(best&&online.configured())online.rankFor('free',best).then(r=>{if(r&&rank.isConnected)rank.textContent=`Your best is #${r.toLocaleString()} in the world${online.user?'':' (sign up to post it)'}.`}).catch(()=>{});
   const go=el('button','btn green map-go',save.mode==='free'?'SELECTED: CUT THE ROPE!':'PLAY FREE RUN');go.onclick=()=>{save.mode='free';persist();closePanel();reset('menu');gameSound.effect('on')};
-  const lb=el('button','mini-btn','FREE RUN RANKING');lb.onclick=()=>{ranksTab='free';openPanel('ranks')};const row=el('div','map-actions');row.append(go,lb);list.append(row);
-  // Each boss's rank: beating it in Free Run makes it come back one rank higher.
-  if(typeof bossRankOf==='function'){const br=el('div','boss-ranks');br.append(el('small','clan-label','BOSS RANKS · EVERY WIN RANKS THE BOSS UP'));
-   for(const s of STAGES){const d=BOSSES[s.id];if(!d)continue;const r=bossRankOf(s.id),it=el('div','br-row t'+rankTier(r));it.innerHTML=`<span class="br-ico">${icon(s.icon)}</span><span class="br-name"><b>${d.name}</b><small>${s.name}</small></span><span class="br-rank">${BOSS_RANKS[r-1]}</span>`;br.append(it)}list.append(br)}}}
+  const lb=el('button','mini-btn','FREE RUN RANKING');lb.onclick=()=>{ranksTab='free';openPanel('ranks')};const row=el('div','map-actions');row.append(go,lb);list.append(row);}}

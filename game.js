@@ -24,7 +24,7 @@ const MEDALS=[{at:1000,tone:'bronze',name:'BRONZE'},{at:2500,tone:'silver',name:
 const LIFE_PRICE=400,LIFE_PACK_PRICE=1000,MAX_LIVES=9;
 // Score: 10 points per metre plus bonuses. Stars come from bosses defeated in one run (revives included):
 // 3 bosses for the first star, 6 for the second and 12 for the third.
-const STAR_BOSSES=[3,6,12],PTS={coin:100,row:500,energy:200,power:300,smash:250,close:500,boss:50000};
+const STAR_BOSSES=[1,3,5],PTS={coin:100,row:500,energy:200,power:300,smash:250,close:500,boss:50000};
 const starsFor=kills=>STAR_BOSSES.filter(n=>kills>=n).length;
 // Wallet, owned skins, lives and per-stage bests live in the browser's localStorage.
 function loadSave(){const fresh={coins:0,gems:0,lives:1,skins:['classic'],skin:'classic',best:{},scores:{},stars:{},lastStage:'sky'};try{const s=JSON.parse(localStorage.getItem('skybound-save'));if(s)return {...fresh,...s,best:{...(s.best||{})},scores:{...(s.scores||{})},stars:{...(s.stars||{})}};const old=Number(localStorage.getItem('skybound-best'))||0;if(old)fresh.best.sky=old}catch{}return fresh}
@@ -35,7 +35,7 @@ let SW=420,W=420,OX=0,H=700,dpr=1,state='menu',previousState='ready',alt=0,x=.5,
 // Game feel: camera shake, flashes, slow motion, popups, combos and a springy balloon with a face.
 let shake=0,flash=0,flashColor='#fff',timeScale=1,slowTimer=0,deathTimer=0,popups=[],rings=[],flyers=[],streaks=[],trailClock=0,streakClock=0,combo=0,comboTimer=0,bestCombo=0,nearMisses=0,smashes=0,squash=0,squashV=0,puff=0,puffV=0,breathHeld=false,breathFace=0,blink=0,nextBlink=2,mood='happy',moodTimer=0,danger=0,ropeCut=null,nextMilestone=1000,passedBest=false,medalsHit=0,eventsSeen=new Set(),grow=1,revives=0;
 // Power state. The showcase is the freeze-frame celebration when the boost engine fires.
-let energy=0,boost=null,speedMult=1,shield=0,magnet=0,doubler=0,invuln=0,showcase=null,powerCount=0,bonus=0,starsHit=0,starFlyers=[],bossKills=0;
+let energy=0,boost=null,speedMult=1,shield=0,magnet=0,doubler=0,invuln=0,showcase=null,powerCount=0,bonus=0,starsHit=0,starFlyers=[],bossKills=0,freeLap=0,conquered=false,conquerTimer=0;
 const runScore=()=>Math.floor(alt)*10+Math.round(bonus)+Math.round(scoreExtra);
 let panelKind=null,storeTab='skins',storePick='classic',previews=[],skinPop={},poseSfx={},transition=null,swapFx=0,wantFullscreen=false;
 // Coin rows: 10 coins per row along the safe path; every 3 perfect rows in a row add +0.1 to the coin multiplier.
@@ -60,7 +60,7 @@ const unlockText=i=>`REACH ${stageGoal(STAGES[i-1].id).toLocaleString()} m IN ${
 const stageBest=()=>runMode==='free'?(save.freeAlt||0):(save.best[stage.id]||0);
 function reset(mode='ready'){state=mode;alt=0;x=.5;vx=0;target=null;pointer=null;lift=0;vy=0;liftTarget=null;drag=null;obstacles=[];coins=[];critters=[];particles=[];leaves=[];flightTime=0;spin=0;wind=0;weatherNow=null;leafClock=0;coinCount=0;shownCoins=0;banked=0;nextObstacle=450;spawnIndex=0;keys.clear();boss=null;caveWallScale=1;nextBossTime=BOSS_FIRST;rewardCoins=[];coinCursor=330;rushCursor=0;rushCount=0;prevLedge={a:0,c:.5};rowId=0;rowCount=0;rowBreaks=0;rows=new Map();rowStreak=0;coinMult=1;bestMult=1;scoreX2=0;scoreExtra=0;lastBase=0;nextRainbow=RAINBOW_EVERY;runBoxes=[];skyBoxAt=-1;levelCredited=0;runBoost=0;if(typeof medalsNewRun==='function')medalsNewRun();runMode=save.mode==='free'?'free':'campaign';if(runMode==='free')stage=STAGES[0];$('#versus').hidden=true;$('#boss-bar').hidden=true;$('#fatality').hidden=true;
  shake=0;flash=0;timeScale=1;slowTimer=0;deathTimer=0;popups=[];rings=[];flyers=[];streaks=[];combo=0;comboTimer=0;bestCombo=0;nearMisses=0;smashes=0;squash=0;squashV=0;puff=0;puffV=0;breathHeld=false;mood='happy';moodTimer=0;danger=0;ropeCut=null;nextMilestone=MILESTONE;passedBest=false;goalHit=false;medalsHit=0;eventsSeen=new Set();grow=1;revives=0;
- energy=0;boost=null;speedMult=1;shield=0;magnet=0;doubler=0;invuln=0;showcase=null;powerCount=0;bonus=0;starsHit=0;starFlyers=[];bossKills=0;$('#results').hidden=true;if(typeof seasonNewRun==='function')seasonNewRun();
+ energy=0;boost=null;speedMult=1;shield=0;magnet=0;doubler=0;invuln=0;showcase=null;powerCount=0;bonus=0;starsHit=0;starFlyers=[];bossKills=0;freeLap=0;conquered=false;conquerTimer=0;$('#results').hidden=true;if(typeof seasonNewRun==='function')seasonNewRun();
  generateCourse();$('#weather').textContent=stage.wind?'CALM AIR':stage.calm;$('#weather').classList.remove('gust');$('#hint').hidden=mode!=='ready';$('#menu').hidden=mode!=='menu';$('#menu').classList.remove('leaving');transition=null;$('#overlay').hidden=true;$('#panel').hidden=true;panelKind=null;$('#pause').innerHTML=icon('pause');$('#pause').setAttribute('aria-label','Pause game');$('#announce').replaceChildren();refreshMeta()}
 function refreshMeta(){const b=stageBest();$('#best').innerHTML=b?`${iconHTML('trophy')}BEST ${b.toLocaleString()} m`:'NO RECORD YET';$('#hint-stage').textContent=stage.name;$('#zone').textContent=stage.name;$('#hint-icon').innerHTML=icon(stage.icon);$('#zone-icon').innerHTML=icon(stage.icon);$('#menu-coins').textContent=save.coins.toLocaleString();$('#menu-gems').textContent=(save.gems||0).toLocaleString();$('#menu-lives').textContent=save.lives;if(typeof myLook==='function'){const pf=$('#profile-face'),lk=myLook(),key=lk.avatar+lk.frame+lk.level;if(pf.dataset.look!==key){pf.dataset.look=key;pf.replaceChildren(avatarEl(lk,44))}}if(typeof refreshSeasonUi==='function')refreshSeasonUi();if(typeof refreshBoxUi==='function')refreshBoxUi();updatePicker()}
 // Main menu stage banner: icon, name, stars and high score of the selected stage, with page dots below.
@@ -90,7 +90,7 @@ async function toggleSound(){soundTouched=true;sound=await gameSound.enable(!sou
 function ensureSound(){if(soundTouched)return;gameSound.enable(true).then(on=>{if(on&&!soundTouched){preloadVoices();soundTouched=true;sound=true;syncSound();gameSound.effect('on')}})}
 // Leave the menu straight into the chosen stage: the menu flies away and an iris opens on the stage.
 function startRun(how){if(state!=='menu')return;if(runMode==='campaign'&&!stageUnlocked(STAGES.indexOf(stage))){lockedNudge();return}if(how==='swipe')wantFullscreen=true;else enterFullscreen();ensureSound();const menu=$('#menu');menu.classList.add('leaving');setTimeout(()=>{if(menu.classList.contains('leaving')){menu.hidden=true;menu.classList.remove('leaving')}},280);
- if(sound)preloadVoices();state='ready';launch(true);transition={age:0,dur:1.2};announce(stage.name,"LET'S FLY!",'stage',stage.icon);canvas.focus()}
+ if(sound)preloadVoices();state='ready';launch(true);transition={age:0,dur:1.2};if(tipsOn())announce(stage.name,"LET'S FLY!",'stage',stage.icon);canvas.focus()}
 function openMenu(){bank();reset('menu')}
 // Daily and season task progress (season.js); safe to call before it loads.
 function tally(stat,n=1){if(typeof trackTask==='function')trackTask(stat,n)}
@@ -200,7 +200,11 @@ function announce(text,sub,kind,ic,tone){const layer=$('#announce');layer.replac
 function countUp(node,value,suffix){const start=performance.now();const tick=now=>{const k=Math.min(1,(now-start)/900);node.textContent=Math.round(value*(1-(1-k)**3)).toLocaleString()+suffix;if(k<1)requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 const backOut=k=>1+3.2*(k-1)**3+2.2*(k-1)**2;
 
-function finish(){state='dead';release();mood='dead';boost=null;shield=0;magnet=0;showcase=null;gameSound.effect('pop');sayVoice('die',{force:true,delay:.12});const bx=x*W,by=balloonY(),gores=(SKINS[save.skin]||SKINS.classic).gores;
+// Hints, tips and "something appeared" notices show only while the tutorial is on.
+const tipsOn=()=>typeof tutorialOn==='function'&&tutorialOn();
+// Campaign: beating the level V boss wins the stage; the run ends in celebration instead of a pop.
+function conquer(){conquered=true;nextBossTime=Infinity;announce('STAGE CONQUERED!','ALL 5 BOSS LEVELS BEATEN','record','trophy');gameSound.effect('record');confetti(70);sayVoice('win',{force:true,delay:.3});mood='star';moodTimer=4;conquerTimer=3.2}
+function finish(){if(conquered)return;state='dead';release();mood='dead';boost=null;shield=0;magnet=0;showcase=null;gameSound.effect('pop');sayVoice('die',{force:true,delay:.12});const bx=x*W,by=balloonY(),gores=(SKINS[save.skin]||SKINS.classic).gores;
  for(let i=0;i<16;i++){const a=Math.random()*TAU,s=rand(160,380);particles.push({type:'shard',x:bx+Math.cos(a)*15,y:by-5+Math.sin(a)*15,vx:Math.cos(a)*s,vy:Math.sin(a)*s-80,life:0,max:rand(.9,1.5),size:rand(6,12),color:gores[i%gores.length][1],gravity:600,drag:1.2,rot:rand(0,TAU),vr:rand(-14,14)})}
  burst(bx,by,26,{type:'confetti',colors:PARTY,speed:[120,420],size:[6,10],life:[.7,1.2],gravity:300,drag:1.5});
  burst(bx,by,18,{colors:['#fff','#ffd23f'],speed:[200,500],size:[2,4],life:[.25,.5]});
@@ -215,10 +219,10 @@ function showResult(){bank();const a=Math.floor(alt),free=runMode==='free',recor
  if(free){if(record)save.freeAlt=a;high=sc>(save.freeBest||0);if(high)save.freeBest=sc}
  else{if(record)save.best[stage.id]=a;high=sc>(save.scores[stage.id]||0);if(high)save.scores[stage.id]=sc;save.stars[stage.id]=Math.max(save.stars[stage.id]||0,stars)}creditLevel(a);persist();if(typeof seasonRunEnd==='function')seasonRunEnd(sc,stars,a,Math.floor(coinCount),bossKills);if(typeof checkMedals==='function'){checkMedals();resultsMedals()}
  const R=$('#results');R.hidden=false;R.classList.remove('play');void R.offsetWidth;R.classList.add('play');R.dataset.stars=stars;
- $('#res-title').textContent=RES_TITLES[stars];$$('.res-star').forEach(n=>{n.classList.remove('on');n.innerHTML=icon('star','off')});$('#res-score').textContent='0';$('#res-new').hidden=true;$('#res-next').innerHTML=stars<3?`NEXT ${iconHTML('star')}: BEAT ${STAR_BOSSES[stars]} BOSSES · ${bossKills}/${STAR_BOSSES[stars]}`:`ALL STARS! ${iconHTML('star')}${iconHTML('star')}${iconHTML('star')}`;
+ $('#res-title').textContent=conquered?'CONQUERED!':RES_TITLES[stars];$$('.res-star').forEach(n=>{n.classList.remove('on');n.innerHTML=icon('star','off')});$('#res-score').textContent='0';$('#res-new').hidden=true;$('#res-next').innerHTML=stars<3?`NEXT ${iconHTML('star')}: BEAT ${STAR_BOSSES[stars]} BOSSES · ${bossKills}/${STAR_BOSSES[stars]}`:conquered?`ALL 5 BOSS LEVELS BEATEN! ${iconHTML('star')}${iconHTML('star')}${iconHTML('star')}`:`ALL STARS! ${iconHTML('star')}${iconHTML('star')}${iconHTML('star')}`;
  $('#res-stage-icon').innerHTML=icon(stage.icon);$('#res-alt').textContent=a.toLocaleString()+' m';$('#res-medals').innerHTML=MEDALS.filter(m=>a>=m.at).map(m=>iconHTML('medal',m.tone)).join('');$('#res-coins').textContent=Math.floor(coinCount).toLocaleString();
  $('#res-extra').textContent=`${bossKills} BOSS${bossKills===1?'':'ES'}`;$('#res-extra').previousElementSibling.innerHTML=icon('crown');
- resultsBoxes();if(save.lives>0){$('#revive').hidden=false;$('#revive').innerHTML=`${iconHTML('heart')}REVIVE (${save.lives})`}else $('#revive').hidden=true;
+ resultsBoxes();if(save.lives>0&&!conquered){$('#revive').hidden=false;$('#revive').innerHTML=`${iconHTML('heart')}REVIVE (${save.lives})`}else $('#revive').hidden=true;
  results={score:sc,stars,high,record,age:0,shown:-1,lit:0,done:false,tick:0,confetti:0,rank:undefined};resFx=[];refreshMeta();resultsOnline()}
 // Player level: the metres of this run (only the new ones after a revive) go to the lifetime total; each new level
 // shows on the results screen; its reward waits in TASKS > LEVEL.
@@ -374,15 +378,15 @@ function layCoins(p0,p1){while(coinCursor<p1.a){const k=clamp((coinCursor-p0.a)/
   else{rowCount=0;rowBreaks++;const kind=rowBreaks%8===5?weightedPick(PICKUPS):rowBreaks%2===0?'energy':null;if(kind)coins.push({a:coinCursor+60,x:cx,kind});coinCursor+=COIN_BREAK}}}
 // Coin rush: while the engine boost or turbo fires, a wavy river of coins pours in ahead of the balloon
 // (two lanes for the engine boost) and the balloon pulls nearby coins in like a magnet.
-function coinRush(){if(!boost||boss){rushCursor=0;return}const top=alt+H/worldScale+40;if(rushCursor<alt){rushCursor=alt+H/worldScale*.55;rushCount=0;popup(x*W,balloonY()-130,'COIN RUSH!','#ffd23f',34)}
+function coinRush(){if(!boost||boss){rushCursor=0;return}const top=alt+H/worldScale+40;if(rushCursor<alt){rushCursor=alt+H/worldScale*.55;rushCount=0;if(tipsOn())popup(x*W,balloonY()-130,'COIN RUSH!','#ffd23f',34)}
  while(rushCursor<top){rushCursor+=RUSH_STEP;const wave=.5+Math.sin(rushCursor/240)*.28;coins.push({a:rushCursor,x:wave,kind:'coin',rush:true});if(boost.kind==='engine')coins.push({a:rushCursor+RUSH_STEP/2,x:clamp(wave+(Math.sin(rushCursor/90)>0?.16:-.16),.1,.9),kind:'coin',rush:true})}}
 function closeCoinRow(){const r=rows.get(rowId);if(r&&!r.closed){r.closed=true;if(r.total&&r.got===r.total&&!r.broken)rowComplete()}rowCount=0}
 // A full row of coins pays a bonus (the score multiplier now comes from the rainbow star).
 function rowComplete(){rowStreak++;tally('rows');bonus+=PTS.row;popup(x*W,balloonY()-84,`PERFECT ROW +${PTS.row}`,'#ffd23f',24);gameSound.effect('milestone');rings.push({x:x*W,y:balloonY(),max:80,life:0,dur:.45,color:'#ffd23f',width:6})}
 function missRow(id){const r=rows.get(id);if(!r||r.broken)return;r.broken=true;rowStreak=0}
 // The star goes in the middle of the course, moved up until no ledge is close to it.
-function spawnSkyBox(){let a=alt+H/worldScale*.85;for(let i=0;i<30&&obstacles.some(o=>!o.broken&&Math.abs(o.a-a)<90);i++)a+=25;coins.push({a,x:rand(.3,.7),kind:'box'});announce('MYSTERY BOX!','GRAB IT!','power','box');gameSound.effect('zone')}
-function spawnRainbow(){let a=alt+H/worldScale*.8;for(let i=0;i<30&&obstacles.some(o=>!o.broken&&Math.abs(o.a-a)<90);i++)a+=25;coins.push({a,x:.5,kind:'rainbow'});announce('RAINBOW STAR!','GRAB IT FOR SCORE x2','power','star');gameSound.effect('zone')}
+function spawnSkyBox(){let a=alt+H/worldScale*.85;for(let i=0;i<30&&obstacles.some(o=>!o.broken&&Math.abs(o.a-a)<90);i++)a+=25;coins.push({a,x:rand(.3,.7),kind:'box'});if(tipsOn())announce('MYSTERY BOX!','GRAB IT!','power','box');gameSound.effect('zone')}
+function spawnRainbow(){let a=alt+H/worldScale*.8;for(let i=0;i<30&&obstacles.some(o=>!o.broken&&Math.abs(o.a-a)<90);i++)a+=25;coins.push({a,x:.5,kind:'rainbow'});if(tipsOn())announce('RAINBOW STAR!','GRAB IT FOR SCORE x2','power','star');gameSound.effect('zone')}
 function drawRainbowStar(cx,cy,r){ctx.save();ctx.translate(cx,cy);ctx.lineJoin='round';glow(0,0,r*2.6,'#ffffff',.55+.2*Math.sin(t*6));glow(0,0,r*2,'#ff7ad9',.6);ctx.rotate(Math.sin(t*2)*.25);
  const g=ctx.createConicGradient?ctx.createConicGradient(t*2,0,0):null;if(g)RAINBOW.concat(RAINBOW[0]).forEach((c,i)=>g.addColorStop(i/RAINBOW.length,c));ctx.fillStyle=g||'#ff7ad9';ctx.strokeStyle=INK;ctx.lineWidth=3.5;star(0,0,r,r*.5,5);ctx.fill();ctx.stroke();
  ctx.rotate(-Math.sin(t*2)*.25);ctx.font=`${Math.round(r*.78)}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=5;ctx.strokeText('x2',0,r*.08);ctx.fillStyle='#fff';ctx.fillText('x2',0,r*.08);
@@ -452,19 +456,19 @@ function collectPickups(dt){for(const item of coins){if(item.collected)continue;
   rings.push({x:cx,y:cy,max:40,life:0,dur:.35,color:'#ffe680',width:4});if(!item.rush||rushCount%8===0)popup(cx,cy-24,item.rush?`COIN RUSH x${rushCount}`:worth>1?`+${+worth.toFixed(1)}`:'+1',worth>1?'#ff9a3c':'#ffd23f',22);
   flyers.push({x:cx,y:cy,age:0,value:worth});squashV+=3;if(moodTimer<=0||mood==='happy'){mood='joy';moodTimer=.6}
   if(r){r.got++;if(r.closed&&!r.broken&&r.got===r.total)rowComplete()}}
- else if(item.kind==='energy'){const was=energy;bonus+=PTS.energy;if(was<4)announcer('energy');energy=Math.min(5,energy+1);gameSound.effect('energy');burst(cx,cy,10,{type:'star',colors:['#ffd23f','#fff'],speed:[60,180],size:[3,6],life:[.3,.6],world:true});popup(cx,cy-22,energy===was?'FULL!':`ENERGY ${energy}/5`,'#ffd23f',22);if(energy===5&&was<5)chargedUp()}
+ else if(item.kind==='energy'){const was=energy;bonus+=PTS.energy;if(was<4)announcer('energy');energy=Math.min(5,energy+1);gameSound.effect('energy');burst(cx,cy,10,{type:'star',colors:['#ffd23f','#fff'],speed:[60,180],size:[3,6],life:[.3,.6],world:true});if(tipsOn())popup(cx,cy-22,energy===was?'FULL!':`ENERGY ${energy}/5`,'#ffd23f',22);if(energy===5&&was<5)chargedUp()}
  else if(item.kind==='rainbow'){scoreX2=RAINBOW_TIME;lastBase=Math.floor(alt)*10+bonus;tally('powerups');announce('SCORE x2!',`${RAINBOW_TIME} SECONDS`,'record','star');gameSound.effect('record');confetti(30);burst(cx,cy,30,{type:'star',colors:RAINBOW,speed:[120,360],size:[4,8],life:[.5,1],world:true});mood='joy';moodTimer=1.2}
- else if(item.kind==='box'){if(typeof foundSkyBox==='function')foundSkyBox();announce('MYSTERY BOX!','OPEN IT AFTER THE RUN','record','box');gameSound.effect('buy');confetti(24);burst(cx,cy,26,{type:'star',colors:['#ffd23f','#7cd0ff','#fff'],speed:[120,340],size:[4,8],life:[.5,1],world:true});mood='joy';moodTimer=1}
+ else if(item.kind==='box'){if(typeof foundSkyBox==='function')foundSkyBox();if(tipsOn())announce('MYSTERY BOX!','OPEN IT AFTER THE RUN','record','box');else popup(cx,cy-24,'+1 BOX','#7ef08f',26);gameSound.effect('buy');confetti(24);burst(cx,cy,26,{type:'star',colors:['#ffd23f','#7cd0ff','#fff'],speed:[120,340],size:[4,8],life:[.5,1],world:true});mood='joy';moodTimer=1}
  else if(item.kind==='nitro'){bonus+=PTS.power;tally('powerups');startTurbo()}
  else{const P=POWERS[item.kind];bonus+=PTS.power;tally('powerups');announcer(item.kind);applyPower(item.kind);popup(x*W,balloonY()-70,`${P.name}!`,P.color,28);squashV+=4;mood='joy';moodTimer=.8}}}
-function chargedUp(){gameSound.effect('charged');announcer('ready');announce('BOOST READY!','TAP BOOST · B','record','bolt');bump($('#boost'))}
+function chargedUp(){gameSound.effect('charged');announcer('ready');if(tipsOn())announce('BOOST READY!','TAP BOOST · B','record','bolt');bump($('#boost'))}
 
 // ---- Power-ups ----
 const smashing=()=>engineOn()||invuln>0;
 // The engine boost is the one power with a cinematic intro: the action freezes and the balloon celebrates.
 // Turbo pickup: a quick mini intro in slow motion (no full freeze), then the rocket fires.
 function startTurbo(){announcer('turbo');showcase={kind:'nitro',age:0,dur:.7,mini:true};invuln=Math.max(invuln,1);mood='cool';moodTimer=1.6;popup(x*W,balloonY()-78,'TURBO!','#ff8a2a',40);gameSound.effect('boost');squash=0;squashV=0;puffV=7;burst(x*W,balloonY(),16,{type:'star',colors:['#ff8a2a','#ffd23f','#fff'],speed:[120,300],size:[4,7],life:[.4,.7],drag:1.5})}
-function activateEngine(){if(state!=='flying'||showcase||energy<5)return;energy=0;tally('boosts');announcer('engine');showcase={kind:'energy',age:0,dur:1.15};mood='cool';moodTimer=2;announce('ENGINE BOOST','FULL POWER!','power','bolt');gameSound.effect('power');
+function activateEngine(){if(state!=='flying'||showcase||energy<5)return;energy=0;tally('boosts');announcer('engine');showcase={kind:'energy',age:0,dur:1.15};mood='cool';moodTimer=2;if(tipsOn())announce('ENGINE BOOST','FULL POWER!','power','bolt');gameSound.effect('power');
  burst(x*W,balloonY(),26,{type:'star',colors:['#ffd23f','#fff','#ff8a2a'],speed:[80,260],size:[4,8],life:[.6,1.1],drag:1.5});confetti(24);squash=0;squashV=0;puffV=8}
 function applyPower(kind){const P=POWERS[kind],bx=x*W,by=balloonY();powerCount++;
  if(kind==='magnet'){magnet=8;gameSound.effect('boost')}
@@ -494,7 +498,7 @@ function checkProgress(){if(boss)return;
  if(runMode==='campaign'&&!goalHit&&alt>=stageGoal(stage.id)){goalHit=true;if(!stageCleared(stage.id)){save.cleared=save.cleared||{};save.cleared[stage.id]=true;const next=STAGES[STAGES.indexOf(stage)+1];if(typeof goalBox==='function')goalBox(stage.id);persist();
    announce('STAGE CLEAR!',next?`${next.name} UNLOCKED`:'EVERY STAGE CLEARED','record','trophy');gameSound.effect('record');confetti(40);nextMilestone=Math.max(nextMilestone,Math.floor(alt/MILESTONE)*MILESTONE+MILESTONE);return}}
  if(medalsHit<MEDALS.length&&alt>=MEDALS[medalsHit].at){const m=MEDALS[medalsHit++];if(stageBest()<m.at){announce(`${m.name} MEDAL`,'NEW MEDAL!','record','medal',m.tone);gameSound.effect('record');confetti(30);nextMilestone=Math.max(nextMilestone,Math.floor(alt/MILESTONE)*MILESTONE+MILESTONE);return}}
- if(stage.id==='space')for(const ev of spaceEvents())if(!eventsSeen.has(ev.key)){eventsSeen.add(ev.key);announce(ev.e.label,'LOOK!','milestone');gameSound.effect('zone');return}
+ if(stage.id==='space'&&tipsOn())for(const ev of spaceEvents())if(!eventsSeen.has(ev.key)){eventsSeen.add(ev.key);announce(ev.e.label,'LOOK!','milestone');gameSound.effect('zone');return}
  if(!passedBest&&stageBest()>0&&alt>stageBest()){passedBest=true;announce('NEW BEST!','KEEP GOING','record','trophy');gameSound.effect('record');confetti(24);return}
  if(alt>=nextMilestone){announce(`${nextMilestone.toLocaleString()} m`,'ALTITUDE','milestone');gameSound.effect('milestone');nextMilestone+=MILESTONE;bump($('.hud-alt'))}}
 function drawRope(){const tied=state==='ready'||state==='menu'||(state==='paused'&&previousState==='ready');ctx.lineCap='round';
@@ -564,12 +568,13 @@ function updateEffects(dt,real){shake*=Math.exp(-8*real);flash=Math.max(0,flash-
  const hold=holdingBreath();puffV+=(((hold?1:0)-puff)*95-puffV*11)*pdt;puff+=puffV*pdt;
  if(breathHeld&&!hold&&state==='flying')burst(x*W,balloonY()+4,7,{type:'puff',colors:['#ffffff'],speed:[30,90],size:[5,10],life:[.35,.6]});breathHeld=hold;
  if((nextBlink-=pdt)<=0){blink=.13;nextBlink=rand(2,5)}blink-=pdt;moodTimer-=pdt;
- if(boost&&(boost.time-=dt)<=0)boost=null;if(shield>0&&(shield-=dt)<=0&&state==='flying')popup(x*W,balloonY()-60,'SHIELD OFF','#bff4ff',20);magnet=Math.max(0,magnet-dt);if(doubler>0&&(doubler-=dt)<=0&&state==='flying')popup(x*W,balloonY()-60,'DOUBLE COINS OVER','#ffd23f',20);invuln=Math.max(0,invuln-dt);
+ if(boost&&(boost.time-=dt)<=0)boost=null;if(shield>0&&(shield-=dt)<=0&&state==='flying'&&tipsOn())popup(x*W,balloonY()-60,'SHIELD OFF','#bff4ff',20);magnet=Math.max(0,magnet-dt);if(doubler>0&&(doubler-=dt)<=0&&state==='flying'&&tipsOn())popup(x*W,balloonY()-60,'DOUBLE COINS OVER','#ffd23f',20);invuln=Math.max(0,invuln-dt);
  speedMult+=((boost?boost.mult:1)-speedMult)*Math.min(1,dt*3);
  danger=state==='flying'&&!smashing()?danger+(measureDanger()-danger)*Math.min(1,dt*10):danger*Math.exp(-6*pdt);
  if(state!=='dead'&&moodTimer<=0)mood=smashing()||shield>0?'cool':danger>.45?'scared':'happy';
  if(ropeCut)ropeCut.age+=dt;if(comboTimer>0&&(comboTimer-=dt)<=0)combo=0;
  if(state==='dead'&&deathTimer>0&&(deathTimer-=real)<=0)showResult();
+ if(conquerTimer>0&&(conquerTimer-=real)<=0&&state==='flying'){state='dead';release();showResult()}
  const scroll=state==='flying'&&!showcase&&!frozen?flightSpeed(alt)*speedMult*worldScale*bossPace():0;
  if(state==='flying'&&!showcase){const tilt=tiltOf(),fire=engineOn(),every=fire?.018:.03;trailClock+=dt;
   while(trailClock>every){trailClock-=every;const bx=x*W-Math.sin(tilt)*(fire?56:36),by=balloonY()+(fire?56:36);

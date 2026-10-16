@@ -23,7 +23,9 @@ const MEDAL_LIST=[
  {id:'booster',name:'TURBO ACE',icon:'bolt',rib:['#ffd23f','#3d7bff'],unit:'engine boosts',goals:[15,60,200,600,1500],get:()=>life('boosts')},
  {id:'veteran',name:'VETERAN',icon:'play',rib:['#4fd36b','#1b1240'],unit:'runs played',goals:[25,100,400,1000,3000],get:()=>life('runs')},
  {id:'taskmaster',name:'TASK MASTER',icon:'trophy',rib:['#a273ff','#ffd23f'],unit:'daily tasks done',goals:[15,60,150,400,900],get:()=>life('dailyDone')},
- {id:'treasure',name:'TREASURE HUNTER',icon:'box',rib:['#c98a4a','#ffd23f'],unit:'boxes opened',goals:[3,20,60,150,400],get:()=>save.boxesOpened||0}];
+ {id:'treasure',name:'TREASURE HUNTER',icon:'box',rib:['#c98a4a','#ffd23f'],unit:'boxes opened',goals:[3,20,60,150,400],get:()=>save.boxesOpened||0},
+ // Boss medals, one per boss: a medal level for each boss rank level (SERGEANT I to V) you have beaten it at.
+ ...STAGES.map(s=>({id:'b'+s.id.slice(0,3),name:BOSSES[s.id].name,icon:s.icon,rib:[BOSSES[s.id].colors[1],BOSSES[s.id].colors[2]],unit:'boss rank level beaten',goals:[1,2,3,4,5],boss:true,get:()=>(save.bossTop||{})[s.id]||0}))];
 const medalById=id=>MEDAL_LIST.find(m=>m.id===id);
 const medalTierOf=(m,v)=>m.goals.filter(g=>v>=g).length;
 const medalLevel=id=>(save.medals||{})[id]||0;
@@ -97,7 +99,9 @@ function renderMedalsTab(list){checkMedals();const box=el('div','medal-sum'),tot
 function openMedal(m,lv,mine){const ov=$('#medal-view'),stage=$('#mv-medal'),info=$('#mv-info');stage.replaceChildren(medalEl(m,lv||1,190,{locked:!lv,spin:true}));info.replaceChildren();
  info.append(el('b','mv-name',m.name),el('small','mv-lv',lv?`LEVEL ${ROMAN[lv-1]} · ${MEDAL_TIERS[lv-1].name}`:'NOT EARNED YET'));
  const ladder=el('div','mv-ladder');m.goals.forEach((g,k)=>{const w=el('div','mv-step'+(k<lv?' got':''));w.append(medalEl(m,k+1,40,{locked:k>=lv}),el('small','',`${ROMAN[k]} · ${g.toLocaleString()}`));ladder.append(w)});info.append(ladder);
- if(mine){const v=m.get(),next=m.goals[lv];info.append(el('p','mv-goal',next?`Next level: ${next.toLocaleString()} ${m.unit} (you have ${v.toLocaleString()}). Reward: ${prizeText(MEDAL_PRIZE[lv])}.`:`All five levels earned: ${v.toLocaleString()} ${m.unit}.`))}
+ if(mine&&m.boss){const next=lv+1<=5?lv+1:0;info.append(el('p','mv-goal',next?`Next level: beat ${m.name} at ${BOSS_RANKS[next-1]}. Reward: ${prizeText(MEDAL_PRIZE[lv])}.`:`All five levels earned: ${m.name} beaten at SERGEANT V, the top rank.`))}
+ else if(m.boss)info.append(el('p','mv-goal',`Beat ${m.name} at rank levels SERGEANT I to V to earn each medal level.`));
+ else if(mine){const v=m.get(),next=m.goals[lv];info.append(el('p','mv-goal',next?`Next level: ${next.toLocaleString()} ${m.unit} (you have ${v.toLocaleString()}). Reward: ${prizeText(MEDAL_PRIZE[lv])}.`:`All five levels earned: ${v.toLocaleString()} ${m.unit}.`))}
  else info.append(el('p','mv-goal',`Levels need ${m.goals.map(g=>g.toLocaleString()).join(' / ')} ${m.unit}.`));
  ov.hidden=false;gameSound.effect('on')}
 $('#mv-close').onclick=()=>{$('#medal-view').hidden=true};
