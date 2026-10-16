@@ -875,6 +875,13 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .lvl-card .mini-btn{font-size:12px;padding:3px 10px 4px}
 .lvl-state{font-family:var(--title);font-size:15px;color:#7ef08f;text-shadow:var(--stroke)}
 .lvl-state.lock{width:18px;height:18px;opacity:.8}.lvl-state.lock svg{width:18px;height:18px}
+/* The living world map behind the level road (levelmap.js) and the sign over the bridge into each world. */
+.lvl-scene{position:absolute;left:0;top:0;display:block;pointer-events:none}
+.lvl-zone{position:absolute;z-index:2;transform:translate(-50%,-50%);display:flex;align-items:center;gap:7px;padding:5px 12px 6px 7px;white-space:nowrap;pointer-events:none;
+ background:linear-gradient(160deg,#3a2486f2,#1b1240f2);border:3px solid var(--ink);border-radius:14px;box-shadow:inset 0 0 0 2px var(--zc),0 3px 0 var(--ink),0 0 18px #0007}
+.lvl-zone .ico{width:28px;height:28px;flex:none}
+.lvl-zone b{display:block;font-family:var(--title);font-weight:400;font-size:15px;line-height:1.05;color:#ffe46b;text-shadow:var(--stroke)}
+.lvl-zone small{display:block;margin-top:2px;font-size:9.5px;font-weight:900;color:#e6ebff}
 @media(prefers-reduced-motion:reduce){.lvl-node.special .lvl-dot,.lvl-me{animation:none}}
 /* Tasks: big tabs like the store's */
 .task-tabs{margin-bottom:8px}.task-tabs .store-tab{min-height:66px}.task-tabs .store-tab .st-ico,.task-tabs .store-tab .st-ico svg{width:32px;height:32px}

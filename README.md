@@ -21,6 +21,7 @@ rope and climb as high as you can.
 - modes.js: the MAP screen (Campaign and Free Run)
 - boxes.js: boxes (coins, gems and skin cards), card unlocks, the box opening show and the store's BOXES tab
 - medals.js: medals (five levels each), their drawing and 3D spin viewer, and PROFILE > MEDALS
+- levelmap.js: the living world map behind the LEVEL path (islands, bridges, flying creatures and the six stage worlds)
 - firebase-config.js: your Firebase project config (online play is off while it is empty)
 - firestore.rules: security rules to paste into Firebase
 
@@ -227,7 +228,7 @@ Like PUBG Mobile, every level needs more than the one before (levelNeed in cosme
 - The results screen shows the metres the run added and how far it is to the next level. A new level shows
   "LEVEL UP!" and "REWARD READY · TASKS > LEVEL".
 - LEVEL PATH (TASKS > LEVEL, the orange third tab with a red count of rewards waiting; like PUBG Mobile's level rewards): a winding road from level 1 at the bottom to level 100
-  at the top, climbing through the stage skies from Sunny Sky to Deep Universe. Your avatar stands on your current
+  at the top. Your avatar stands on your current
   level and the road is gold up to it. Every level from 2 to 100 has a reward card; reached levels show CLAIM (or
   CLAIM ALL at the top) and the TASKS button's red dot counts the rewards waiting (levelPrize in cosmetics.js):
 
@@ -239,6 +240,22 @@ Like PUBG Mobile, every level needs more than the one before (levelNeed in cosme
   | 60 / 70 / 80 | 6,000 coins + 120 gems / 8,000 coins + 180 gems / 10,000 coins + 250 gems |
   | 90 | AURORA SPIRIT, an animated avatar: a glowing spirit under waving aurora ribbons with a flickering crown of light |
   | 100 | CROWN OF THE SKIES, an animated frame: a turning gold-and-rainbow ring with feathered wings, a jewelled crown and orbiting stars |
+
+- LEVEL WORLD MAP (levelmap.js): the path is a real map. The road runs over floating islands (two to five levels
+  each) joined by bridges, and climbing it travels through the six stages in order, each world starting after a
+  long bridge under a sign with its name and levels:
+
+  | Levels | World | What you see |
+  |---|---|---|
+  | 1-16 | SUNNY SKY | a sandy start island in the sea with a sailing boat, then grassy floating islands with trees, huts and flowers, clouds, hot-air balloons, a rainbow and flocks of birds; wooden bridges |
+  | 17-33 | JUNGLE ISLAND | jungle islands with palms and hibiscus, leafy edges with swinging vines, a waterfall, parrots and butterflies |
+  | 34-50 | CRYSTAL CAVE | purple rock islands with crystals, glowing mushrooms and fire bowls between jagged cave walls, floating spores and bats; crystal bridges |
+  | 51-66 | ROBO FACTORY | steel platforms on rocket thrusters with lamps, crates and gears, riveted pillars with warning lights, turning gears, steaming pipes and patrol drones; girder bridges |
+  | 67-83 | OUTER SPACE | asteroid islands with craters, flags, dishes and rockets, twinkling stars, Earth, a red planet and a moon, satellites, UFOs, an astronaut and shooting stars; light-beam bridges |
+  | 84-100 | DEEP UNIVERSE | glowing crystal islands with golden stars and tiny planets, nebulas, spiral galaxies, a ringed planet, comets, and golden rays behind level 100 |
+
+  Decorations stand on the free side of each level, away from its reward card. The world is drawn on one canvas
+  that follows the scroll (only the visible part is drawn) and the same seed lays it out the same way every visit.
 
   Claiming the avatar or frame asks whether to wear it now. Both are never sold; in PROFILE they show "LEVEL 90" and
   "LEVEL 100" until claimed. Claimed rewards are saved to your account.
@@ -550,3 +567,8 @@ Coins, skins, cards, boxes, lives, bests, high scores and stars are saved in the
   PTS set the rules.
 - skins.js: add a skin to SKINS with its gores, decorations, face, price and rarity,
   and give it a selection pose in SKIN_POSES.
+
+## License
+Copyright (c) 2026 nikezaxo. All rights reserved. Skybound's code, art, sounds and other content are not open
+source: being public on GitHub gives nobody permission to copy, modify, reuse, host or share any of it without the
+owner's written permission. See [LICENSE](LICENSE). You are welcome to play the game at https://nikezaxo.github.io/Balloon/.
