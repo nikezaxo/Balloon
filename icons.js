@@ -49,3 +49,59 @@ const ICONS={
 function icon(name,variant){return ICONS[name]?ICONS[name]('ic'+(++iconSeq),variant):''}
 function iconHTML(name,variant,cls=''){return `<span class="ico ${cls}">${icon(name,variant)}</span>`}
 function applyIcons(root=document){root.querySelectorAll('[data-icon]').forEach(el=>{el.innerHTML=icon(el.dataset.icon,el.dataset.variant)})}
+// Stage emblems: a round illustrated badge for each world (used for stages everywhere: map, banners, HUD, results,
+// rankings and the level map signs). Each has a glowing disc, a little scene clipped inside it, a light inner rim and
+// a chunky outline.
+const emGlint=(x,y,s)=>`<path d="M${x} ${y-s}Q${x} ${y} ${x+s} ${y}Q${x} ${y} ${x} ${y+s}Q${x} ${y} ${x-s} ${y}Q${x} ${y} ${x} ${y-s}Z" fill="#fff" stroke="none"/>`;
+const rg=(id,a,b,cx=.35,cy=.3,r=.85)=>`<radialGradient id="${id}" cx="${cx}" cy="${cy}" r="${r}"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></radialGradient>`;
+function stageEmblem(u,bg,scene,defs=''){return svgIcon(`<circle cx="32" cy="32" r="29" fill="url(#${u}b)"/><g clip-path="url(#${u}c)" stroke-width="2.2">${scene}</g><circle cx="32" cy="32" r="26.6" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.8"/><path d="M9.5 25 A23.5 23.5 0 0 1 26 8.6" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2.6"/><circle cx="32" cy="32" r="29" fill="none" stroke-width="3.4"/>`,
+ rg(u+'b',bg[0],bg[1])+`<clipPath id="${u}c"><circle cx="32" cy="32" r="28"/></clipPath>`+defs)}
+const palmLeaf=(x,y,a,len,col)=>`<path d="M0 0 Q${len*.45} ${-len*.42} ${len} ${len*.1} Q${len*.5} ${len*.22} 0 0 Z" fill="${col}" stroke-width="1.2" transform="translate(${x} ${y}) rotate(${a})"/>`;
+Object.assign(ICONS,{
+ // SUNNY SKY: a striped hot-air balloon under a shining sun, floating over fluffy clouds.
+ stSky:u=>{let rays='';for(let i=0;i<10;i++)rays+=`<path d="M48 2 L50.6 9 H45.4 Z" fill="#ffc21a" stroke="none" transform="rotate(${i*36} 48 17)"/>`;
+  return stageEmblem(u,['#bdeeff','#2a86e0'],`<circle cx="48" cy="17" r="15" fill="#fff6b0" fill-opacity=".45" stroke="none"/>${rays}<circle cx="48" cy="17" r="8" fill="url(#${u}s)"/>
+   <path d="M26 11 C15 11 11 20 13 27 C15 33 21 37 23.5 41 H28.5 C31 37 37 33 39 27 C41 20 37 11 26 11 Z" fill="#ff4d5e"/><path d="M26 11 C21.5 13 20.5 21 21.5 28 C22.5 34 23.6 38.5 24.4 41 H27.6 C28.4 38.5 29.5 34 30.5 28 C31.5 21 30.5 13 26 11 Z" fill="#ffd23f" stroke-width="1.6"/>
+   <path d="M26 11 C15 11 11 20 13 27 C15 33 21 37 23.5 41 H28.5 C31 37 37 33 39 27 C41 20 37 11 26 11 Z" fill="none"/>${gloss(19.5,20,2.4,5.5,-15)}
+   <path d="M24 41 L23.4 46 M28 41 L28.6 46" fill="none" stroke-width="1.6"/><rect x="22" y="45.5" width="8" height="5.5" rx="1.6" fill="#b07a48" stroke-width="1.8"/>
+   <path d="M1 60 Q1 51 9 52 Q11 45 19 47 Q25 43 29 50 Q35 50 34 57 Q34 62 28 62 L5 62 Q1 62 1 60 Z" fill="#fff"/><path d="M36 57 Q36 51 42 52 Q44 46 51 48 Q57 47 58 53 Q64 54 63 58 Q63 62 58 62 L40 62 Q36 62 36 57 Z" fill="#fff"/>`,
+   lg(u+'s','#fff6b0','#ff9a1a'))},
+ // JUNGLE ISLAND: two palm trees on a sandy island in a turquoise lagoon, under a warm glow.
+ stJungle:u=>stageEmblem(u,['#d8fff0','#18a58c'],`<circle cx="32" cy="22" r="13" fill="#fff6b0" fill-opacity=".6" stroke="none"/><rect x="0" y="44" width="64" height="22" fill="#2fb6e8" stroke="none"/>
+   <path d="M6 52 q4 -3 8 0 M44 55 q4 -3 8 0 M24 58 q4 -3 8 0" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="1.8"/>
+   <ellipse cx="32" cy="47" rx="22" ry="7" fill="#ffe2a0"/><ellipse cx="32" cy="44.5" rx="15" ry="4.5" fill="#4fc45a" stroke-width="1.8"/>
+   ${thick('M27 45 Q25 34 21 22','#a8743e',3.2)}${thick('M37 45 Q39 35 43 26','#a8743e',3.2)}
+   ${palmLeaf(21,22,200,15,'#3aa84a')}${palmLeaf(21,22,240,14,'#5fd35a')}${palmLeaf(21,22,300,14,'#3aa84a')}${palmLeaf(21,22,-20,15,'#5fd35a')}${palmLeaf(21,22,30,13,'#3aa84a')}
+   ${palmLeaf(43,26,200,13,'#5fd35a')}${palmLeaf(43,26,250,12,'#3aa84a')}${palmLeaf(43,26,305,12,'#5fd35a')}${palmLeaf(43,26,-15,13,'#3aa84a')}${palmLeaf(43,26,35,12,'#5fd35a')}
+   <circle cx="20" cy="24.5" r="2.2" fill="#7a4a20" stroke-width="1.4"/><circle cx="23.2" cy="24.8" r="2.2" fill="#7a4a20" stroke-width="1.4"/><circle cx="43.5" cy="28.5" r="2" fill="#7a4a20" stroke-width="1.4"/>`),
+ // CRYSTAL CAVE: glowing crystals inside a rocky cave mouth, with a bat flying out.
+ stCave:u=>stageEmblem(u,['#b48cff','#2a1450'],`<path d="M-2 66 L-2 30 Q2 9 20 6 Q32 3 44 6 Q62 9 66 30 L66 66 Z" fill="#5a4180"/>
+   <path d="M13 66 L13 37 Q15 21 32 19 Q49 21 51 37 L51 66 Z" fill="#1c0e3a"/><path d="M19 27 l2 6 l2 -5 M30 20 l1.5 5 l1.5 -5 M42 25 l1.8 5.5 l2 -6" fill="#5a4180" stroke-width="1.6"/>
+   <circle cx="32" cy="48" r="16" fill="url(#${u}g)" stroke="none"/>
+   <path d="M25 60 L22 48 L26 38 L30 48 L28 60 Z" fill="#ff6ad5"/><path d="M30 61 L28 44 L33 30 L38 44 L36 61 Z" fill="#5ff0ff"/><path d="M36 60 L36 50 L40 42 L44 50 L41 60 Z" fill="#b07aff"/>
+   <path d="M31.5 45 L33 34 L34 45 Z" fill="#fff" fill-opacity=".75" stroke="none"/><path d="M24.5 49 L26 41 L26.8 49 Z" fill="#fff" fill-opacity=".6" stroke="none"/>
+   <path d="M22 30 q3 -5 6 -1.5 q2.5 -2 4 0 q1.5 -2 4 0 q3 -3.5 6 1.5 q-3.5 -.5 -5 2.5 q-1.5 -1.5 -3 0 q-1.5 -1.5 -3 0 q-1.5 -3 -5 -2.5 Z" fill="#8a64c0" stroke-width="1.6"/>
+   <circle cx="30.6" cy="29.2" r=".9" fill="#ffd23f" stroke="none"/><circle cx="33.4" cy="29.2" r=".9" fill="#ffd23f" stroke="none"/>`,
+   `<radialGradient id="${u}g"><stop offset="0" stop-color="#7ff6ff" stop-opacity=".8"/><stop offset="1" stop-color="#7ff6ff" stop-opacity="0"/></radialGradient>`),
+ // ROBO FACTORY: a turning cog behind a saw-tooth factory with glowing windows and a smoking chimney.
+ stFactory:u=>stageEmblem(u,['#dfe8f8','#4d5f82'],`<path d="${gearPath(21,22,13,9)}" fill="#ffb020"/><circle cx="21" cy="22" r="4.5" fill="#4d5f82" stroke-width="2"/>
+   <circle cx="50" cy="13" r="4" fill="#fff" fill-opacity=".85" stroke="none"/><circle cx="55" cy="7" r="5" fill="#fff" fill-opacity=".7" stroke="none"/><circle cx="46" cy="8" r="3" fill="#fff" fill-opacity=".6" stroke="none"/>
+   <rect x="44" y="18" width="8" height="40" fill="#8f9db8"/><rect x="44" y="22" width="8" height="4" fill="#ff4d5e" stroke-width="1.6"/>
+   <path d="M4 60 V38 L16 30 V38 L28 30 V38 L40 30 V60 Z" fill="#5f6b88"/><rect x="8" y="42" width="6" height="5" rx="1" fill="#ffe46b" stroke-width="1.5"/><rect x="19" y="42" width="6" height="5" rx="1" fill="#ffe46b" stroke-width="1.5"/><rect x="30" y="42" width="6" height="5" rx="1" fill="#ffe46b" stroke-width="1.5"/>
+   <g clip-path="url(#${u}h)"><rect x="0" y="52" width="64" height="12" fill="#ffd23f" stroke="none"/><path d="M-4 64 L4 52 H10 L2 64 Z M10 64 L18 52 H24 L16 64 Z M24 64 L32 52 H38 L30 64 Z M38 64 L46 52 H52 L44 64 Z M52 64 L60 52 H66 L58 64 Z" fill="#1b1240" stroke="none"/></g><path d="M0 52 H64" fill="none" stroke-width="2"/>`,
+   `<clipPath id="${u}h"><rect x="0" y="52" width="64" height="12"/></clipPath>`),
+ // OUTER SPACE: a rocket blasting past the Earth and the Moon among the stars.
+ stSpace:u=>stageEmblem(u,['#4a5ad0','#070630'],`<g fill="#fff" stroke="none"><circle cx="40" cy="10" r="1"/><circle cx="54" cy="24" r="1.2"/><circle cx="10" cy="30" r="1"/><circle cx="30" cy="8" r=".8"/><circle cx="56" cy="44" r="1"/><circle cx="46" cy="54" r=".8"/></g>${emGlint(49,14,3.5)}
+   <circle cx="15" cy="15" r="5.5" fill="#eceaf4" stroke-width="1.8"/><circle cx="13.5" cy="14" r="1.4" fill="#b8b6c8" stroke="none"/><circle cx="16.8" cy="17" r="1" fill="#b8b6c8" stroke="none"/>
+   <circle cx="18" cy="49" r="17" fill="url(#${u}e)"/><path d="M8 42 q5 -4 9 0 q3 4 -2 7 q-5 2 -7 -2 Z M20 52 q5 -3 9 1 q1 5 -5 6 q-6 -1 -4 -7 Z M22 38 q4 -2 6 1 q-2 3 -6 -1 Z" fill="#4fc06a" stroke-width="1.4"/>
+   <g transform="translate(40 28) rotate(40)"><path d="M-4 12 Q0 26 4 12 Z" fill="#ffb020" stroke-width="1.5"/><path d="M-2 12 Q0 19 2 12 Z" fill="#fff6b0" stroke="none"/>
+   <path d="M-6 4 L-11 12 L-5 11 Z M6 4 L11 12 L5 11 Z" fill="#ff4d5e" stroke-width="1.6"/><path d="M-5 12 V-6 Q0 -18 5 -6 V12 Z" fill="#fff"/><path d="M-3.6 -9 Q0 -17 3.6 -9 Z" fill="#ff4d5e" stroke-width="1.4"/><circle cx="0" cy="1" r="2.8" fill="#44d9ff" stroke-width="1.6"/></g>`,
+   rg(u+'e','#9fdcff','#1f5fc0',.35,.3,.9)),
+ // DEEP UNIVERSE: a glowing spiral galaxy with a ringed planet and sparkling stars.
+ stUniverse:u=>stageEmblem(u,['#a85cf0','#12052e'],`<circle cx="32" cy="34" r="22" fill="url(#${u}n)" stroke="none"/>
+   <path d="M32 34 C40 27 47 35 41 43 C35 51 19 47 17 36" fill="none" stroke="#ff9af0" stroke-opacity=".9" stroke-width="4.5"/><path d="M32 34 C24 41 17 33 23 25 C29 17 45 21 47 32" fill="none" stroke="#b3d1ff" stroke-opacity=".9" stroke-width="4.5"/>
+   <path d="M32 34 C40 27 47 35 41 43 C35 51 19 47 17 36 M32 34 C24 41 17 33 23 25 C29 17 45 21 47 32" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="1.4"/>
+   <circle cx="32" cy="34" r="5.5" fill="url(#${u}k)" stroke="none"/>
+   <g transform="translate(46 18) rotate(-20)"><path d="M-10 0 A10 3 0 0 1 10 0" fill="none" stroke="#ffd23f" stroke-width="2.4"/><circle cx="0" cy="0" r="5.5" fill="url(#${u}p)" stroke-width="1.8"/><path d="M-10 0 A10 3 0 0 0 10 0" fill="none" stroke="#ffd23f" stroke-width="2.4"/></g>
+   ${emGlint(14,20,3.5)}${emGlint(51,48,3)}${emGlint(21,52,2.5)}`,
+   `<radialGradient id="${u}n"><stop offset="0" stop-color="#ff7ad9" stop-opacity=".55"/><stop offset="1" stop-color="#7a3cff" stop-opacity="0"/></radialGradient>`+rg(u+'k','#ffffff','#ffd0f4',.5,.5,.6)+rg(u+'p','#ffd8a0','#e06a3a'))});

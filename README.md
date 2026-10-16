@@ -53,7 +53,11 @@ and only a few buttons sit around the edges.
 - SETTINGS: sound, full screen, your account (guest: SIGN UP or LOG IN; member: sign out), your
   USERNAME (or guest name), HOW TO PLAY (power-ups, boost and bosses) and the tutorial (replay it or turn it off).
 On wide screens the action stays in a centred column framed by side walls. All icons are cartoon
-SVGs in icons.js.
+SVGs in icons.js. Each stage has its own round illustrated emblem (stSky, stJungle, stCave, stFactory, stSpace,
+stUniverse in icons.js), used on the map, the menu banner, the HUD, results, rankings and the level map signs:
+a striped hot-air balloon under the sun over clouds, two palm trees on an island in a lagoon, glowing crystals in a
+cave mouth with a bat, a cog and a smoking factory over a hazard band, a rocket passing the Earth and the Moon, and a
+glowing spiral galaxy with a ringed planet.
 
 ## Modes: Campaign and Free Run
 The MAP button (the big middle button of the bottom bar), or a tap on the stage banner, opens the map.
@@ -298,7 +302,8 @@ levels. Finishing a level moves the medal up to the next one with a harder goal 
 | TASK MASTER | daily tasks done | 15 | 60 | 150 | 400 | 900 |
 | TREASURE HUNTER | boxes opened | 3 | 20 | 60 | 150 | 400 |
 
-Boss medals: THUNDER KING, TIKI TITAN, BAT QUEEN, MECHA CRUSHER, UFO OVERLORD and STAR DEVOURER. Each medal level is
+Boss medals: THUNDER KING, TIKI TITAN, BAT QUEEN, MECHA CRUSHER, UFO OVERLORD and STAR DEVOURER, each showing that boss's
+own face in the middle. Each medal level is
 earned by beating that boss at that rank level (SERGEANT I for level I up to SERGEANT V for level V), in the campaign
 or in Free Run.
 
