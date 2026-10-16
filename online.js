@@ -27,8 +27,14 @@ const online=(()=>{
  function weekEnd(d=new Date()){const t=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()));t.setUTCDate(t.getUTCDate()+((8-(t.getUTCDay()||7))%7||7));return t}
  function timeLeft(){const ms=Math.max(0,weekEnd()-Date.now()),d=Math.floor(ms/864e5),h=Math.floor(ms/36e5)%24,m=Math.floor(ms/6e4)%60;return d?`${d}d ${h}h`:h?`${h}h ${m}m`:`${m}m`}
  const clean=s=>String(s||'').replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim().slice(0,16);
- // Guests are "Guest"; members use their username, or their first name and last initial until they pick one.
- function displayName(){if(!user)return 'Guest';if(save.nick)return clean(save.nick)||'Player';const parts=clean(user&&user.displayName).split(' ').filter(Boolean);return parts.length?clean(parts[0]+(parts.length>1?` ${parts[parts.length-1][0]}.`:'')):'Player'}
+ // Every guest gets a fun name of their own (written straight to this device, without marking the save newer than
+ // the cloud), and can change it in Settings. Signing up keeps it as the username when nobody else has it.
+ const GUEST_A=['Sky','Cloud','Sunny','Turbo','Comet','Star','Breezy','Rocket','Lucky','Swift','Puffy','Zippy'],GUEST_B=['Pilot','Flyer','Fox','Dash','Hopper','Glider','Rider','Zoom','Drifter','Racer','Bubble','Ace'];
+ const guestPick=()=>GUEST_A[Math.floor(Math.random()*GUEST_A.length)]+GUEST_B[Math.floor(Math.random()*GUEST_B.length)]+Math.floor(100+Math.random()*900);
+ if(!clean(save.guestName)){save.guestName=guestPick();try{localStorage.setItem('skybound-save',JSON.stringify(save))}catch{}}
+ function renameGuest(raw){save.guestName=clean(raw);persist();changed()}
+ // Guests show their guest name; members use their username, or their first name and last initial until they have one.
+ function displayName(){if(!user)return clean(save.guestName)||'Guest';if(save.nick)return clean(save.nick)||'Player';const parts=clean(user&&user.displayName).split(' ').filter(Boolean);return parts.length?clean(parts[0]+(parts.length>1?` ${parts[parts.length-1][0]}.`:'')):'Player'}
  function changed(){refreshOnline();if((status==='out'||status==='error')&&typeof seasonCheck==='function')seasonCheck()}
  function start(){if(!configured()||loading)return loading;status='loading';
   loading=(async()=>{try{const [A,U,F]=await Promise.all(['firebase-app','firebase-auth','firebase-firestore'].map(n=>import(SDK+n+'.js')));const app=A.initializeApp(FIREBASE_CONFIG);fb={U,F,auth:U.getAuth(app),db:F.getFirestore(app)};status='out';
@@ -57,8 +63,10 @@ const online=(()=>{
   if(top>best.all){best.all=top;await putEntry(['leaders',uid],entry(top,topStage,save.skin)).catch(()=>{})}
   if((save.freeBest||0)>best.free){best.free=save.freeBest;await putEntry(['freerun',uid],entry(save.freeBest,'sky',save.skin)).catch(()=>{})}
   await claimWeekly();publishNow();changed();
-  // New accounts, and accounts without a username signing in on purpose, pick a username.
-  if(!save.nickKey&&(mode||!data)&&typeof chooseName==='function')chooseName({fresh:true,current:suggestName()})}
+  // An account that already has a username never asks again. A new account keeps the guest name (or a fresh one like
+  // it when that is taken); an older account without a username, signing in on purpose, is asked once.
+  if(!save.nick&&(mode||!data)){let named=false;if(!data)for(const n of [clean(save.guestName),guestPick(),guestPick()]){if(!n)continue;try{await claimName(n);named=true;break}catch(e){}}
+   if(!named&&typeof chooseName==='function')chooseName({fresh:true,current:data?suggestName():clean(save.guestName)||suggestName()})}}
  function firstName(){return clean(user&&user.displayName).split(' ')[0]||''}
  function suggestName(){const f=firstName().replace(/[^\p{L}\p{N} _.\-]/gu,'').slice(0,12);return f.length>=2?f:'Pilot'+Math.floor(100+Math.random()*900)}
  // Usernames are unique: usernames/{name in lower case} holds the owner's uid. Taking a new one frees the old one.
@@ -78,7 +86,7 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
  function mergeSave(cloud){if(!cloud||typeof cloud!=='object')return;const newer=(cloud.updated||0)>(save.updated||0),num=(v,lo,hi)=>typeof v==='number'&&isFinite(v)?Math.min(hi,Math.max(lo,Math.floor(v))):null;
   if((cloud.updated||0)>(save.updated||0)){const c=num(cloud.coins,0,1e9),l=num(cloud.lives,0,MAX_LIVES),g=num(cloud.gems,0,1e6);if(c!==null)save.coins=c;if(g!==null)save.gems=g;if(l!==null)save.lives=l;if(SKINS[cloud.skin])save.skin=cloud.skin;save.updated=cloud.updated}
   save.skins=[...new Set([...(save.skins||[]),...(Array.isArray(cloud.skins)?cloud.skins:[])])].filter(id=>SKINS[id]);if(!save.skins.includes(save.skin))save.skin='classic';
-  for(const k of ['best','scores','stars','bossWins']){save[k]=save[k]||{};for(const [id,v] of Object.entries(cloud[k]||{})){const n=num(v,0,1e9);if(n!==null&&STAGES.some(s=>s.id===id))save[k][id]=Math.max(save[k][id]||0,n)}}
+  for(const k of ['best','scores','stars','bossWins','freeRanks']){save[k]=save[k]||{};for(const [id,v] of Object.entries(cloud[k]||{})){const n=num(v,0,1e9);if(n!==null&&STAGES.some(s=>s.id===id))save[k][id]=Math.max(save[k][id]||0,n)}}
   const cc=cloud.cos;if(cc&&typeof cc==='object'){const c=myCos();c.own=[...new Set([...c.own,...(Array.isArray(cc.own)?cc.own:[])])].filter(id=>AVATARS[id]||FRAMES[id]);c.goldOwned=c.goldOwned||!!cc.goldOwned;if((cloud.updated||0)>=(save.updated||0)){if(AVATARS[cc.avatar])c.avatar=cc.avatar;if(FRAMES[cc.frame])c.frame=cc.frame;c.gold=!!cc.gold}}
   if((cloud.updated||0)>(save.updated||0)){if(cloud.clan&&typeof cloud.clan==='object')save.clan=cloud.clan;if(cloud.clanReq&&typeof cloud.clanReq==='object')save.clanReq=cloud.clanReq}
   // Free Run records keep the best of both; cleared campaign stages add up.
@@ -135,6 +143,9 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
   if(seasonSent!==key)try{await fb.F.setDoc(ref('seasons',s.id,'players',user.uid),{...doc,at:fb.F.serverTimestamp()});seasonSent=key}
   catch(e){console.warn('Season points not saved',e);return}
   if(s.sp>=LEGEND_MIN){const r=await seasonRank(s.id,s.sp);if(r!==null)seasonLegend(r<=LEGEND_TOP,s.id)}else if(s.legend)seasonLegend(false,s.id)}
+ // LEVEL board: the top 100 players by level, read from public profiles (a level only grows with total metres,
+ // so sorting by metres sorts by level).
+ async function topLevels(){if(!fb)return [];const snap=await fb.F.getDocs(fb.F.query(fb.F.collection(fb.db,'profiles'),fb.F.orderBy('meters','desc'),fb.F.limit(100)));return snap.docs.map(d=>({uid:d.id,...d.data()}))}
  async function seasonTop(id){if(!fb)return [];const snap=await fb.F.getDocs(fb.F.query(fb.F.collection(fb.db,'seasons',id,'players'),fb.F.orderBy('sp','desc'),fb.F.limit(TOP)));return snap.docs.map(d=>({uid:d.id,...d.data()}))}
  async function seasonRank(id,sp){if(!fb||!sp)return null;try{const snap=await fb.F.getCountFromServer(fb.F.query(fb.F.collection(fb.db,'seasons',id,'players'),fb.F.where('sp','>',sp)));return snap.data().count+1}catch{return null}}
  // Public stats for player cards: stage high scores and stars, bosses beaten, this season's points and rank,
@@ -156,7 +167,7 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
   if(save.clan){const [m,c]=await Promise.all([fb.F.getDoc(ref('clans',save.clan.id,'members',uid)),fb.F.getDoc(ref('clans',save.clan.id))]);if(!m.exists()||!c.exists()){save.clan=null}else{const d=c.data();save.clan={id:save.clan.id,name:d.name,tag:d.tag,role:m.data().role}}changedClan=true}
   if(save.clanReq&&!save.clan){const id=save.clanReq.id,[m,r,c]=await Promise.all([fb.F.getDoc(ref('clans',id,'members',uid)),fb.F.getDoc(ref('clans',id,'requests',uid)),fb.F.getDoc(ref('clans',id))]);if(m.exists()&&c.exists()){const d=c.data();save.clan={id,name:d.name,tag:d.tag,role:m.data().role};save.clanReq=null}else if(!r.exists()||!c.exists())save.clanReq=null;changedClan=true}
   if(changedClan){persist();refreshMeta()}}
- return {configured,start,signIn,signOut,submit,top,saved,claimName,rankFor,get ready(){return ready},seasonSync,seasonTop,seasonRank,myCard,timeLeft,weekId,displayName,REWARDS,publish,publishNow,getProfile,looks,verifyClan,get api(){return fb&&user?{F:fb.F,db:fb.db,ref,uid:user.uid}:null},get status(){return status},get user(){return user},get best(){return best},get reward(){return reward},takeReward(){const r=reward;reward=null;return r}};
+ return {configured,start,signIn,signOut,submit,top,saved,claimName,renameGuest,rankFor,get ready(){return ready},seasonSync,seasonTop,seasonRank,topLevels,myCard,timeLeft,weekId,displayName,REWARDS,publish,publishNow,getProfile,looks,verifyClan,get api(){return fb&&user?{F:fb.F,db:fb.db,ref,uid:user.uid}:null},get status(){return status},get user(){return user},get best(){return best},get reward(){return reward},takeReward(){const r=reward;reward=null;return r}};
 })();
 
 // ---- High score screens ----
@@ -177,9 +188,10 @@ function postResult(score){if(!online.user)return;results.rank=null;resultsOnlin
 function renderRanks(){const list=$('#panel-list'),on=online.configured();$('#panel-title').textContent='HIGH SCORES';list.replaceChildren();
  const r=online.takeReward&&online.takeReward();if(r){const b=el('div','reward-banner');b.innerHTML=iconHTML('trophy');b.prepend(avatarEl(myLook(),40));b.append(el('div','',''));b.lastChild.append(el('b','',`LAST WEEK YOU PLACED #${r.rank}!`),el('span','',`Tournament reward: +${r.coins} coins${r.gems?` and +${r.gems} gems`:''}`));list.append(b);confetti(30)}
  if(!on)ranksTab='mine';
- const tabs=el('div','tabs rank-tabs');for(const [id,label,ic] of [['week','WEEKLY','trophy'],['all','ALL TIME','planet'],['free','FREE RUN','rocket'],['mine','MY BESTS','star']]){if(!on&&id!=='mine')continue;const b=el('button','tab'+(ranksTab===id?' on':''));b.innerHTML=iconHTML(ic)+label;b.onclick=()=>{ranksTab=id;renderRanks()};tabs.append(b)}list.append(tabs);
+ const tabs=el('div','tabs rank-tabs');for(const [id,label,ic] of [['week','WEEKLY','trophy'],['all','ALL TIME','planet'],['free','FREE RUN','rocket'],['level','LEVEL','crown'],['mine','MY BESTS','star']]){if(!on&&id!=='mine')continue;const b=el('button','tab'+(ranksTab===id?' on':''));b.innerHTML=iconHTML(ic)+label;b.onclick=()=>{ranksTab=id;renderRanks()};tabs.append(b)}list.append(tabs);
  if(ranksTab==='mine'){const box=el('div','rank-list'),lk=myLook(),me=el('div','rank-row me mine-head');me.append(avatarEl(lk,40),nameEl(online.displayName(),lk.gold,save.clan&&save.clan.tag),el('b','rank-score',Math.max(0,...Object.values(save.scores||{})).toLocaleString()));me.onclick=()=>openPanel('profile');box.append(me);for(const s of STAGES){const st=save.stars[s.id]||0,row=el('div','rank-row stage-row'),ico=el('span','ico');ico.innerHTML=icon(s.icon);const trio=el('span','star-trio');trio.innerHTML=[0,1,2].map(k=>iconHTML('star',k<st?'':'off',k===1?'mid':'')).join('');row.append(ico,el('b','rank-name',s.name),trio,el('b','rank-score',(save.scores[s.id]||0).toLocaleString()));box.append(row)}{const row=el('div','rank-row stage-row'),ico=el('span','ico');ico.innerHTML=icon('rocket');row.append(ico,el('b','rank-name','FREE RUN'),el('b','rank-score',(save.freeBest||0).toLocaleString()));box.append(row)}list.append(box);
   if(!on)list.append(el('p','rank-note','Worldwide and weekly leaderboards with Google sign-in switch on once the game is connected to Firebase (see README).'));return}
+ if(ranksTab==='level'){renderLevelBoard(list);return}
  if(ranksTab==='free')list.append(el('p','rank-note','FREE RUN: one endless run through all six stages. Ranked by highest score.'));
  if(ranksTab==='week'){const info=el('div','week-info');info.innerHTML=iconHTML('trophy');info.append(el('div',''));info.lastChild.append(el('b','',`ENDS IN ${online.timeLeft()}`),el('span','',`TOP 10 WIN GEMS! 1st: 50 gems + 1000 coins · 2nd: 30 + 750 · 3rd: 20 + 500 · 4th-10th: 10 + 300 · everyone: 50 coins`));list.append(info)}
  const box=el('div','rank-list');box.append(el('p','rank-note',online.status==='error'?'Could not reach the leaderboard. Check your connection.':'Loading…'));list.append(box);
@@ -195,4 +207,19 @@ function renderRanks(){const list=$('#panel-list'),on=online.configured();$('#pa
   online.looks(rows.map(e=>e.uid).filter(u=>u!==uid)).then(map=>{if(req!==ranksReq)return;for(const row of box.querySelectorAll('.rank-row[data-uid]')){const p=map[row.dataset.uid];if(!p)continue;const cv=row.querySelector('canvas'),nm=row.querySelector('.rank-name');if(cv)cv.replaceWith(avatarEl(p,32));if(nm)nm.replaceWith(nameEl(p.name,p.gold,p.clanTag))}}).catch(()=>{});
   const myBest=board==='week'?online.best.week:online.best.all;if(uid&&myBest&&!rows.some(e=>e.uid===uid)){const row=el('div','rank-row me'),pos=el('span','rank-pos','…'),lk=myLook();row.append(pos,avatarEl(lk,32),nameEl(online.displayName(),lk.gold,save.clan&&save.clan.tag),el('span','ico'),el('b','rank-score',myBest.toLocaleString()));box.append(row)}})
   .catch(e=>{if(req!==ranksReq)return;console.warn(e);box.replaceChildren(el('p','rank-note','Could not load the leaderboard right now.'))})}
+// LEVEL tab: the top 100 players in the game by level, each with their level badge; your own row follows if you are
+// further down, and guests see their level with the sign-up buttons.
+function renderLevelBoard(list){const lv=playerLevel();list.append(el('p','rank-note','TOP 100 PLAYERS BY LEVEL. Your level grows with every metre you fly, in every run.'));
+ const box=el('div','rank-list');box.append(el('p','rank-note',online.status==='error'?'Could not reach the leaderboard. Check your connection.':'Loading…'));list.append(box);
+ const foot=el('div','rank-foot');if(online.user){const me=el('div','me'),lk=myLook();me.append(avatarEl(lk,32),nameEl(online.displayName(),lk.gold,save.clan&&save.clan.tag,''));foot.append(me,el('small','',`You are LEVEL ${lv}.`))}
+ else{const acts=el('div','set-acts');acts.append(googleButton('SIGN UP','signup'),googleButton('LOG IN','login'));foot.append(el('small','',`You are LEVEL ${lv} as a guest.`),acts,el('small','','Sign up to join the level ranking and keep your level in the cloud.'))}
+ list.append(foot);
+ const req=++ranksReq;Promise.resolve(online.start()).then(()=>online.topLevels()).then(rows=>{if(req!==ranksReq||panelKind!=='ranks')return;box.replaceChildren();if(!rows.length){box.append(el('p','rank-note','No levels yet. Fly to be the first!'));return}
+  const uid=online.user&&online.user.uid,levelFor=e=>Math.max(1,Math.min(MAX_LEVEL,Math.floor(e.level)||levelOf(e.meters||0).level));
+  rows.forEach((e,i)=>{const mine=e.uid===uid,L=mine?lv:levelFor(e),look=mine?myLook():{avatar:e.avatar,frame:e.frame,gold:e.gold,level:L},row=el('div','rank-row'+(mine?' me':'')+(i<3?' top':'')),pos=el('span','rank-pos');
+   if(i<3)pos.innerHTML=icon('medal',['gold','silver','bronze'][i]);else pos.textContent=i+1;row.dataset.uid=e.uid;
+   row.append(pos,avatarEl(look,32),nameEl(mine?online.displayName():e.name,look.gold,mine?save.clan&&save.clan.tag:e.clanTag),el('b','rank-score',`LEVEL ${L}`));
+   row.onclick=()=>showProfile(e.uid,{name:e.name,avatar:e.avatar,frame:e.frame,gold:e.gold,clanTag:e.clanTag,best:e.best,skin:e.skin});box.append(row)});
+  if(uid&&!rows.some(e=>e.uid===uid)){const row=el('div','rank-row me'),lk=myLook();row.append(el('span','rank-pos','…'),avatarEl(lk,32),nameEl(online.displayName(),lk.gold,save.clan&&save.clan.tag),el('b','rank-score',`LEVEL ${lv}`));box.append(row)}})
+  .catch(e=>{if(req!==ranksReq)return;console.warn(e);box.replaceChildren(el('p','rank-note','Could not load the level ranking right now.'))})}
 online.start();refreshOnline();setInterval(()=>{if(state==='menu')refreshOnline(false)},30000);

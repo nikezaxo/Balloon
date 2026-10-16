@@ -51,24 +51,26 @@ and only a few buttons sit around the edges.
   Free Run, see Modes), RANKS (weekly tournament, all-time, Free Run and your bests; the badge shows
   the time left this week), SEASON (your rank badge) and CLAN.
 - SETTINGS: sound, full screen, your account (guest: SIGN UP or LOG IN; member: sign out), your
-  USERNAME, HOW TO PLAY (power-ups, boost and bosses) and the tutorial (replay it or turn it off).
+  USERNAME (or guest name), HOW TO PLAY (power-ups, boost and bosses) and the tutorial (replay it or turn it off).
 On wide screens the action stays in a centred column framed by side walls. All icons are cartoon
 SVGs in icons.js.
 
 ## Modes: Campaign and Free Run
 The MAP button (the big middle button of the bottom bar), or a tap on the stage banner, opens the map.
 - CAMPAIGN: the six stages in order. Only Sunny Sky is open at first. Each stage has a GOAL altitude, and
-  every goal is higher than the one before: Sunny Sky 3,000 m, Jungle Island 6,000 m, Crystal Cave
-  10,000 m, Robo Factory 15,000 m, Outer Space 25,000 m and Deep Universe 40,000 m (STAGE_GOALS in game.js).
+  every goal is higher than the one before: Sunny Sky 8,000 m, Jungle Island 15,000 m, Crystal Cave
+  25,000 m, Robo Factory 40,000 m, Outer Space 60,000 m and Deep Universe 90,000 m (STAGE_GOALS in game.js).
+  Runs start at 130 m a second and speed up, so Sunny Sky's goal means surviving about 45 seconds and Deep
+  Universe's about four minutes. Stages already cleared stay cleared.
   Reaching a stage's goal CLEARS it and unlocks the next stage mid-flight ("STAGE CLEAR! JUNGLE ISLAND
   UNLOCKED"), and the first clear of each stage pays a box (Sky Box for the first two, Storm Box for the
   next three, Legend Box for Deep Universe). The menu banner shows the goal under the stage name and the map shows a goal bar for each stage. Locked stages
-  show a padlock on the map, the banner and the page dots with what opens them ("REACH 3,000 m IN SUNNY
+  show a padlock on the map, the banner and the page dots with what opens them ("REACH 8,000 m IN SUNNY
   SKY"); cutting the rope on a locked stage does nothing. Stages you had already played or cleared stay
   open. Campaign runs count for the stage's best, stars, and the weekly and all-time boards.
 - FREE RUN: one endless run through every stage. It starts at Sunny Sky; after each boss the run flies
   straight on into the next stage (new backdrop, ledges, creatures and boss), and after Deep Universe it
-  starts again at Sunny Sky, tougher every time. It has its own record (FREE RUN in MY BESTS) and its own
+  starts again at Sunny Sky, tougher every time. Its bosses have ranks (see BOSS RANKS under Boss fights). It has its own record (FREE RUN in MY BESTS) and its own
   world ranking by highest score (the FREE RUN tab of the rankings, freerun/{uid} in Firestore); it
   does not change your stage records. The banner reads FREE RUN with your best; change mode on the map.
 
@@ -162,12 +164,16 @@ or go back to the menu. Each stage keeps its best score and most stars.
 
 ## Online high scores
 With online play switched on:
-- Everyone starts as a GUEST: they can play, see the weekly, all-time and season rankings, tap any player
-  and see where their own best would place ("your best would be #12 this week"). Guest progress is kept
-  on that device only.
-- SIGN UP (Settings, the high scores screen or the results screen) creates an account with Google:
-  the player picks a USERNAME, their guest progress and best scores go into the account and on the boards,
-  and everything is saved in the cloud. LOG IN signs in to an account they already have.
+- Everyone starts as a GUEST with a fun guest name of their own (like CometDash226 or SkyPilot482), shown on
+  their profile; SETTINGS > USERNAME changes it. Guests can play, see the weekly, all-time, Free Run, level and
+  season rankings, tap any player and see where their own best would place ("your best would be #12 this
+  week"). Guest progress is kept on that device only.
+- SIGN UP (Settings, the high scores screen or the results screen) creates an account with Google without
+  asking anything: the guest name becomes the USERNAME (or a fresh one like it if somebody already has it),
+  the guest progress and best scores go into the account and on the boards, and everything is saved in the
+  cloud. LOG IN signs in to an account they already have.
+- An account that has a username never asks for one again, whether you log out and back in or switch
+  devices. Only an older account that never picked one is asked once, when you log in.
 - Signing up with a Google account that already has a Skybound account asks first: CANCEL (stay a guest,
   nothing changes) or SIGN IN with that account (skins and best scores from this device are added to it).
   Nothing is written to the cloud until the account is confirmed.
@@ -178,6 +184,8 @@ With online play switched on:
   "already taken, please choose another name". Change it any time in SETTINGS > USERNAME; the new name
   shows right away on the boards, in clans and on your player card, and the old one is freed.
 - Your best score goes on the ALL TIME board and your best this week on the WEEKLY board.
+- LEVEL board: the top 100 players in the game by level, with their level badges (read from the public profiles,
+  sorted by total metres flown); your own row follows if you are further down.
   The results screen shows your world and weekly rank after each run.
 - The weekly tournament runs Monday 00:00 to Sunday 23:59 UTC. The first time you sign in
   after it ends you get your prize: 1st 1,000 coins + 50 gems, 2nd 750 + 30 gems,
@@ -268,18 +276,18 @@ levels. Finishing a level moves the medal up to the next one with a harder goal 
 
 | Medal | Task | I | II | III | IV | V |
 |---|---|---|---|---|---|---|
-| SKY EXPLORER | metres flown in total | 10,000 | 100,000 | 500,000 | 2,000,000 | 10,000,000 |
-| HIGH FLYER | metres in one run | 5,000 | 15,000 | 30,000 | 60,000 | 100,000 |
-| BOSS HUNTER | bosses beaten | 1 | 10 | 50 | 150 | 500 |
-| STAR COLLECTOR | stage stars (out of 18) | 1 | 3 | 6 | 12 | 18 |
-| COIN TYCOON | coins collected in runs | 500 | 5,000 | 25,000 | 100,000 | 500,000 |
-| PERFECTIONIST | perfect coin rows | 20 | 100 | 400 | 1,000 | 3,000 |
-| DAREDEVIL | close calls | 25 | 100 | 400 | 1,000 | 3,000 |
-| SMASHER | smashes and bonks | 50 | 250 | 1,000 | 3,000 | 10,000 |
-| TURBO ACE | engine boosts | 5 | 25 | 100 | 300 | 1,000 |
-| VETERAN | runs played | 10 | 50 | 200 | 500 | 1,500 |
-| TASK MASTER | daily tasks done | 5 | 25 | 75 | 200 | 500 |
-| TREASURE HUNTER | boxes opened | 1 | 10 | 30 | 100 | 300 |
+| SKY EXPLORER | metres flown in total | 25,000 | 250,000 | 1,200,000 | 5,000,000 | 25,000,000 |
+| HIGH FLYER | metres in one run | 8,000 | 20,000 | 40,000 | 70,000 | 120,000 |
+| BOSS HUNTER | bosses beaten | 5 | 30 | 100 | 300 | 1,000 |
+| STAR COLLECTOR | stage stars (out of 18) | 3 | 6 | 10 | 14 | 18 |
+| COIN TYCOON | coins collected in runs | 2,000 | 20,000 | 100,000 | 400,000 | 1,500,000 |
+| PERFECTIONIST | perfect coin rows | 50 | 250 | 1,000 | 3,000 | 8,000 |
+| DAREDEVIL | close calls | 60 | 250 | 1,000 | 3,000 | 8,000 |
+| SMASHER | smashes and bonks | 150 | 700 | 2,500 | 8,000 | 25,000 |
+| TURBO ACE | engine boosts | 15 | 60 | 200 | 600 | 1,500 |
+| VETERAN | runs played | 25 | 100 | 400 | 1,000 | 3,000 |
+| TASK MASTER | daily tasks done | 15 | 60 | 150 | 400 | 900 |
+| TREASURE HUNTER | boxes opened | 3 | 20 | 60 | 150 | 400 |
 
 - Higher levels look cooler: I is a round BRONZE medal, II a scalloped SILVER one, III a starburst GOLD one,
   IV is FIRE GOLD (animated flame colours, flames and sparks) and V is ROYAL FIRE (fire gold with a halo, wings
@@ -289,7 +297,8 @@ levels. Finishing a level moves the medal up to the next one with a harder goal 
 - Tap a medal to open it big: it spins round in 3D (front, edge, the back with an embossed star, front again),
   with its five levels in a row underneath and what the next level needs.
 - A medal earned mid-run pops up in flight ("MEDAL! SMASHER III"); the results screen shows it with its reward
-  (tap to see it spin). Players from before medals get the levels their old saves have already earned.
+  (tap to see it spin). Players from before medals get the levels their old saves have already earned, and medal levels
+  already earned stay earned when goals change.
 - Signed-in players' medals are saved to their account and public profile, and show on their player card
   (needs the updated firestore.rules).
 
@@ -395,17 +404,31 @@ boss you beat (BOSS_FIRST and BOSS_GAP in bosses.js; a BOSS timer counts down in
    boss, +100 with the Golden King skin); they all fly into your balloon, then the
    course resumes. Repeat wins against a stage's boss also make it slightly faster.
 
+BOSS RANKS. Every boss wears a rank badge at its bottom right (BOSS_RANKS in bosses.js): SERGEANT I, II and III
+(bronze chevrons), LIEUTENANT I, II and III (silver bars), CAPTAIN I, II and III (gold stars) and GENERAL (a big glowing
+star). The rank shows in the boss bar and the versus splash ("JUNGLE BOSS · SERGEANT II").
+- FREE RUN: every boss starts at SERGEANT I, and each time you beat it there it comes back one rank higher the next
+  time you meet it ("TIKI TITAN WILL RETURN AS SERGEANT II!"), kept on your account. Each rank looks angrier, better
+  armoured and shinier: steam puffs from rank II, a throbbing anger mark from rank III, steel armour from lieutenant,
+  gold armour with turning rays from captain and a glowing aura at general, with a shine sweeping across. Each rank
+  also attacks faster, loses stamina more slowly and uses its special skill more often. The FREE RUN tab of the
+  map lists every boss's rank.
+- CAMPAIGN: a boss's rank grows with how often you have beaten it (up to LIEUTENANT I) and looks the part, but it
+  gets no harder than before.
+
 Bosses, weapons and SPECIAL SKILLS. Every boss has three weapons of its own and one special skill that no other
 boss uses (ATTACKS in bosses.js). The special skill comes with a SPECIAL SKILL banner: first when the boss's stamina
 drops below 70, again just after it gets enraged, then every 16 seconds.
 - THUNDER KING (Sunny Sky):
   - LIGHTNING strikes down a flashing column.
-  - A TORNADO funnel crosses the screen and drags you towards it.
+  - A TORNADO funnel crosses most of the screen and drags you a little towards it; it stops short of the far side,
+    so fly to that edge.
   - A GUST blows you sideways (wind streaks show it) while leaves and branches fly across.
-  - Special CHAIN LIGHTNING: two storm orbs joined by a crackling arc sweep down the screen; get outside them.
+  - Special CHAIN LIGHTNING: two storm orbs joined by a crackling arc sweep slowly down the screen (a second sweep
+    once enraged). The arc never spans more than 40% of the width, so there is always room beside it.
 - TIKI TITAN (Jungle Island):
-  - A BOOMERANG axe loops out to where you were and comes back.
-  - COCONUT BOMBS fall and burst into flying splinters.
+  - A BOOMERANG axe loops out to where you were and comes back (two once enraged).
+  - COCONUT BOMBS fall and burst high up into five slower splinters, leaving time to dodge.
   - LAVA GEYSERS erupt from the bottom after bubbling (the first one under you).
   - Special FIRE BREATH: a cone of fire sweeps across below the mask; "GET LOW!" and fly under its reach.
 - BAT QUEEN (Crystal Cave):
