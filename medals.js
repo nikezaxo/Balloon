@@ -12,18 +12,18 @@ const MEDAL_PRIZE=[{coins:100},{coins:300},{gems:10},{gems:25},{gems:60}];
 const life=k=>(save.life||{})[k]||0;
 const sumOf=o=>Object.values(o||{}).reduce((a,v)=>a+(Math.floor(v)||0),0);
 const MEDAL_LIST=[
- {id:'explorer',name:'SKY EXPLORER',icon:'balloon',rib:['#3d9bff','#ffffff'],unit:'m flown in total',goals:[10000,100000,500000,2000000,10000000],get:()=>Math.floor(save.totalM||0)},
- {id:'flyer',name:'HIGH FLYER',icon:'rocket',rib:['#7a3cff','#5ff0ff'],unit:'m in one run',goals:[5000,15000,30000,60000,100000],get:()=>Math.max(life('runAlt'),save.freeAlt||0,...Object.values(save.best||{}).map(v=>Math.floor(v)||0))},
- {id:'hunter',name:'BOSS HUNTER',icon:'skull',rib:['#e0203c','#1b1240'],unit:'bosses beaten',goals:[1,10,50,150,500],get:()=>sumOf(save.bossWins)},
- {id:'stars',name:'STAR COLLECTOR',icon:'star',rib:['#ffd23f','#ff7a00'],unit:'stage stars',goals:[1,3,6,12,18],get:()=>sumOf(save.stars)},
- {id:'tycoon',name:'COIN TYCOON',icon:'coin',rib:['#ffc414','#2fbf4f'],unit:'coins collected in runs',goals:[500,5000,25000,100000,500000],get:()=>life('coins')},
- {id:'perfect',name:'PERFECTIONIST',icon:'gem',rib:['#ff7ad9','#ffffff'],unit:'perfect coin rows',goals:[20,100,400,1000,3000],get:()=>life('rows')},
- {id:'daredevil',name:'DAREDEVIL',icon:'shield',rib:['#44d9ff','#1b1240'],unit:'close calls',goals:[25,100,400,1000,3000],get:()=>life('close')},
- {id:'smasher',name:'SMASHER',icon:'flame',rib:['#ff5a1f','#ffd23f'],unit:'smashes and bonks',goals:[50,250,1000,3000,10000],get:()=>life('smashes')},
- {id:'booster',name:'TURBO ACE',icon:'bolt',rib:['#ffd23f','#3d7bff'],unit:'engine boosts',goals:[5,25,100,300,1000],get:()=>life('boosts')},
- {id:'veteran',name:'VETERAN',icon:'play',rib:['#4fd36b','#1b1240'],unit:'runs played',goals:[10,50,200,500,1500],get:()=>life('runs')},
- {id:'taskmaster',name:'TASK MASTER',icon:'trophy',rib:['#a273ff','#ffd23f'],unit:'daily tasks done',goals:[5,25,75,200,500],get:()=>life('dailyDone')},
- {id:'treasure',name:'TREASURE HUNTER',icon:'box',rib:['#c98a4a','#ffd23f'],unit:'boxes opened',goals:[1,10,30,100,300],get:()=>save.boxesOpened||0}];
+ {id:'explorer',name:'SKY EXPLORER',icon:'balloon',rib:['#3d9bff','#ffffff'],unit:'m flown in total',goals:[25000,250000,1200000,5000000,25000000],get:()=>Math.floor(save.totalM||0)},
+ {id:'flyer',name:'HIGH FLYER',icon:'rocket',rib:['#7a3cff','#5ff0ff'],unit:'m in one run',goals:[8000,20000,40000,70000,120000],get:()=>Math.max(life('runAlt'),save.freeAlt||0,...Object.values(save.best||{}).map(v=>Math.floor(v)||0))},
+ {id:'hunter',name:'BOSS HUNTER',icon:'skull',rib:['#e0203c','#1b1240'],unit:'bosses beaten',goals:[5,30,100,300,1000],get:()=>sumOf(save.bossWins)},
+ {id:'stars',name:'STAR COLLECTOR',icon:'star',rib:['#ffd23f','#ff7a00'],unit:'stage stars',goals:[3,6,10,14,18],get:()=>sumOf(save.stars)},
+ {id:'tycoon',name:'COIN TYCOON',icon:'coin',rib:['#ffc414','#2fbf4f'],unit:'coins collected in runs',goals:[2000,20000,100000,400000,1500000],get:()=>life('coins')},
+ {id:'perfect',name:'PERFECTIONIST',icon:'gem',rib:['#ff7ad9','#ffffff'],unit:'perfect coin rows',goals:[50,250,1000,3000,8000],get:()=>life('rows')},
+ {id:'daredevil',name:'DAREDEVIL',icon:'shield',rib:['#44d9ff','#1b1240'],unit:'close calls',goals:[60,250,1000,3000,8000],get:()=>life('close')},
+ {id:'smasher',name:'SMASHER',icon:'flame',rib:['#ff5a1f','#ffd23f'],unit:'smashes and bonks',goals:[150,700,2500,8000,25000],get:()=>life('smashes')},
+ {id:'booster',name:'TURBO ACE',icon:'bolt',rib:['#ffd23f','#3d7bff'],unit:'engine boosts',goals:[15,60,200,600,1500],get:()=>life('boosts')},
+ {id:'veteran',name:'VETERAN',icon:'play',rib:['#4fd36b','#1b1240'],unit:'runs played',goals:[25,100,400,1000,3000],get:()=>life('runs')},
+ {id:'taskmaster',name:'TASK MASTER',icon:'trophy',rib:['#a273ff','#ffd23f'],unit:'daily tasks done',goals:[15,60,150,400,900],get:()=>life('dailyDone')},
+ {id:'treasure',name:'TREASURE HUNTER',icon:'box',rib:['#c98a4a','#ffd23f'],unit:'boxes opened',goals:[3,20,60,150,400],get:()=>save.boxesOpened||0}];
 const medalById=id=>MEDAL_LIST.find(m=>m.id===id);
 const medalTierOf=(m,v)=>m.goals.filter(g=>v>=g).length;
 const medalLevel=id=>(save.medals||{})[id]||0;

@@ -916,3 +916,10 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .res-medal{cursor:pointer;border-color:#ffd23f;box-shadow:0 0 14px #ffd23f88}
 .res-medal-mid{flex:1;min-width:0}.res-medal-mid b{display:block;font-family:var(--title);font-weight:400;font-size:13px;color:#ffe46b;text-shadow:var(--stroke)}
 .res-medal-mid small{display:block;font-size:10px;font-weight:900;color:#e6ebff;margin-top:2px}
+/* Free Run boss ranks on the map (bosses.js BOSS_RANKS). */
+.boss-ranks{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.br-row{display:flex;align-items:center;gap:9px;padding:6px 10px;background:#1b1240cc;border:3px solid var(--ink);border-radius:12px}
+.br-ico{width:28px;height:28px;flex:none}.br-ico svg{width:28px;height:28px}
+.br-name{flex:1;min-width:0}.br-name b{display:block;font-family:var(--title);font-weight:400;font-size:14px;text-shadow:var(--stroke)}.br-name small{display:block;font-size:9.5px;font-weight:900;color:#c9d3ec}
+.br-rank{padding:3px 8px 4px;border:2px solid var(--ink);border-radius:8px;font-family:var(--title);font-size:12px;color:#1b1240;background:linear-gradient(#ffcf9a,#c9712a);white-space:nowrap}
+.br-row.t1 .br-rank{background:linear-gradient(#eef3fb,#8a96ae)}.br-row.t2 .br-rank{background:linear-gradient(#fff3a0,#e0a000)}.br-row.t3 .br-rank{background:linear-gradient(#ffd0f4,#d94ae0);color:#fff;text-shadow:var(--stroke)}

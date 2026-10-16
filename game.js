@@ -51,7 +51,7 @@ new ResizeObserver(resize).observe(canvas);
 // every goal is higher than the one before. FREE RUN is one endless run that moves on to the next stage after
 // every boss (after Deep Universe it starts again at Sunny Sky).
 let runMode='campaign',goalHit=false;
-const STAGE_GOALS={sky:3000,jungle:6000,cave:10000,factory:15000,space:25000,universe:40000};
+const STAGE_GOALS={sky:8000,jungle:15000,cave:25000,factory:40000,space:60000,universe:90000};
 const stageGoal=id=>STAGE_GOALS[id]||0;
 const stageCleared=id=>(save.best[id]||0)>=stageGoal(id)||!!(save.cleared||{})[id];
 const stageUnlocked=i=>i<=0||stageCleared(STAGES[i-1].id)||!!save.best[STAGES[i].id];
@@ -590,7 +590,7 @@ function updateHud(){setText('#coin-count',String(Math.floor(shownCoins)));$('#b
  shell.classList.toggle('ready',state==='ready'||(state==='paused'&&previousState==='ready'));shell.classList.toggle('in-menu',state==='menu');
  setChip('#chip-boost',boost?boost.time/boost.dur:0);if(boost){const ic=boost.kind==='nitro'?'flame':'bolt';if(hudCache.boostIcon!==ic){hudCache.boostIcon=ic;$('#chip-boost-icon').innerHTML=icon(ic)}$('#chip-boost').style.setProperty('--c',POWERS[boost.kind==='engine'?'energy':'nitro'].color)}
  setChip('#chip-shield',shield/20);setChip('#chip-magnet',magnet/8);setChip('#chip-double',Math.max(0,doubler)/DOUBLE_TIME);setChip('#chip-x2',Math.max(0,scoreX2)/RAINBOW_TIME);$('.hud-alt').classList.toggle('x2',scoreX2>0);$('#coin-pill').classList.toggle('doubled',doubler>0);
- const bp=boss?boss.phase:'',fighting=state!=='menu'&&['enter','fight','tired','fatality'].includes(bp),bar=$('#boss-bar');shell.classList.toggle('boss-fight',!!boss&&bp!=='done');if(bar.hidden===fighting)bar.hidden=!fighting;if(fighting){setText('#boss-name',bp==='tired'||bp==='fatality'?`${boss.def.name} · TIRED!`:`${boss.def.name}${boss.rage?' · ENRAGED':''} · #${bossKills+1}`);$('#boss-fill').style.width=Math.max(0,boss.stamina)+'%';bar.classList.toggle('tired',bp==='tired');bar.classList.toggle('rage',!!boss.rage&&bp==='fight')}
+ const bp=boss?boss.phase:'',fighting=state!=='menu'&&['enter','fight','tired','fatality'].includes(bp),bar=$('#boss-bar');shell.classList.toggle('boss-fight',!!boss&&bp!=='done');if(bar.hidden===fighting)bar.hidden=!fighting;if(fighting){setText('#boss-name',bp==='tired'||bp==='fatality'?`${boss.def.name} · TIRED!`:`${boss.def.name}${boss.rage?' · ENRAGED':''} · ${boss.rank&&typeof BOSS_RANKS!=='undefined'?BOSS_RANKS[boss.rank-1]:'#'+(bossKills+1)}`);$('#boss-fill').style.width=Math.max(0,boss.stamina)+'%';bar.classList.toggle('tired',bp==='tired');bar.classList.toggle('rage',!!boss.rage&&bp==='fight')}
  const fat=bp==='tired'&&state==='flying';if($('#fatality').hidden===fat)$('#fatality').hidden=!fat;
  const btn=$('#boost'),visible=(state==='flying'||state==='paused'&&previousState==='flying')&&!['versus','tired','fatality'].includes(bp),key=`${visible}|${energy}|${!!showcase}`;
  if(hudCache.boost!==key){hudCache.boost=key;btn.hidden=!visible;btn.disabled=energy<5||!!showcase;btn.classList.toggle('ready',energy>=5&&!showcase);btn.querySelectorAll('.pips i').forEach((pip,i)=>pip.classList.toggle('on',i<energy))}}
