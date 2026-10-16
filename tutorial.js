@@ -50,7 +50,7 @@ $('#tut-yes').onclick=()=>{$('#welcome').hidden=true;startTutorial();gameSound.e
 $('#tut-no').onclick=()=>{$('#welcome').hidden=true;save.tut='done';persist();refreshMeta();gameSound.effect('on')};
 
 // ---- Account dialogs (called by online.js) ----
-// Signing up with a Google account that already has a Skybound account: cancel, or sign in with that account.
+// Signing up with a Google account that already has a Fly Up account: cancel, or sign in with that account.
 async function accountChoice(info){const r=await askDialog({ribbon:'ACCOUNT FOUND',title:'You already have an account',text:`This Google account is already linked to ${info.name}${info.best?` (best ${info.best.toLocaleString()})`:''}. Sign in with that account? Skins and best scores from this device will be added to it.`,buttons:[{label:'SIGN IN',cls:'green',value:true},{label:'CANCEL',cls:'blue',value:false}]});return r.value}
 // Picking a username: names are unique, so a taken one asks for another.
 // Guests rename their guest name on this device; signing up keeps it as the username when it is free.

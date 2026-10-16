@@ -84,7 +84,13 @@ button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 @keyframes fadeIn{from{opacity:0}}
 .menu-top{width:100%;max-width:560px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .logo{margin-top:2vh;font-family:var(--title);font-size:clamp(46px,12vw,82px);line-height:1;text-shadow:var(--stroke),0 8px 0 var(--ink);animation:float 2.2s ease-in-out infinite}
-.logo span{color:var(--yellow)}
+.logo{display:flex;align-items:flex-end;justify-content:center;gap:.06em}
+/* FLY UP: "UP" sits inside an arrow that points up and bobs. */
+.logo .logo-fly{color:#fff}
+.logo .logo-up{position:relative;display:block;width:1.08em;height:1.34em;margin:0 0 -.04em;animation:upBob 1.6s ease-in-out infinite}
+.logo .logo-up svg{display:block;width:100%;height:100%;overflow:visible}
+.logo .logo-up-text{position:absolute;left:0;right:0;bottom:9%;text-align:center;font-weight:400;font-size:.5em;line-height:1;color:#fff;letter-spacing:.01em;text-shadow:1.5px 0 var(--ink),-1.5px 0 var(--ink),0 1.5px var(--ink),0 -1.5px var(--ink),1.1px 1.1px var(--ink),-1.1px -1.1px var(--ink),1.1px -1.1px var(--ink),-1.1px 1.1px var(--ink),0 2.6px var(--ink)}
+@keyframes upBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8%)}}
 @keyframes float{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-9px) rotate(2deg)}}
 
 /* Big slam-in announcements */
@@ -135,7 +141,7 @@ button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .boost-item small{font-family:var(--title);font-size:12px;letter-spacing:.8px;color:var(--yellow)}
 button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
 
-@media(prefers-reduced-motion:reduce){.stage-icon,.logo,.hand,.hint strong,.air-warning,.flight-info .gust,.overlay h2,.record-badge,.record-badge::before,.btn.huge,.boost-btn.ready{animation:none}}
+@media(prefers-reduced-motion:reduce){.logo .logo-up,.stage-icon,.logo,.hand,.hint strong,.air-warning,.flight-info .gust,.overlay h2,.record-badge,.record-badge::before,.btn.huge,.boost-btn.ready{animation:none}}
 
 /* Menu wallet */
 .wallet-row{display:flex;gap:8px}
