@@ -394,7 +394,10 @@ function drawRainbowStar(cx,cy,r){ctx.save();ctx.translate(cx,cy);ctx.lineJoin='
 // Creatures: bird flocks (sky), swinging monkeys (jungle, cave), bats (cave) and patrol drones (factory).
 // Each one gets the gap above ledge a to itself, widened by the returned extra distance. Monkeys hang
 // above that ledge, on its side, where the balloon never needs to be; flyers cross mid-gap.
-function spawnCritters(i,a,side,gap){const r=Math.random(),fast=1+Math.min(.7,a/30000),add=o=>critters.push({kx:0,ky:0,kvx:0,kvy:0,spin:0,knocked:false,dormant:false,phase:rand(0,TAU),...o,vx:(o.vx||0)*fast});
+// Creatures thin out as you climb and the run gets faster: all of them near the ground, half at 25,000 m and a
+// quarter from 37,500 m up.
+const critterKeep=a=>Math.max(.25,1-a/50000);
+function spawnCritters(i,a,side,gap){if(Math.random()>critterKeep(a))return 0;const r=Math.random(),fast=1+Math.min(.7,a/30000),add=o=>critters.push({kx:0,ky:0,kvx:0,kvy:0,spin:0,knocked:false,dormant:false,phase:rand(0,TAU),...o,vx:(o.vx||0)*fast});
  const flock=(kind,count,speed,size,extra)=>{const from=Math.random()<.5?0:1,mid=a+(gap+extra)/2;for(let j=0;j<count;j++){const row=Math.ceil(j/2),sgn=j%2?1:-1;add({kind,a:mid+(j?sgn*row*18:0),ox:row*.09,side:from,vx:(from?-1:1)*speed,r:size,dormant:true,lead:j===0})}return extra};
  const monkey=()=>{add({kind:'monkey',a:a+125,x:side?.82:.18,r:15});return 140};
  if(stage.critters==='birds'&&i%6===4)return flock('bird',3,.16,10,300);

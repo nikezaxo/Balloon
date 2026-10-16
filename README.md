@@ -416,8 +416,9 @@ boss you beat (BOSS_FIRST and BOSS_GAP in bosses.js; a BOSS timer counts down in
    +100 with the Golden King skin); they all fly into your balloon, then the course
    resumes.
 
-BOSS RANKS. Every boss has five rank levels, SERGEANT I to V (BOSS_RANKS in bosses.js), shown by the same bronze
-shield badge at its bottom right on every boss, with one chevron per level, and in the boss bar and the versus splash
+BOSS RANKS. Every boss has five rank levels, SERGEANT I to V (BOSS_RANKS in bosses.js), shown by the same shield badge
+at its bottom right on every boss, with one chevron per level (bronze at levels I and II, gold at III and IV, and
+sparkling diamond at V), and in the boss bar and the versus splash
 ("JUNGLE BOSS · SERGEANT II"). Every game starts at level I:
 - CAMPAIGN: each boss you beat comes back one level higher (I, II, III, IV, V). Beating the level V boss CONQUERS
   the stage: the run ends in celebration with "CONQUERED!" and three stars.
@@ -451,7 +452,11 @@ drops below 70, again just after it gets enraged, then every 16 seconds.
   - A homing BAT SWARM.
   - Special BLACKOUT: the lights go out except a small glow around you, and bats hunt you in the dark,
     showing only their glowing red eyes.
-- MECHA CRUSHER (Robo Factory):
+- MECHA CRUSHER (Robo Factory): a horned battle mech with a scanning red visor, a spinning reactor core (cyan, orange
+  when it attacks), armoured shoulders, three-finger crushing claws on hydraulic arms and jet thrusters. When its
+  energy runs out it SHUTS DOWN instead of getting dizzy: thrusters and visor go dark (a cracked visor flickers), the
+  core sputters red, its head and arms sag, smoke rises, electric charges spin around it, an arc snaps between its
+  shoulders and its claws spit sparks.
   - Aimed LASER eyes.
   - HOMING MISSILES.
   - Bouncing SAW BLADES.
@@ -509,6 +514,8 @@ boss; P or Escape pauses.
   counter glows and an x2 timer shows in the HUD).
   Turbo plays a quick mini intro in slow motion, then rockets you up.
 - Smashing ledges or drones, or bonking creatures while boosted, earns a coin.
+- Creatures (birds, monkeys, bats, drones) thin out as you climb and the run gets faster: about a fifth fewer at
+  10,000 m, half as many at 25,000 m and a quarter as many from 37,500 m up (critterKeep in game.js).
 
 ## Boxes and skin cards
 - A box holds coins, sometimes GEMS (rare) and SKIN CARD rewards (each one is several cards of one skin). EPIC, LEGENDARY and MYTHIC skins are not sold
