@@ -33,7 +33,7 @@ function persist(){save.updated=Date.now();try{localStorage.setItem('skybound-sa
 let stage=STAGES.find(s=>s.id===save.lastStage)||STAGES[0];
 let SW=420,W=420,OX=0,H=700,dpr=1,state='menu',previousState='ready',alt=0,x=.5,vx=0,t=0,last=0,obstacles=[],coins=[],critters=[],particles=[],pointer=null,target=null,sound=false,soundTouched=false,flightTime=0,spin=0,wind=0,weatherNow=null,leaves=[],leafClock=0,coinCount=0,shownCoins=0,banked=0,nextObstacle=450,spawnIndex=0;
 // Game feel: camera shake, flashes, slow motion, popups, combos and a springy balloon with a face.
-let shake=0,flash=0,flashColor='#fff',timeScale=1,slowTimer=0,deathTimer=0,popups=[],rings=[],flyers=[],streaks=[],trailClock=0,streakClock=0,combo=0,comboTimer=0,bestCombo=0,nearMisses=0,smashes=0,squash=0,squashV=0,blink=0,nextBlink=2,mood='happy',moodTimer=0,danger=0,ropeCut=null,nextMilestone=1000,passedBest=false,medalsHit=0,eventsSeen=new Set(),grow=1,revives=0;
+let shake=0,flash=0,flashColor='#fff',timeScale=1,slowTimer=0,deathTimer=0,popups=[],rings=[],flyers=[],streaks=[],trailClock=0,streakClock=0,combo=0,comboTimer=0,bestCombo=0,nearMisses=0,smashes=0,squash=0,squashV=0,puff=0,puffV=0,breathHeld=false,breathFace=0,blink=0,nextBlink=2,mood='happy',moodTimer=0,danger=0,ropeCut=null,nextMilestone=1000,passedBest=false,medalsHit=0,eventsSeen=new Set(),grow=1,revives=0;
 // Power state. The showcase is the freeze-frame celebration when the boost engine fires.
 let energy=0,boost=null,speedMult=1,shield=0,magnet=0,doubler=0,invuln=0,showcase=null,powerCount=0,bonus=0,starsHit=0,starFlyers=[],bossKills=0;
 const runScore=()=>Math.floor(alt)*10+Math.round(bonus)+Math.round(scoreExtra);
@@ -59,7 +59,7 @@ const stageUnlocked=i=>i<=0||stageCleared(STAGES[i-1].id)||!!save.best[STAGES[i]
 const unlockText=i=>`REACH ${stageGoal(STAGES[i-1].id).toLocaleString()} m IN ${STAGES[i-1].name}`;
 const stageBest=()=>runMode==='free'?(save.freeAlt||0):(save.best[stage.id]||0);
 function reset(mode='ready'){state=mode;alt=0;x=.5;vx=0;target=null;pointer=null;lift=0;vy=0;liftTarget=null;drag=null;obstacles=[];coins=[];critters=[];particles=[];leaves=[];flightTime=0;spin=0;wind=0;weatherNow=null;leafClock=0;coinCount=0;shownCoins=0;banked=0;nextObstacle=450;spawnIndex=0;keys.clear();boss=null;caveWallScale=1;nextBossTime=BOSS_FIRST;rewardCoins=[];coinCursor=330;rushCursor=0;rushCount=0;prevLedge={a:0,c:.5};rowId=0;rowCount=0;rowBreaks=0;rows=new Map();rowStreak=0;coinMult=1;bestMult=1;scoreX2=0;scoreExtra=0;lastBase=0;nextRainbow=RAINBOW_EVERY;runBoxes=[];skyBoxAt=-1;levelCredited=0;runBoost=0;if(typeof medalsNewRun==='function')medalsNewRun();runMode=save.mode==='free'?'free':'campaign';if(runMode==='free')stage=STAGES[0];$('#versus').hidden=true;$('#boss-bar').hidden=true;$('#fatality').hidden=true;
- shake=0;flash=0;timeScale=1;slowTimer=0;deathTimer=0;popups=[];rings=[];flyers=[];streaks=[];combo=0;comboTimer=0;bestCombo=0;nearMisses=0;smashes=0;squash=0;squashV=0;mood='happy';moodTimer=0;danger=0;ropeCut=null;nextMilestone=MILESTONE;passedBest=false;goalHit=false;medalsHit=0;eventsSeen=new Set();grow=1;revives=0;
+ shake=0;flash=0;timeScale=1;slowTimer=0;deathTimer=0;popups=[];rings=[];flyers=[];streaks=[];combo=0;comboTimer=0;bestCombo=0;nearMisses=0;smashes=0;squash=0;squashV=0;puff=0;puffV=0;breathHeld=false;mood='happy';moodTimer=0;danger=0;ropeCut=null;nextMilestone=MILESTONE;passedBest=false;goalHit=false;medalsHit=0;eventsSeen=new Set();grow=1;revives=0;
  energy=0;boost=null;speedMult=1;shield=0;magnet=0;doubler=0;invuln=0;showcase=null;powerCount=0;bonus=0;starsHit=0;starFlyers=[];bossKills=0;$('#results').hidden=true;if(typeof seasonNewRun==='function')seasonNewRun();
  generateCourse();$('#weather').textContent=stage.wind?'CALM AIR':stage.calm;$('#weather').classList.remove('gust');$('#hint').hidden=mode!=='ready';$('#menu').hidden=mode!=='menu';$('#menu').classList.remove('leaving');transition=null;$('#overlay').hidden=true;$('#panel').hidden=true;panelKind=null;$('#pause').innerHTML=icon('pause');$('#pause').setAttribute('aria-label','Pause game');$('#announce').replaceChildren();refreshMeta()}
 function refreshMeta(){const b=stageBest();$('#best').innerHTML=b?`${iconHTML('trophy')}BEST ${b.toLocaleString()} m`:'NO RECORD YET';$('#hint-stage').textContent=stage.name;$('#zone').textContent=stage.name;$('#hint-icon').innerHTML=icon(stage.icon);$('#zone-icon').innerHTML=icon(stage.icon);$('#menu-coins').textContent=save.coins.toLocaleString();$('#menu-gems').textContent=(save.gems||0).toLocaleString();$('#menu-lives').textContent=save.lives;if(typeof myLook==='function'){const pf=$('#profile-face'),lk=myLook(),key=lk.avatar+lk.frame+lk.level;if(pf.dataset.look!==key){pf.dataset.look=key;pf.replaceChildren(avatarEl(lk,44))}}if(typeof refreshSeasonUi==='function')refreshSeasonUi();if(typeof refreshBoxUi==='function')refreshBoxUi();updatePicker()}
@@ -280,6 +280,8 @@ function drawObstacle(o){if(o.broken)return;const z=spike(o);if(z.y<-80||z.y>H+8
 const shape=lat=>({r:29*Math.cos(lat)*(1-.16*Math.sin(lat)),y:33*Math.sin(lat)-5});
 const BALLOON=(()=>{const p=new Path2D(),n=40;for(let i=0;i<=n;i++){const v=shape(-Math.PI/2+i/n*Math.PI);i?p.lineTo(v.r,v.y):p.moveTo(v.r,v.y)}for(let i=n;i>=0;i--){const v=shape(-Math.PI/2+i/n*Math.PI);p.lineTo(-v.r,v.y)}p.closePath();return p})();
 const engineOn=()=>!!boost;
+// The balloon holds its breath through the engine boost and turbo (and their intros) and while it gulps a boss's coins.
+const holdingBreath=()=>state==='flying'&&(!!showcase||engineOn()||(typeof rewardCoins!=='undefined'&&rewardCoins.length>0));
 function drawBalloon(){
  if(state==='dead')return;
  const flying=state==='flying'||(state==='paused'&&previousState==='flying'),waiting=state==='ready'||state==='menu';
@@ -288,8 +290,10 @@ function drawBalloon(){
  if(engineOn()){const len=(boost.kind==='nitro'?44:52)*(1+Math.random()*.35),g=ctx.createLinearGradient(0,50,0,50+len);g.addColorStop(0,'#fff6b0');g.addColorStop(.35,'#ffb020');g.addColorStop(1,'rgba(255,60,40,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(-9,50);ctx.quadraticCurveTo(0,50+len*1.25,9,50);ctx.closePath();ctx.fill();
   ctx.strokeStyle=INK;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.fillStyle='#c4cee0';rr(-10,33,20,15,4);ctx.fillStyle='#ff4d5e';ctx.fillRect(-8.5,38,17,4);ctx.fillStyle='#5f6b85';ctx.beginPath();ctx.moveTo(-7,48);ctx.lineTo(7,48);ctx.lineTo(10,54);ctx.lineTo(-10,54);ctx.closePath();ctx.fill();ctx.stroke()}
  else if(flying){ctx.strokeStyle=INK;ctx.lineWidth=2.2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(0,35);ctx.bezierCurveTo(-wind*20-vx*14,46,8,52,Math.sin(t*5)*7-wind*30-vx*24,66);ctx.stroke()}
- const stretch=flying?Math.min(.08,(flightSpeed(alt)*speedMult-130)/2000):0;
- ctx.save();ctx.scale(1-squash*.6-stretch*.5,1+squash+stretch);drawBalloonBody(SKINS[save.skin]||SKINS.classic,spin,mood,blink);ctx.restore();ctx.restore()}
+ // Holding its breath (engine boost, turbo, gulping a boss's coins) it puffs up round and bigger from the knot, trembling a little;
+ // squash kicks then swell it evenly instead of stretching it thin.
+ const held=clamp(puff,0,1),stretch=flying?Math.min(.08,(flightSpeed(alt)*speedMult-130)/2000)*(1-held):0,sq=squash*(1-held),swell=1+.17*puff+Math.abs(squash)*held*.3+Math.sin(t*36)*.012*held;
+ ctx.save();ctx.translate(0,30);ctx.scale(swell,swell);ctx.translate(0,-30);ctx.scale((1-sq*.6)*(1+.05*held),1+sq+stretch);breathFace=held;drawBalloonBody(SKINS[save.skin]||SKINS.classic,spin,mood,blink);breathFace=0;ctx.restore();ctx.restore()}
 // The balloon itself at the origin: shaded gores, skin decorations, face, outline and accessories.
 function drawBalloonBody(skin,turn,face,blinking){const gores=skin.gores;
  ctx.save();ctx.clip(BALLOON);
@@ -308,12 +312,14 @@ function drawBalloonBody(skin,turn,face,blinking){const gores=skin.gores;
  skinExtras(skin)}
 // Eyes follow the steering and react: joy after coins, fright near danger, sunglasses when powered up.
 function drawFace(m,skin,blinking){const lx=clamp(vx*2.2+(state==='ready'||state==='menu'?Math.sin(t*.8)*.7:0),-1,1)*3;
- if(skin.face!=='robot'){ctx.fillStyle='rgba(255,110,150,.5)';for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*16,1,4,2.4,0,0,TAU);ctx.fill()}}
+ const cheeks=clamp((breathFace-.3)/.5,0,1);
+ if(skin.face!=='robot'){if(cheeks){for(const s of [-1,1]){const r=4+4.5*cheeks;ctx.fillStyle='rgba(255,110,150,.55)';ctx.beginPath();ctx.arc(s*16,3,r,0,TAU);ctx.fill();ctx.fillStyle='rgba(255,255,255,.55)';ctx.beginPath();ctx.arc(s*16-s*r*.3,3-r*.45,r*.28,0,TAU);ctx.fill();ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.lineCap='round';ctx.beginPath();s>0?ctx.arc(16,3,r,-.3*Math.PI,.45*Math.PI):ctx.arc(-16,3,r,.55*Math.PI,1.3*Math.PI);ctx.stroke()}}
+  else{ctx.fillStyle='rgba(255,110,150,.5)';for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*16,1,4,2.4,0,0,TAU);ctx.fill()}}}
  ctx.strokeStyle=INK;ctx.lineCap='round';ctx.lineJoin='round';
- if(m==='cool'){ctx.fillStyle=INK;ctx.beginPath();ctx.moveTo(-18,-14);ctx.lineTo(18,-14);ctx.lineTo(16,-6);ctx.quadraticCurveTo(10,1,3,-5);ctx.lineTo(-3,-5);ctx.quadraticCurveTo(-10,1,-16,-6);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-14,-11);ctx.lineTo(-9,-11);ctx.moveTo(5,-11);ctx.lineTo(10,-11);ctx.stroke();ctx.strokeStyle=INK;ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(-5,3);ctx.quadraticCurveTo(1,9,8,1);ctx.stroke();return}
- if(m==='star'){for(const s of [-1,1]){ctx.fillStyle='#ffd23f';star(s*9,-8,8.5,3.8,5);ctx.fill();ctx.lineWidth=2;ctx.stroke()}ctx.fillStyle='#7a1030';ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(-8,2);ctx.quadraticCurveTo(0,17,8,2);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ff7a9a';ctx.beginPath();ctx.ellipse(0,8.5,3.5,2,0,0,TAU);ctx.fill();return}
+ if(m==='cool'){ctx.fillStyle=INK;ctx.beginPath();ctx.moveTo(-18,-14);ctx.lineTo(18,-14);ctx.lineTo(16,-6);ctx.quadraticCurveTo(10,1,3,-5);ctx.lineTo(-3,-5);ctx.quadraticCurveTo(-10,1,-16,-6);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-14,-11);ctx.lineTo(-9,-11);ctx.moveTo(5,-11);ctx.lineTo(10,-11);ctx.stroke();if(cheeks){heldLips(lx,skin);return}ctx.strokeStyle=INK;ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(-5,3);ctx.quadraticCurveTo(1,9,8,1);ctx.stroke();return}
+ if(m==='star'){for(const s of [-1,1]){ctx.fillStyle='#ffd23f';star(s*9,-8,8.5,3.8,5);ctx.fill();ctx.lineWidth=2;ctx.stroke()}if(cheeks){heldLips(lx,skin);return}ctx.fillStyle='#7a1030';ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(-8,2);ctx.quadraticCurveTo(0,17,8,2);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ff7a9a';ctx.beginPath();ctx.ellipse(0,8.5,3.5,2,0,0,TAU);ctx.fill();return}
  const scared=m==='scared'||m==='wow',open=blinking>0?.15:1,ly=scared?-1:0;
- if(skin.face==='robot'){const mad=m==='angry';ctx.fillStyle=INK;ctx.beginPath();ctx.roundRect(-17,-16,34,15,5);ctx.fill();if(mad){ctx.strokeStyle=INK;ctx.lineWidth=4;for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*17,-21);ctx.lineTo(s*4,-16);ctx.stroke()}}ctx.fillStyle=scared||mad?'#ff5a6a':'#5ff0ff';for(const s of [-1,1]){ctx.beginPath();ctx.roundRect(s*8-4+lx*.5,-12+(1-open)*4,8,Math.max(1.5,8*open),2);ctx.fill()}ctx.lineWidth=2.4;ctx.beginPath();if(m==='joy')ctx.arc(0,1,6,.15*Math.PI,.85*Math.PI);else if(scared){ctx.moveTo(-6,6);ctx.lineTo(-3,4);ctx.lineTo(0,6);ctx.lineTo(3,4);ctx.lineTo(6,6)}else{ctx.moveTo(-5,5);ctx.lineTo(5,5)}ctx.stroke();return}
+ if(skin.face==='robot'){const mad=m==='angry';ctx.fillStyle=INK;ctx.beginPath();ctx.roundRect(-17,-16,34,15,5);ctx.fill();if(mad){ctx.strokeStyle=INK;ctx.lineWidth=4;for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*17,-21);ctx.lineTo(s*4,-16);ctx.stroke()}}ctx.fillStyle=scared||mad?'#ff5a6a':'#5ff0ff';for(const s of [-1,1]){ctx.beginPath();ctx.roundRect(s*8-4+lx*.5,-12+(1-open)*4,8,Math.max(1.5,8*open),2);ctx.fill()}ctx.lineWidth=2.4;ctx.beginPath();if(cheeks){ctx.moveTo(-3.5,5);ctx.lineTo(3.5,5)}else if(m==='joy')ctx.arc(0,1,6,.15*Math.PI,.85*Math.PI);else if(scared){ctx.moveTo(-6,6);ctx.lineTo(-3,4);ctx.lineTo(0,6);ctx.lineTo(3,4);ctx.lineTo(6,6)}else{ctx.moveTo(-5,5);ctx.lineTo(5,5)}ctx.stroke();return}
  if(skin.face==='ninja'){ctx.fillStyle=INK;ctx.beginPath();ctx.roundRect(-25,-17,50,16,7);ctx.fill()}
  if(skin.face==='monster'){ctx.fillStyle='#fff';ctx.lineWidth=2.2;ctx.beginPath();ctx.ellipse(lx*.4,-9,10,(scared?12:10)*open,0,0,TAU);ctx.fill();ctx.stroke();if(open>.5){ctx.fillStyle='#7a1030';ctx.beginPath();ctx.arc(lx,-8+ly,4.5,0,TAU);ctx.fill();ctx.fillStyle=INK;ctx.beginPath();ctx.arc(lx,-8+ly,2.4,0,TAU);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(lx+1.5,-10+ly,1.3,0,TAU);ctx.fill()}}
  else for(const s of [-1,1]){const big=skin.face==='goofy'&&s<0?1.3:1,ew=(skin.face==='ninja'?6.5:scared?7:6)*big,eh=(skin.face==='ninja'?4.5:scared?9:7.5)*open*big;ctx.fillStyle='#fff';ctx.lineWidth=2.2;ctx.beginPath();ctx.ellipse(s*9+lx*.4,-8,ew,eh,0,0,TAU);ctx.fill();ctx.stroke();
@@ -324,9 +330,10 @@ function drawFace(m,skin,blinking){const lx=clamp(vx*2.2+(state==='ready'||state
   for(const s of [-1,1]){const ex=s*9+lx*.4,y=-15.5+15*lid,outer=y-tilt,inner=y+tilt,hw=6*Math.sqrt(Math.max(0,1-((y+8)/7.5)**2))+.6;ctx.save();ctx.beginPath();ctx.ellipse(ex,-8,6,7.5,0,0,TAU);ctx.clip();ctx.beginPath();ctx.moveTo(ex-8,-17);ctx.lineTo(ex+8,-17);ctx.lineTo(ex+8,s<0?inner:outer);ctx.lineTo(ex-8,s<0?outer:inner);ctx.closePath();ctx.fill();ctx.restore();
    ctx.beginPath();ctx.moveTo(ex-hw,s<0?outer:inner);ctx.lineTo(ex+hw,s<0?inner:outer);ctx.stroke()}}
  if(skin.face==='grump'&&m!=='angry'&&!scared){ctx.strokeStyle=INK;ctx.lineWidth=5;for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*16,-19);ctx.lineTo(s*4,-15.5);ctx.stroke()}}
- if(skin.face==='chick'){const ox=lx*.3,openBeak=m==='joy'||scared||m==='angry';if(m==='angry'){ctx.strokeStyle=INK;ctx.lineWidth=4;for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*15,-19);ctx.lineTo(s*4,-14);ctx.stroke()}}
+ if(skin.face==='chick'){const ox=lx*.3,openBeak=!cheeks&&(m==='joy'||scared||m==='angry');if(m==='angry'){ctx.strokeStyle=INK;ctx.lineWidth=4;for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*15,-19);ctx.lineTo(s*4,-14);ctx.stroke()}}
   ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.fillStyle='#ff9a1a';ctx.beginPath();ctx.moveTo(ox-6.5,0);ctx.lineTo(ox+6.5,0);ctx.lineTo(ox,openBeak?4.5:7.5);ctx.closePath();ctx.fill();ctx.stroke();
   if(openBeak){ctx.fillStyle='#e0700a';ctx.beginPath();ctx.moveTo(ox-5,6.5);ctx.lineTo(ox+5,6.5);ctx.lineTo(ox,m==='wow'?13:11);ctx.closePath();ctx.fill();ctx.stroke()}return}
+ if(cheeks){heldLips(lx,skin);return}
  if(m==='angry'){ctx.strokeStyle=INK;ctx.lineWidth=4.5;ctx.lineCap='round';if(skin.face==='monster'){ctx.beginPath();ctx.moveTo(-13,-24);ctx.lineTo(0,-17);ctx.lineTo(13,-24);ctx.stroke()}else for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*17,-20);ctx.lineTo(s*3,-14);ctx.stroke()}
   ctx.fillStyle='#fff';ctx.lineWidth=2.2;ctx.beginPath();ctx.roundRect(-8,2,16,8,3.5);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(-8,6);ctx.lineTo(8,6);ctx.moveTo(-3,2);ctx.lineTo(-3,10);ctx.moveTo(3,2);ctx.lineTo(3,10);ctx.stroke();return}
  ctx.lineWidth=2.3;ctx.fillStyle='#7a1030';
@@ -338,6 +345,8 @@ function drawFace(m,skin,blinking){const lx=clamp(vx*2.2+(state==='ready'||state
  else{ctx.beginPath();ctx.arc(lx*.3,1,5,.18*Math.PI,.82*Math.PI);ctx.stroke()}
  if(skin.face==='goofy'&&!scared){ctx.fillStyle='#ff7a9a';ctx.beginPath();ctx.ellipse(2+lx*.3,7.5,3.2,4,.2,0,TAU);ctx.fill();ctx.stroke()}
  if(skin.face==='monster'&&!scared){ctx.fillStyle='#fff';ctx.lineWidth=1.5;for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*4+lx*.3,3.5);ctx.lineTo(s*2.5+lx*.3,8);ctx.lineTo(s*1+lx*.3,3.8);ctx.closePath();ctx.fill();ctx.stroke()}}}
+// Lips pressed tight and pushed out (the chicks keep their beaks shut): the balloon is holding its breath.
+function heldLips(lx,skin){const ox=lx*.3;if(skin.face==='chick'){ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.fillStyle='#ff9a1a';ctx.beginPath();ctx.moveTo(ox-6.5,0);ctx.lineTo(ox+6.5,0);ctx.lineTo(ox,7.5);ctx.closePath();ctx.fill();ctx.stroke();return}ctx.fillStyle='#ff7a9a';ctx.strokeStyle=INK;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(ox,6,4.6,2.8,0,0,TAU);ctx.fill();ctx.stroke();ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(ox-3,6);ctx.lineTo(ox+3,6);ctx.stroke()}
 // Shield bubble and magnet ring around the balloon.
 function drawAuras(){const bx=x*W,by=balloonY()-4;
  if(magnet>0){ctx.save();ctx.translate(bx,by);ctx.rotate(t*2);ctx.setLineDash([8,10]);ctx.strokeStyle=`rgba(255,77,94,${magnet<2?.3+.3*Math.sin(t*20):.7})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,66,0,TAU);ctx.stroke();ctx.restore()}
@@ -454,9 +463,9 @@ function chargedUp(){gameSound.effect('charged');announcer('ready');announce('BO
 const smashing=()=>engineOn()||invuln>0;
 // The engine boost is the one power with a cinematic intro: the action freezes and the balloon celebrates.
 // Turbo pickup: a quick mini intro in slow motion (no full freeze), then the rocket fires.
-function startTurbo(){announcer('turbo');showcase={kind:'nitro',age:0,dur:.7,mini:true};invuln=Math.max(invuln,1);mood='cool';moodTimer=1.6;popup(x*W,balloonY()-78,'TURBO!','#ff8a2a',40);gameSound.effect('boost');squash=.25;squashV=0;burst(x*W,balloonY(),16,{type:'star',colors:['#ff8a2a','#ffd23f','#fff'],speed:[120,300],size:[4,7],life:[.4,.7],drag:1.5})}
+function startTurbo(){announcer('turbo');showcase={kind:'nitro',age:0,dur:.7,mini:true};invuln=Math.max(invuln,1);mood='cool';moodTimer=1.6;popup(x*W,balloonY()-78,'TURBO!','#ff8a2a',40);gameSound.effect('boost');squash=0;squashV=0;puffV=7;burst(x*W,balloonY(),16,{type:'star',colors:['#ff8a2a','#ffd23f','#fff'],speed:[120,300],size:[4,7],life:[.4,.7],drag:1.5})}
 function activateEngine(){if(state!=='flying'||showcase||energy<5)return;energy=0;tally('boosts');announcer('engine');showcase={kind:'energy',age:0,dur:1.15};mood='cool';moodTimer=2;announce('ENGINE BOOST','FULL POWER!','power','bolt');gameSound.effect('power');
- burst(x*W,balloonY(),26,{type:'star',colors:['#ffd23f','#fff','#ff8a2a'],speed:[80,260],size:[4,8],life:[.6,1.1],drag:1.5});confetti(24);squash=.3;squashV=0}
+ burst(x*W,balloonY(),26,{type:'star',colors:['#ffd23f','#fff','#ff8a2a'],speed:[80,260],size:[4,8],life:[.6,1.1],drag:1.5});confetti(24);squash=0;squashV=0;puffV=8}
 function applyPower(kind){const P=POWERS[kind],bx=x*W,by=balloonY();powerCount++;
  if(kind==='magnet'){magnet=8;gameSound.effect('boost')}
  if(kind==='nitro'){boost={kind:'nitro',time:4,dur:4,mult:1.8};gameSound.effect('nitro')}
@@ -552,6 +561,8 @@ function updateEffects(dt,real){shake*=Math.exp(-8*real);flash=Math.max(0,flash-
  if(showcase&&(showcase.age+=real)>=showcase.dur){const kind=showcase.kind;showcase=null;applyPower(kind)}
  updateBoss(dt,real);updateRewardCoins(real);const frozen=!!(boss&&boss.freeze),pdt=showcase||frozen?real:dt;
  squashV+=(-squash*170-squashV*11)*pdt;squash+=squashV*pdt;
+ const hold=holdingBreath();puffV+=(((hold?1:0)-puff)*95-puffV*11)*pdt;puff+=puffV*pdt;
+ if(breathHeld&&!hold&&state==='flying')burst(x*W,balloonY()+4,7,{type:'puff',colors:['#ffffff'],speed:[30,90],size:[5,10],life:[.35,.6]});breathHeld=hold;
  if((nextBlink-=pdt)<=0){blink=.13;nextBlink=rand(2,5)}blink-=pdt;moodTimer-=pdt;
  if(boost&&(boost.time-=dt)<=0)boost=null;if(shield>0&&(shield-=dt)<=0&&state==='flying')popup(x*W,balloonY()-60,'SHIELD OFF','#bff4ff',20);magnet=Math.max(0,magnet-dt);if(doubler>0&&(doubler-=dt)<=0&&state==='flying')popup(x*W,balloonY()-60,'DOUBLE COINS OVER','#ffd23f',20);invuln=Math.max(0,invuln-dt);
  speedMult+=((boost?boost.mult:1)-speedMult)*Math.min(1,dt*3);
