@@ -79,7 +79,7 @@ function renderLevelPath(list){const lv=levelOf(save.totalM),cur=lv.level,head=e
  fill.style.width=(lv.need?Math.min(100,lv.into/lv.need*100):100)+'%';bar.append(fill);info.append(el('b','',`LEVEL ${cur}`),bar,el('small','',lv.need?`${(lv.need-lv.into).toLocaleString()} m TO LEVEL ${cur+1}`:'MAX LEVEL'));head.append(avatarEl(myLook(),48),info);
  if(n){const all=el('button','mini-btn go',`CLAIM ALL (${n})`);all.onclick=()=>{let got=null;for(let L=2;L<=cur;L++){const r=claimLevel(L);if(r&&(r.avatar||r.frame))got=got||r}gameSound.effect('buy');confetti(40);renderTasks();if(got)levelItemDialog(got)};head.append(all)}
  list.append(head,el('p','rank-note','Fly to level up. Every level has a reward: claim it here. Big rewards at 60, 70 and 80, a new animated avatar at 90 and an animated frame at 100.'));
- const top=60,height=(MAX_LEVEL-1)*LVL_STEP+top*2,map=el('div','lvl-map'),yOf=L=>(MAX_LEVEL-L)*LVL_STEP+top;map.style.height=height+'px';
+ const gaps=typeof lvlGapsAbove==='function'?lvlGapsAbove:()=>0,top=60,height=(MAX_LEVEL-1)*LVL_STEP+top*2+gaps(0),map=el('div','lvl-map'),yOf=L=>(MAX_LEVEL-L)*LVL_STEP+top+gaps(L);map.style.height=height+'px';
  // The road: a curve through every level, gold up to your level.
  const pts=L=>`${lvlX(L)} ${yOf(L)}`,road=to=>{let d=`M${pts(1)}`;for(let L=2;L<=to;L++){const ym=(yOf(L-1)+yOf(L))/2;d+=` C${lvlX(L-1)} ${ym} ${lvlX(L)} ${ym} ${pts(L)}`}return d};
  map.insertAdjacentHTML('beforeend',`<svg class="lvl-road" viewBox="0 0 100 ${height}" preserveAspectRatio="none"><path d="${road(MAX_LEVEL)}" class="r-edge"/><path d="${road(MAX_LEVEL)}" class="r-base"/><path d="${road(cur)}" class="r-done"/><path d="${road(MAX_LEVEL)}" class="r-dash"/></svg>`);
@@ -92,7 +92,7 @@ function renderLevelPath(list){const lv=levelOf(save.totalM),cur=lv.level,head=e
   else node.append(el('span','lvl-start','START'));
   if(L===cur){const me=el('div','lvl-me');me.append(avatarEl(myLook(),40));node.append(me);curNode=node}
   map.append(node)}
- list.append(map);
+ list.append(map);if(typeof levelScene==='function')levelScene(map,list,height,yOf);
  // Open at your level (only on the first render, later re-renders keep the scroll).
  if(!list.dataset.lvlOpened){list.dataset.lvlOpened='1';requestAnimationFrame(()=>{if(curNode)list.scrollTop=Math.max(0,map.offsetTop+parseFloat(curNode.style.top)-list.clientHeight/2)})}}
 async function levelItemDialog(r){const id=r.avatar||r.frame,item=AVATARS[r.avatar]||FRAMES[r.frame],res=await askDialog({ribbon:'LEVEL REWARD',title:item.name,text:`You unlocked the ${r.avatar?'animated avatar':'animated frame'} ${item.name}! Wear it now?`,buttons:[{label:'WEAR IT',cls:'green',value:true},{label:'LATER',cls:'blue',value:false}]});
