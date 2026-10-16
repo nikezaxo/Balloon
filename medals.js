@@ -25,7 +25,7 @@ const MEDAL_LIST=[
  {id:'taskmaster',name:'TASK MASTER',icon:'trophy',rib:['#a273ff','#ffd23f'],unit:'daily tasks done',goals:[15,60,150,400,900],get:()=>life('dailyDone')},
  {id:'treasure',name:'TREASURE HUNTER',icon:'box',rib:['#c98a4a','#ffd23f'],unit:'boxes opened',goals:[3,20,60,150,400],get:()=>save.boxesOpened||0},
  // Boss medals, one per boss: a medal level for each boss rank level (SERGEANT I to V) you have beaten it at.
- ...STAGES.map(s=>({id:'b'+s.id.slice(0,3),name:BOSSES[s.id].name,icon:s.icon,rib:[BOSSES[s.id].colors[1],BOSSES[s.id].colors[2]],unit:'boss rank level beaten',goals:[1,2,3,4,5],boss:true,get:()=>(save.bossTop||{})[s.id]||0}))];
+ ...STAGES.map(s=>({id:'b'+s.id.slice(0,3),name:BOSSES[s.id].name,icon:'boss:'+s.id,rib:[BOSSES[s.id].colors[1],BOSSES[s.id].colors[2]],unit:'boss rank level beaten',goals:[1,2,3,4,5],boss:true,get:()=>(save.bossTop||{})[s.id]||0}))];
 const medalById=id=>MEDAL_LIST.find(m=>m.id===id);
 const medalTierOf=(m,v)=>m.goals.filter(g=>v>=g).length;
 const medalLevel=id=>(save.medals||{})[id]||0;
@@ -47,7 +47,9 @@ const prizeText=r=>r.coins?`+${r.coins} COINS`:`+${r.gems} GEMS`;
 // ---- Drawing ----
 // Medal icons come from the game's SVG icons, drawn into the medal (cached as images).
 const medalIcons={};
-function medalIcon(name){let im=medalIcons[name];if(!im){im=medalIcons[name]=new Image();im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(icon(name).replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" '))}return im.complete&&im.naturalWidth?im:null}
+// Boss medals show the boss's own face: its art is painted once onto a small canvas.
+function bossFace(id){const def=BOSSES[id],cv=document.createElement('canvas');cv.width=cv.height=160;const main=ctx;ctx=cv.getContext('2d');try{ctx.translate(80,86);ctx.scale(.6,.6);def.art({t:1.2,tired:false,attack:0,lookX:0,lookY:.4})}finally{ctx=main}return cv}
+function medalIcon(name){let im=medalIcons[name];if(!im&&name.startsWith('boss:'))return medalIcons[name]=bossFace(name.slice(5));if(im&&im.getContext)return im;if(!im){im=medalIcons[name]=new Image();im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(icon(name).replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" '))}return im.complete&&im.naturalWidth?im:null}
 function medalPath(c,tier){c.beginPath();
  if(tier<=1)c.arc(0,0,28,0,TAU);
  else if(tier===2){for(let i=0;i<=64;i++){const a=i/64*TAU,r=28.5+1.6*Math.cos(a*16);c.lineTo(Math.cos(a)*r,Math.sin(a)*r)}}
@@ -72,7 +74,7 @@ function drawMedal(c,m,tier,t,{spin=0,locked=false}={}){const cols=medalCols(tie
  // Inner disc and the moving shine.
  c.beginPath();c.arc(0,0,20,0,TAU);const g2=c.createRadialGradient(-6,-8,2,0,0,22);g2.addColorStop(0,cols[0]);g2.addColorStop(1,cols[1]);c.fillStyle=g2;c.fill();c.lineWidth=2;c.strokeStyle=cols[2];c.stroke();c.strokeStyle=INK;
  c.save();medalPath(c,Math.max(1,tier));c.clip();const sh=((spin/TAU)%1+1)%1,bx=-60+sh*120+Math.sin(t*1.3)*6;c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.moveTo(bx-8,-40);c.lineTo(bx+4,-40);c.lineTo(bx-14,40);c.lineTo(bx-26,40);c.closePath();c.fill();c.restore();
- if(face){const im=medalIcon(m.icon);if(im){c.save();if(fade)c.globalAlpha*=.5;c.drawImage(im,-15,-15,30,30);c.restore()}}
+ if(face){const im=medalIcon(m.icon);if(im){c.save();if(fade)c.globalAlpha*=.5;if(m.boss){c.beginPath();c.arc(0,0,19,0,TAU);c.clip();c.drawImage(im,-24,-24,48,48)}else c.drawImage(im,-15,-15,30,30);c.restore()}}
  else{c.fillStyle='rgba(255,255,255,.55)';starP(c,0,0,13,5.5);c.fill();c.lineWidth=1.6;c.stroke()}
  c.restore();
  // Royal fire: a crown on top.
