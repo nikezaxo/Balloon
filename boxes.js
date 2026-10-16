@@ -15,9 +15,9 @@ const cardsOf=id=>(save.cards||{})[id]||0;
 // cards a stack holds; sure: the Legend Box's first stack is always legendary or better (this chance of mythic);
 // tickets: the (very rare) chance of a x2 and of a x4 LEVEL TICKET.
 const BOXES={
- sky:{tickets:[.015,.003],name:'SKY BOX',price:{coins:250},coins:[60,140],gems:[.03,1,2],stacks:2,odds:{epic:.76,legendary:.2,mythic:.04},amt:{epic:[2,4],legendary:[1,3],mythic:[1,2]},body:['#a6e4ff','#3d9bff','#1f4fb0'],trim:['#fff3a0','#ffc21a','#b87400'],glow:'#7cd0ff',emblem:'cloud'},
- storm:{tickets:[.04,.01],name:'STORM BOX',price:{coins:750},coins:[180,360],gems:[.08,2,4],stacks:3,odds:{epic:.55,legendary:.35,mythic:.1},amt:{epic:[3,6],legendary:[2,4],mythic:[1,3]},body:['#dcc0ff','#8a4cff','#3c1890'],trim:['#ffffff','#c9d3ec','#6f7a9c'],glow:'#b98cff',emblem:'bolt'},
- legend:{tickets:[.1,.03],name:'LEGEND BOX',price:{gems:40},coins:[400,800],gems:[.12,3,6],stacks:4,sure:.25,odds:{epic:.3,legendary:.45,mythic:.25},amt:{epic:[5,8],legendary:[3,6],mythic:[2,4]},body:['#ffa898','#e8402a','#8a1410'],trim:['#fff6b8','#ffd23f','#c98a00'],glow:'#ffcf4a',emblem:'crown'}};
+ sky:{tickets:[.015,.003],name:'SKY BOX',price:{coins:1500},coins:[60,140],gems:[.03,1,2],stacks:2,odds:{epic:.76,legendary:.2,mythic:.04},amt:{epic:[2,4],legendary:[1,3],mythic:[1,2]},body:['#a6e4ff','#3d9bff','#1f4fb0'],trim:['#fff3a0','#ffc21a','#b87400'],glow:'#7cd0ff',emblem:'cloud'},
+ storm:{tickets:[.04,.01],name:'STORM BOX',price:{coins:5000},coins:[180,360],gems:[.08,2,4],stacks:3,odds:{epic:.55,legendary:.35,mythic:.1},amt:{epic:[3,6],legendary:[2,4],mythic:[1,3]},body:['#dcc0ff','#8a4cff','#3c1890'],trim:['#ffffff','#c9d3ec','#6f7a9c'],glow:'#b98cff',emblem:'bolt'},
+ legend:{tickets:[.1,.03],name:'LEGEND BOX',price:{gems:150},coins:[400,800],gems:[.12,3,6],stacks:4,sure:.25,odds:{epic:.3,legendary:.45,mythic:.25},amt:{epic:[5,8],legendary:[3,6],mythic:[2,4]},body:['#ffa898','#e8402a','#8a1410'],trim:['#fff6b8','#ffd23f','#c98a00'],glow:'#ffcf4a',emblem:'crown'}};
 const BOX_ORDER=['sky','storm','legend'];
 // The box for clearing each stage's goal the first time.
 const GOAL_BOX={sky:'sky',jungle:'sky',cave:'storm',factory:'storm',space:'storm',universe:'legend'};
@@ -267,7 +267,7 @@ function renderBoxShop(list){boxTiles=[];
   mine.append(row);list.append(mine)}
  list.append(el('h4','box-head','BUY A BOX'));const shop=el('div','box-row');
  for(const k of BOX_ORDER){const B=BOXES[k],t=el('div','box-card');t.style.setProperty('--glow',B.glow);t.append(boxTile(k),el('b','',B.name),el('small','',`COINS + ${B.stacks} CARD REWARDS${B.sure?' · 1 LEGENDARY+':''}`));
-  const b=el('button','buy'+(B.price.gems?' gem':''));b.innerHTML=B.price.gems?iconHTML('gem')+B.price.gems:iconHTML('coin')+B.price.coins;b.onclick=()=>{const need=B.price.gems||B.price.coins,have=B.price.gems?(save.gems||0):save.coins;if(have<need)return notEnough(b,need,!!B.price.gems);openBox(k,'buy')};t.append(b);shop.append(t)}
+  const b=el('button','buy'+(B.price.gems?' gem':''));b.innerHTML=B.price.gems?iconHTML('gem')+B.price.gems.toLocaleString():iconHTML('coin')+B.price.coins.toLocaleString();b.onclick=()=>{const need=B.price.gems||B.price.coins,have=B.price.gems?(save.gems||0):save.coins;if(have<need)return notEnough(b,need,!!B.price.gems);openBox(k,'buy')};t.append(b);shop.append(t)}
  list.append(shop);
  const info=el('div','box-info');info.append(el('p','',"Every box has coins, sometimes GEMS (rare) and SKIN CARD rewards (each one is several cards of one skin). Collect enough cards of an EPIC, LEGENDARY or MYTHIC skin to unlock it. Very rarely a box holds a LEVEL TICKET: use it here for x2 or x4 level metres for your next 3 runs. Win free boxes from BOX TASKS (Tuesday, Thursday and Saturday), by clearing a stage's goal for the first time, and from mystery boxes floating in the sky."));
  for(const k of BOX_ORDER){const B=BOXES[k];info.append(el('small','',`${B.name}: ${B.coins[0]}-${B.coins[1]} coins · gems ${Math.round(B.gems[0]*100)}% · each card reward ${oddsText(B)}${B.sure?' (the first is always legendary or mythic)':''} · x2 ticket ${+(B.tickets[0]*100).toFixed(1)}% · x4 ticket ${+(B.tickets[1]*100).toFixed(1)}%`))}list.append(info);

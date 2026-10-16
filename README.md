@@ -296,9 +296,9 @@ levels. Finishing a level moves the medal up to the next one with a harder goal 
 ## Profiles, avatars and frames
 Open PROFILE to pick your avatar, its frame and your name colour. Six avatars (Sunny, Kitty,
 Bear, Froggy, Bot, Balloon) and four frames (Classic, Wood, Cloud, Leafy) are free. Animated
-ones cost gems: avatars Phoenix and Ghost (150), Alien (200), Dragon (250) and Lion King (300);
-frames Golden Laurel (200), Inferno and Rainbow (250), Thunder (300), Galaxy (350) and
-Diamond (400). A shimmering GOLD NAME costs 500 gems; the white name is free.
+ones cost a lot of gems, so they take a long time to save for: avatars Phoenix and Ghost (1,200), Alien (1,600),
+Dragon (2,000) and Lion King (2,500); frames Golden Laurel (1,500), Inferno and Rainbow (1,800), Thunder (2,200),
+Galaxy (2,700) and Diamond (3,500). A shimmering GOLD NAME costs 2,000 gems; the white name is free.
 Season frames (Bronze, Silver, Gold, Titanium and Diamond Season, Star Legend) and avatars
 (Golden Eagle, Mech Pilot, Crystal Fox, Star Legend) are only won at the end of a season.
 Tap any gem item (or the gold name) to try it on: your big avatar shows it animated with a
@@ -362,7 +362,7 @@ more. SP never go down during a season and start again from zero in the next one
   shows the SP the run earned and any rank up. Open TASKS and tap CLAIM to collect.
 
 ## Clans
-- CREATE A CLAN costs 100 gems: pick a name, a 2 to 5 letter tag, a description, a badge,
+- CREATE A CLAN costs 300 gems: pick a name, a 2 to 5 letter tag, a description, a badge,
   a colour and whether it is open (anyone joins) or closed (players send a join request).
 - Find clans on the clan screen (top clans by trophies, or search by name) and JOIN or REQUEST.
 - Up to 30 members. Roles: the LEADER (founder) promotes members to ADMIN, demotes them,
@@ -484,9 +484,9 @@ boss; P or Escape pauses.
 
   | Box | Price | Coins | Gems | Card rewards | Each reward: epic / legendary / mythic | Level ticket x2 / x4 |
   |---|---|---|---|---|---|---|
-  | SKY BOX | 250 coins | 60-140 | 3% chance, 1-2 | 2 | 76% / 20% / 4% | 1.5% / 0.3% |
-  | STORM BOX | 750 coins | 180-360 | 8% chance, 2-4 | 3 | 55% / 35% / 10% | 4% / 1% |
-  | LEGEND BOX | 40 gems | 400-800 | 12% chance, 3-6 | 4 (the first always legendary or mythic) | 30% / 45% / 25% | 10% / 3% |
+  | SKY BOX | 1,500 coins | 60-140 | 3% chance, 1-2 | 2 | 76% / 20% / 4% | 1.5% / 0.3% |
+  | STORM BOX | 5,000 coins | 180-360 | 8% chance, 2-4 | 3 | 55% / 35% / 10% | 4% / 1% |
+  | LEGEND BOX | 150 gems | 400-800 | 12% chance, 3-6 | 4 (the first always legendary or mythic) | 30% / 45% / 25% | 10% / 3% |
 
 - Free boxes: BOX TASKS (Tuesday, Thursday and Saturday, see Tasks), the first clear of each campaign stage's goal,
   and MYSTERY BOXES that float through the sky in about a third of runs (at most two a day): grab one to keep it.
@@ -503,8 +503,12 @@ boss; P or Escape pauses.
   (each card skin's progress; tap one to see the skin).
 
 ## Store
+- PRICES are set high on purpose because coins (about 600-1,500 from a good run with a boss) and gems (tasks,
+  seasons, medals and level rewards) come in steadily: skins and boxes take several runs of saving, and animated
+  avatars, frames and the gold name are long-term goals. Prices live in skins.js (skins), boxes.js (BOXES),
+  cosmetics.js (AVATARS, FRAMES, GOLD_NAME_PRICE, CLAN_PRICE) and game.js (LIFE_PRICE, LIFE_PACK_PRICE).
 - The store has your coins and gems at the top and three big tabs: SKINS, BOXES (with a badge counting unopened
-  boxes) and LIVES (two offer cards: +1 life, or +3 lives as the best deal).
+  boxes) and LIVES (two offer cards: +1 life for 400 coins, or +3 lives for 1,000 coins as the best deal).
 - Skins are shown as Angry Birds style cards with light rays, coloured by rarity
   (common teal, rare blue, epic purple, legendary orange). The picked skin sits on a
   big card next to its details and buy/equip button; all skins are in the fanned row
@@ -514,13 +518,13 @@ boss; P or Escape pauses.
   Robot Dance with laser eyes, Watermelon – Melon Twister, Monster – Monster Roar,
   Ninja – Shadow Clones, Galaxy – Cosmic Warp, Golden King – King's Treasure, Sleepy Dog –
   Nap Time, Chick Trio – Chick Parade, Sly Fox – Sneaky Scheme, Grumpy Wolf – Huff and Puff.
-- Skins: Classic (free), and Gumball, Funny Clown, Toy Robot and Watermelon for coins. The EPIC skins
+- Skins: Classic (free), and Gumball (3,000 coins), Funny Clown (4,500), Toy Robot (6,000) and Watermelon (7,500). The EPIC skins
   (Monster, Ninja, Chick Trio, Sly Fox), LEGENDARY skins (Galaxy, Golden King, Grumpy Wolf) and MYTHIC skins
   (Fire Dragon: Dragon Fire pose, Dragon Breath fatality; Rainbow Unicorn: Rainbow Dash, Rainbow Blast; Diamond:
   Crystal Shine, Diamond Storm) are unlocked with skin cards from boxes; their store button shows the cards
   collected (for example 4 / 10 CARDS) and opens the BOXES tab.
 - Four TALKING CHARACTERS, original characters each with 35 voice lines: Sleepy Dog
-  (rare, 350 coins: floppy ears, eye patch and nightcap; trails Zzz, bones and puffs; Sleepy Slam fatality),
+  (rare, 9,000 coins: floppy ears, eye patch and nightcap; trails Zzz, bones and puffs; Sleepy Slam fatality),
   Chick Trio (epic, cards: a chick balloon with two baby chicks flying beside it; feathers, music notes
   and seeds; Peck Peck Peck), Sly Fox (epic, cards: pointy ears, white muzzle, whiskers and a bushy tail;
   feathers; Feather Frenzy) and Grumpy Wolf (legendary, cards: ragged ears, heavy brows and fangs; wind puffs
