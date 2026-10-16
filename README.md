@@ -20,6 +20,7 @@ rope and climb as high as you can.
 - season.js: monthly seasons, ranks, season points, daily, box and season tasks, rewards and the Season and Tasks screens
 - modes.js: the MAP screen (Campaign and Free Run)
 - boxes.js: boxes (coins, gems and skin cards), card unlocks, the box opening show and the store's BOXES tab
+- medals.js: medals (five levels each), their drawing and 3D spin viewer, and PROFILE > MEDALS
 - firebase-config.js: your Firebase project config (online play is off while it is empty)
 - firestore.rules: security rules to paste into Firebase
 
@@ -243,6 +244,37 @@ Like PUBG Mobile, every level needs more than the one before (levelNeed in cosme
   "LEVEL 100" until claimed. Claimed rewards are saved to your account.
 - Players from before levels start from what their save shows they flew (their best altitudes or this season's
   total, whichever is bigger). Signed-in players' levels are saved to their account and public profile.
+
+## Medals
+Open PROFILE > MEDALS to see the 12 medals. Each one is earned by doing a task over and over, and has five
+levels. Finishing a level moves the medal up to the next one with a harder goal (SKY EXPLORER I, then II, then III and so on):
+
+| Medal | Task | I | II | III | IV | V |
+|---|---|---|---|---|---|---|
+| SKY EXPLORER | metres flown in total | 10,000 | 100,000 | 500,000 | 2,000,000 | 10,000,000 |
+| HIGH FLYER | metres in one run | 5,000 | 15,000 | 30,000 | 60,000 | 100,000 |
+| BOSS HUNTER | bosses beaten | 1 | 10 | 50 | 150 | 500 |
+| STAR COLLECTOR | stage stars (out of 18) | 1 | 3 | 6 | 12 | 18 |
+| COIN TYCOON | coins collected in runs | 500 | 5,000 | 25,000 | 100,000 | 500,000 |
+| PERFECTIONIST | perfect coin rows | 20 | 100 | 400 | 1,000 | 3,000 |
+| DAREDEVIL | close calls | 25 | 100 | 400 | 1,000 | 3,000 |
+| SMASHER | smashes and bonks | 50 | 250 | 1,000 | 3,000 | 10,000 |
+| TURBO ACE | engine boosts | 5 | 25 | 100 | 300 | 1,000 |
+| VETERAN | runs played | 10 | 50 | 200 | 500 | 1,500 |
+| TASK MASTER | daily tasks done | 5 | 25 | 75 | 200 | 500 |
+| TREASURE HUNTER | boxes opened | 1 | 10 | 30 | 100 | 300 |
+
+- Higher levels look cooler: I is a round BRONZE medal, II a scalloped SILVER one, III a starburst GOLD one,
+  IV is FIRE GOLD (animated flame colours, flames and sparks) and V is ROYAL FIRE (fire gold with a halo, wings
+  and a crown). Each level pays once: 100 coins, 300 coins, 10 gems, 25 gems, then 60 gems.
+- Medals you have not earned yet are faded grey with a "?" until their first level. Each card shows its level,
+  a progress bar and the next goal; the top shows how many of the 60 medal levels you own.
+- Tap a medal to open it big: it spins round in 3D (front, edge, the back with an embossed star, front again),
+  with its five levels in a row underneath and what the next level needs.
+- A medal earned mid-run pops up in flight ("MEDAL! SMASHER III"); the results screen shows it with its reward
+  (tap to see it spin). Players from before medals get the levels their old saves have already earned.
+- Signed-in players' medals are saved to their account and public profile, and show on their player card
+  (needs the updated firestore.rules).
 
 ## Profiles, avatars and frames
 Open PROFILE to pick your avatar, its frame and your name colour. Six avatars (Sunny, Kitty,

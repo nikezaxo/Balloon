@@ -80,7 +80,7 @@ function seasonState(){const now=seasonOf();if(!save.season||!save.season.id)sav
  const t=save.tasks||(save.tasks={});if(t.day!==todayId()){t.day=todayId();t.daily=dailyFor(t.day);t.bonus=false;t.boxTask=boxTaskFor(t.day)}if(!('boxTask' in t))t.boxTask=boxTaskFor(t.day)
  if(t.season!==save.season.id){t.season=save.season.id;t.st={};t.sc=[]}return save.season}
 let seasonToast=[];
-function trackTask(stat,amount=1){if(!amount)return;seasonState();const t=save.tasks,max=stat==='runAlt';
+function trackTask(stat,amount=1){if(!amount)return;seasonState();if(typeof lifeStat==='function')lifeStat(stat,amount);const t=save.tasks,max=stat==='runAlt';
  for(const d of t.daily){const def=DAILY_TASKS[d.k];if(def.stat!==stat||d.c)continue;const goal=def.goals[d.g],was=d.p;d.p=max?Math.max(d.p,amount):d.p+amount;if(was<goal&&d.p>=goal){seasonToast.push(`TASK DONE: ${def.text(goal).toUpperCase()}`);if(seasonRun)seasonRun.done++}}
  const bt=t.boxTask;if(bt&&!bt.c&&BOX_TASKS[bt.k].stat===stat){const goal=BOX_TASKS[bt.k].goal,w=bt.p;bt.p=max?Math.max(bt.p,amount):bt.p+amount;if(w<goal&&bt.p>=goal){seasonToast.push('BOX TASK DONE! CLAIM YOUR BOX');if(seasonRun)seasonRun.done++}}
  const was=t.st[stat]||0;t.st[stat]=max?Math.max(was,amount):was+amount;for(const s of SEASON_TASKS)if(s.stat===stat&&was<s.goal&&t.st[stat]>=s.goal&&!t.sc.includes(s.id)){seasonToast.push(`SEASON TASK DONE: ${s.text.toUpperCase()}`);if(seasonRun)seasonRun.done++}

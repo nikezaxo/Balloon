@@ -881,3 +881,31 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .task-tabs .store-tab.level:not(.on){background:linear-gradient(160deg,#ff9a3c,#c8501a)}
 /* The Tasks tabs stay at the top while the list (or the long level map) scrolls under them. */
 .task-tabs{position:sticky;top:-4px;z-index:6;margin:-4px -4px 8px;padding:6px 4px 10px;background:linear-gradient(#4683fa 80%,#4683fa00)}
+/* Medals */
+.medal-cv{display:block;flex:none}
+.medal-sum{padding:7px 10px 8px;text-align:center;background:#1b1240aa;border:3px solid var(--ink);border-radius:13px}
+.medal-sum b{display:block;font-family:var(--title);font-weight:400;font-size:20px;color:#ffe46b;text-shadow:var(--stroke)}
+.medal-sum small{font-size:10.5px;font-weight:900;color:#e6ebff}
+.medal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.medal-card{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 5px 8px;color:#fff;background:radial-gradient(circle at 50% 30%,#ffffff22,#1b124099 70%);border:3px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);min-width:0}
+.medal-card b{font-family:var(--title);font-weight:400;font-size:12px;text-align:center;line-height:1.1;text-shadow:var(--stroke)}
+.medal-card small{font-size:9px;font-weight:900;color:#dfe6ff;text-align:center}
+.medal-card .medal-lv{color:#ffe46b}
+.medal-card.locked{filter:saturate(.4)}.medal-card.locked b{opacity:.7}.medal-card.locked .medal-lv{color:#b8bccb}
+.medal-card .bo-bar{width:100%}
+.medal-card.t3{border-color:#ffd23f}.medal-card.t4,.medal-card.t5{border-color:#ff9a1a;box-shadow:0 0 14px #ff7a1a99,0 4px 0 var(--ink)}
+.medal-card.t5{background:radial-gradient(circle at 50% 30%,#ff7ad944,#1b124099 70%)}
+.medal-view{z-index:9}
+.medal-view .card{padding-top:42px}
+.mv-medal{display:flex;justify-content:center;margin:-6px 0 2px;filter:drop-shadow(0 10px 12px #0006)}
+.mv-name{display:block;font-family:var(--title);font-weight:400;font-size:26px;color:#ffe46b;text-shadow:var(--stroke),0 4px 0 var(--ink)}
+.mv-lv{display:block;font-size:12px;font-weight:900;color:#fff;margin:2px 0 6px}
+.mv-ladder{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
+.mv-step{display:flex;flex-direction:column;align-items:center;gap:1px;width:56px}
+.mv-step small{font-size:8.5px;font-weight:900;color:#c9d3ff}.mv-step.got small{color:#ffe46b}
+.mv-goal{margin:8px 0 0!important;font-size:12px!important}
+.pc-medals{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
+.pc-medal{padding:0;background:none;border:0}
+.res-medal{cursor:pointer;border-color:#ffd23f;box-shadow:0 0 14px #ffd23f88}
+.res-medal-mid{flex:1;min-width:0}.res-medal-mid b{display:block;font-family:var(--title);font-weight:400;font-size:13px;color:#ffe46b;text-shadow:var(--stroke)}
+.res-medal-mid small{display:block;font-size:10px;font-weight:900;color:#e6ebff;margin-top:2px}

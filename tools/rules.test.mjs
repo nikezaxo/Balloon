@@ -111,5 +111,9 @@ await t('level 0 denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf
 await t('level above 100 denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, level: 101 }))));
 await t('text level denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, level: 'max' }))));
 await t('negative metres denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, meters: -5 }))));
+// Medals
+await t('profile with medals', assertSucceeds(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, medals: 'explorer5,hunter4,stars3' }))));
+await t('very long medals text denied', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, medals: 'x'.repeat(161) }))));
+await t('medals must be text', assertFails(setDoc(doc(A, 'profiles/alice'), statsProf({ ...stats, medals: 5 }))));
 console.log(`${pass} passed, ${fail} failed`);
 await env.cleanup(); process.exit(fail ? 1 : 0);
