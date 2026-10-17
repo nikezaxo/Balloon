@@ -50,8 +50,21 @@ and only a few buttons sit around the edges.
 - Bottom bar: STORE (skins, boxes and lives; a red badge counts unopened boxes), TASKS (red dot when a reward is ready), MAP (Campaign or
   Free Run, see Modes), RANKS (weekly tournament, all-time, Free Run and your bests; the badge shows
   the time left this week), SEASON (your rank badge) and CLAN.
-- SETTINGS: sound, full screen, your account (guest: SIGN UP or LOG IN; member: sign out), your
+- SETTINGS: sound, full screen, GRAPHICS, your account (guest: SIGN UP or LOG IN; member: sign out), your
   USERNAME (or guest name), HOW TO PLAY (power-ups, boost and bosses) and the tutorial (replay it or turn it off).
+- GRAPHICS has four levels (GFX_LEVELS in game.js), kept on this device only (localStorage 'flyup-gfx', not in the
+  save or the cloud). NORMAL is the default and is how the game always looked.
+
+  | Level | Sharpness (pixels per screen point) | Particles, trails, speed lines | Most particles at once | Other |
+  |---|---|---|---|---|
+  | VERY SMOOTH | 1x | 30% (speed lines and box show 50%) | 120 | no edge shading (vignette) |
+  | SMOOTH | up to 1.5x | 60% | 260 | |
+  | NORMAL | up to 2x | 100% | 700 | |
+  | BETTER | up to 3x (the screen's full sharpness) | 135% | 1,100 | high-quality image scaling |
+
+  The level also sets the sharpness of the boss picture buffer (1x / 1.5x / 2x), the box opening screen and the LEVEL
+  map. Lower levels draw far fewer pixels each frame, so slower phones keep a steadier frame rate; on a phone whose
+  screen is 2x, BETTER only adds effects.
 On wide screens the action stays in a centred column framed by side walls. All icons are cartoon
 SVGs in icons.js. Each stage has its own round illustrated emblem (stSky, stJungle, stCave, stFactory, stSpace,
 stUniverse in icons.js), used on the map, the menu banner, the HUD, results, rankings and the level map signs:

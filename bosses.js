@@ -185,7 +185,9 @@ function rankBadge(r,t){
  for(let i=0;i<n;i++){const y=4-(n-1)*gap/2+i*gap,hw=11-Math.max(0,y-8)*.25;ctx.beginPath();ctx.moveTo(-hw,y+5);ctx.lineTo(0,y-2);ctx.lineTo(hw,y+5);ctx.stroke()}
  if(r>=5){const k=(t*.7)%1;ctx.save();ctx.globalAlpha=Math.sin(k*Math.PI);ctx.fillStyle='#fff';star(-12+k*24,-14+k*30,6,1.6,4);ctx.fill();ctx.restore()}ctx.restore()}
 // The boss art with its rank look (rank I is the plain art with its one-chevron badge).
-function rankedArt(b,o){const r=b.rank||0;if(r<2){b.def.art(o);if(r)rankBadge(r,o.t);return}if(!bossBuf)bossBuf=document.createElement('canvas');bossBuf.width=720;bossBuf.height=720;const c=bossBuf.getContext('2d'),main=ctx;c.setTransform(2,0,0,2,360,360);ctx=c;b.def.art(o);rankTint(r,o.t);ctx=main;rankAura(r,o.t);ctx.drawImage(bossBuf,-180,-180,360,360);rankBadge(r,o.t)}
+// The boss is drawn into a 360-unit square buffer, at up to 2x sharpness (less on the SMOOTH graphics levels).
+function bossCanvas(){if(!bossBuf)bossBuf=document.createElement('canvas');const k=Math.min(2,gfxRes()),S=Math.round(360*k);bossBuf.width=S;bossBuf.height=S;const c=bossBuf.getContext('2d');c.setTransform(k,0,0,k,S/2,S/2);return c}
+function rankedArt(b,o){const r=b.rank||0;if(r<2){b.def.art(o);if(r)rankBadge(r,o.t);return}const c=bossCanvas(),main=ctx;ctx=c;b.def.art(o);rankTint(r,o.t);ctx=main;rankAura(r,o.t);ctx.drawImage(bossBuf,-180,-180,360,360);rankBadge(r,o.t)}
 
 // ---------- Fight flow ----------
 // Difficulty: tier is how many bosses this run has beaten (up to 11), level how often this stage's boss was beaten
@@ -312,7 +314,7 @@ function drawRewardCoins(){if(!rewardCoins.length)return;ctx.save();ctx.beginPat
 // ---------- Drawing ----------
 function drawBossBody(b){const F=(b.fatal&&b.fatal.pose)||{};if(b.hidden||F.alpha===0)return;const o={t:b.animT,tired:b.phase==='tired'||b.phase==='fatality',attack:b.attack,lookX:clamp((x*W-b.x)/150,-1,1),lookY:clamp((balloonY()-b.y)/250,-1,1)},sc=b.scale*(F.scale===undefined?1:F.scale);
  ctx.save();ctx.translate(b.x+(F.dx||0),b.y+(F.dy||0));ctx.rotate(F.rot||0);ctx.scale(sc*(F.sx||1),sc*(F.sy||1));if(F.alpha!==undefined)ctx.globalAlpha=F.alpha;
- if(F.gold||F.split||F.tint){if(!bossBuf)bossBuf=document.createElement('canvas');bossBuf.width=720;bossBuf.height=720;const c=bossBuf.getContext('2d'),main=ctx;c.setTransform(2,0,0,2,360,360);ctx=c;b.def.art(o);if((b.rank||0)>1)rankTint(b.rank,o.t);if(F.gold){ctx.globalCompositeOperation='source-atop';ctx.fillStyle=`rgba(255,196,40,${F.gold*.85})`;ctx.fillRect(-180,-180,360,360);ctx.fillStyle=`rgba(255,255,255,${F.gold*.25})`;ctx.fillRect(-180,-180,360,120);ctx.globalCompositeOperation='source-over'}if(F.tint){ctx.globalCompositeOperation='source-atop';ctx.fillStyle=F.tint;ctx.fillRect(-180,-180,360,360);ctx.globalCompositeOperation='source-over'}ctx=main;
+ if(F.gold||F.split||F.tint){const c=bossCanvas(),main=ctx;ctx=c;b.def.art(o);if((b.rank||0)>1)rankTint(b.rank,o.t);if(F.gold){ctx.globalCompositeOperation='source-atop';ctx.fillStyle=`rgba(255,196,40,${F.gold*.85})`;ctx.fillRect(-180,-180,360,360);ctx.fillStyle=`rgba(255,255,255,${F.gold*.25})`;ctx.fillRect(-180,-180,360,120);ctx.globalCompositeOperation='source-over'}if(F.tint){ctx.globalCompositeOperation='source-atop';ctx.fillStyle=F.tint;ctx.fillRect(-180,-180,360,360);ctx.globalCompositeOperation='source-over'}ctx=main;
   if(F.split){const k=F.split;ctx.globalAlpha*=1-k*.5;for(const s of [-1,1]){ctx.save();ctx.translate(s*k*60,k*k*160);ctx.rotate(s*k*.5);ctx.beginPath();ctx.rect(s<0?-180:0,-180,180,360);ctx.clip();ctx.drawImage(bossBuf,-180,-180,360,360);ctx.restore()}}else ctx.drawImage(bossBuf,-180,-180,360,360)}
  else rankedArt(b,o);
  if(F.hurt){ctx.globalAlpha=F.hurt*.4;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,90,0,TAU);ctx.fill()}ctx.restore();
