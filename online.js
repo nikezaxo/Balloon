@@ -87,7 +87,7 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
   if((cloud.updated||0)>(save.updated||0)){const c=num(cloud.coins,0,1e9),l=num(cloud.lives,0,MAX_LIVES),g=num(cloud.gems,0,1e6);if(c!==null)save.coins=c;if(g!==null)save.gems=g;if(l!==null)save.lives=l;if(SKINS[cloud.skin])save.skin=cloud.skin;save.updated=cloud.updated}
   save.skins=[...new Set([...(save.skins||[]),...(Array.isArray(cloud.skins)?cloud.skins:[])])].filter(id=>SKINS[id]);if(!save.skins.includes(save.skin))save.skin='classic';
   for(const k of ['best','scores','stars','bossWins','bossTop']){save[k]=save[k]||{};for(const [id,v] of Object.entries(cloud[k]||{})){const n=num(v,0,1e9);if(n!==null&&STAGES.some(s=>s.id===id))save[k][id]=Math.max(save[k][id]||0,n)}}
-  const cc=cloud.cos;if(cc&&typeof cc==='object'){const c=myCos();c.own=[...new Set([...c.own,...(Array.isArray(cc.own)?cc.own:[])])].filter(id=>AVATARS[id]||FRAMES[id]);c.goldOwned=c.goldOwned||!!cc.goldOwned;if((cloud.updated||0)>=(save.updated||0)){if(AVATARS[cc.avatar])c.avatar=cc.avatar;if(FRAMES[cc.frame])c.frame=cc.frame;c.gold=!!cc.gold}}
+  const cc=cloud.cos;if(cc&&typeof cc==='object'){const c=myCos();c.own=[...new Set([...c.own,...(Array.isArray(cc.own)?cc.own:[])])].filter(id=>AVATARS[id]||FRAMES[id]);c.goldOwned=c.goldOwned||!!cc.goldOwned;if(cc.sn&&typeof cc.sn==='object'){c.sn=c.sn||{};for(const [k,v] of Object.entries(cc.sn)){const n=Math.floor(+v);if(/^[af]:[A-Za-z]{1,16}$/.test(k)&&n>0&&n<100&&(!c.sn[k]||n<c.sn[k]))c.sn[k]=n}}if((cloud.updated||0)>=(save.updated||0)){if(AVATARS[cc.avatar])c.avatar=cc.avatar;if(FRAMES[cc.frame])c.frame=cc.frame;c.gold=!!cc.gold}}
   if((cloud.updated||0)>(save.updated||0)){if(cloud.clan&&typeof cloud.clan==='object')save.clan=cloud.clan;if(cloud.clanReq&&typeof cloud.clanReq==='object')save.clanReq=cloud.clanReq}
   // Free Run records keep the best of both; cleared campaign stages add up.
   // Claimed level rewards add up (each level can only be claimed once).
@@ -139,12 +139,12 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
  let seasonTimer=0,seasonSent='';
  // New season points refresh the profile too (publishNow then pushes the season entry).
  function seasonSync(){if(!user||!fb)return;clearTimeout(seasonTimer);seasonTimer=setTimeout(publishNow,1500)}
- // Writes the season entry only when the points, name or look changed since the last write; a player past
- // Diamond I also checks whether they are in the top 1,000 (Star Legend).
+ // Writes the season entry only when the points, name or look changed since the last write; a player with the
+ // points for STAR LEGEND V also checks whether they are in the top 100.
  async function seasonPush(){if(!user||!fb||!ready||typeof seasonState!=='function')return;const s=seasonState(),lk=myLook(),doc={name:displayName(),sp:Math.floor(s.sp),avatar:lk.avatar,frame:lk.frame,gold:lk.gold,clan:save.clan?save.clan.tag:''},key=s.id+JSON.stringify(doc);if(!s.sp)return;
   if(seasonSent!==key)try{await fb.F.setDoc(ref('seasons',s.id,'players',user.uid),{...doc,at:fb.F.serverTimestamp()});seasonSent=key}
   catch(e){console.warn('Season points not saved',e);return}
-  if(s.sp>=LEGEND_MIN){const r=await seasonRank(s.id,s.sp);if(r!==null)seasonLegend(r<=LEGEND_TOP,s.id)}else if(s.legend)seasonLegend(false,s.id)}
+  if(s.sp>=LEGEND_V_MIN){const r=await seasonRank(s.id,s.sp);if(r!==null)seasonLegend(r<=LEGEND_TOP,s.id)}else if(s.legend)seasonLegend(false,s.id)}
  // LEVEL board: the top 100 players by level, read from public profiles (a level only grows with total metres,
  // so sorting by metres sorts by level).
  async function topLevels(){if(!fb)return [];const snap=await fb.F.getDocs(fb.F.query(fb.F.collection(fb.db,'profiles'),fb.F.orderBy('meters','desc'),fb.F.limit(100)));return snap.docs.map(d=>({uid:d.id,...d.data()}))}

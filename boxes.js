@@ -5,7 +5,7 @@
 // cards are. Boxes are bought in the store (BOXES tab), won from BOX TASKS (three days a week, season.js), paid for
 // clearing a stage goal the first time and sometimes found floating in the sky. Won and found boxes wait in the
 // store until opened; opening one plays a full-screen show that reveals the rewards one by one.
-const CARD_NEED={epic:10,legendary:20,mythic:30};
+const CARD_NEED={epic:25,legendary:50,mythic:80};
 // Spare cards (beyond badge III, or when every card skin is at badge III) turn into coins.
 const CARD_DUP={epic:15,legendary:40,mythic:80};
 const CARD_RANK={epic:1,legendary:2,mythic:3};
@@ -25,9 +25,9 @@ function cardStep(it){const n=CARD_NEED[it.rar],steps=it.unlock||!save.skins.inc
 // cards a stack holds; sure: the Legend Box's first stack is always legendary or better (this chance of mythic);
 // tickets: the (very rare) chance of a x2 and of a x4 LEVEL TICKET.
 const BOXES={
- sky:{tickets:[.015,.003],name:'SKY BOX',price:{coins:1500},coins:[60,140],gems:[.03,1,2],stacks:2,odds:{epic:.76,legendary:.2,mythic:.04},amt:{epic:[2,4],legendary:[1,3],mythic:[1,2]},body:['#a6e4ff','#3d9bff','#1f4fb0'],trim:['#fff3a0','#ffc21a','#b87400'],glow:'#7cd0ff',emblem:'cloud'},
- storm:{tickets:[.04,.01],name:'STORM BOX',price:{coins:5000},coins:[180,360],gems:[.08,2,4],stacks:3,odds:{epic:.55,legendary:.35,mythic:.1},amt:{epic:[3,6],legendary:[2,4],mythic:[1,3]},body:['#dcc0ff','#8a4cff','#3c1890'],trim:['#ffffff','#c9d3ec','#6f7a9c'],glow:'#b98cff',emblem:'bolt'},
- legend:{tickets:[.1,.03],name:'LEGEND BOX',price:{gems:150},coins:[400,800],gems:[.12,3,6],stacks:4,sure:.25,odds:{epic:.3,legendary:.45,mythic:.25},amt:{epic:[5,8],legendary:[3,6],mythic:[2,4]},body:['#ffa898','#e8402a','#8a1410'],trim:['#fff6b8','#ffd23f','#c98a00'],glow:'#ffcf4a',emblem:'crown'}};
+ sky:{tickets:[.015,.003],name:'SKY BOX',price:{coins:5000},coins:[60,140],gems:[.03,1,2],stacks:2,odds:{epic:.76,legendary:.2,mythic:.04},amt:{epic:[2,4],legendary:[1,3],mythic:[1,2]},body:['#a6e4ff','#3d9bff','#1f4fb0'],trim:['#fff3a0','#ffc21a','#b87400'],glow:'#7cd0ff',emblem:'cloud'},
+ storm:{tickets:[.04,.01],name:'STORM BOX',price:{coins:15000},coins:[180,360],gems:[.08,2,4],stacks:3,odds:{epic:.55,legendary:.35,mythic:.1},amt:{epic:[3,6],legendary:[2,4],mythic:[1,3]},body:['#dcc0ff','#8a4cff','#3c1890'],trim:['#ffffff','#c9d3ec','#6f7a9c'],glow:'#b98cff',emblem:'bolt'},
+ legend:{tickets:[.1,.03],name:'LEGEND BOX',price:{gems:400},coins:[400,800],gems:[.12,3,6],stacks:4,sure:.25,odds:{epic:.3,legendary:.45,mythic:.25},amt:{epic:[5,8],legendary:[3,6],mythic:[2,4]},body:['#ffa898','#e8402a','#8a1410'],trim:['#fff6b8','#ffd23f','#c98a00'],glow:'#ffcf4a',emblem:'crown'}};
 const BOX_ORDER=['sky','storm','legend'];
 // The box for clearing each stage's goal the first time.
 const GOAL_BOX={sky:'sky',jungle:'sky',cave:'storm',factory:'storm',space:'storm',universe:'legend'};

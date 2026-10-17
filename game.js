@@ -22,7 +22,7 @@ const DOUBLE_TIME=15;
 // Altitude banners show only every MILESTONE metres, to keep the screen clear.
 const MILESTONE=100000;
 const MEDALS=[{at:1000,tone:'bronze',name:'BRONZE'},{at:2500,tone:'silver',name:'SILVER'},{at:5000,tone:'gold',name:'GOLD'}];
-const LIFE_PRICE=400,LIFE_PACK_PRICE=1000,MAX_LIVES=9;
+const LIFE_PRICE=400,LIFE_PACK_PRICE=1000,MAX_LIVES=3;
 // Score: 10 points per metre plus bonuses. Stars come from bosses defeated in one run (revives included):
 // 3 bosses for the first star, 6 for the second and 12 for the third.
 const STAR_BOSSES=[1,3,5],PTS={coin:100,row:500,energy:200,power:300,smash:250,close:500,boss:50000};
@@ -30,6 +30,8 @@ const starsFor=kills=>STAR_BOSSES.filter(n=>kills>=n).length;
 // Wallet, owned skins, lives and per-stage bests live in the browser's localStorage.
 function loadSave(){const fresh={coins:0,gems:0,lives:1,skins:['classic'],skin:'classic',best:{},scores:{},stars:{},lastStage:'sky'};try{const s=JSON.parse(localStorage.getItem('skybound-save'));if(s)return {...fresh,...s,best:{...(s.best||{})},scores:{...(s.scores||{})},stars:{...(s.stars||{})}};const old=Number(localStorage.getItem('skybound-best'))||0;if(old)fresh.best.sky=old}catch{}return fresh}
 const save=loadSave();
+// At most MAX_LIVES extra lives (older saves could hold more); fixed in memory, stored with the next save.
+if(save.lives>MAX_LIVES)save.lives=MAX_LIVES;
 function persist(){save.updated=Date.now();try{localStorage.setItem('skybound-save',JSON.stringify(save))}catch{}if(typeof online!=='undefined')online.saved()}
 let stage=STAGES.find(s=>s.id===save.lastStage)||STAGES[0];
 let SW=420,W=420,OX=0,H=700,dpr=1,state='menu',previousState='ready',alt=0,x=.5,vx=0,t=0,last=0,obstacles=[],coins=[],critters=[],particles=[],pointer=null,target=null,sound=false,soundTouched=false,flightTime=0,spin=0,wind=0,weatherNow=null,leaves=[],leafClock=0,coinCount=0,shownCoins=0,banked=0,nextObstacle=450,spawnIndex=0;

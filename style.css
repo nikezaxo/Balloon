@@ -547,6 +547,23 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .tier-mid small{font-size:10px;font-weight:800;letter-spacing:.4px;color:#c9d3f0}
 .tier-mid .task-reward{justify-content:flex-start}
 .tier-items{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px}
+button.tier-row{width:100%;color:#fff;font:inherit;text-align:left;cursor:pointer}
+button.tier-row:active{transform:translateY(2px)}
+.tier-row.open{border-radius:13px 13px 6px 6px}
+.tier-arrow{flex:none;font-size:11px;color:#dfe6ff;text-shadow:var(--stroke)}
+.tier-items{flex-direction:row;flex-wrap:wrap;justify-content:flex-end;max-width:76px}
+.tier-levels{display:flex;flex-direction:column;gap:5px;margin:-6px 4px 0;padding:9px 7px 7px;background:#140c34cc;border:3px solid var(--ink);border-top:0;border-radius:0 0 13px 13px}
+.tl-line{display:flex;align-items:center;gap:8px;padding:5px 7px;background:#ffffff12;border:2px solid #ffffff1c;border-radius:10px;opacity:.78}
+.tl-line.got{opacity:1;background:#2fbf4f33;border-color:#7ef08f66}
+.tl-line.now{opacity:1;border-color:var(--yellow);box-shadow:0 0 0 2px #ffd23f55}
+.tl-line.top{opacity:1;background:linear-gradient(90deg,#c46aff44,#ffe68033);border-color:#ffe68088}
+.tl-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.tl-mid b{font-family:var(--title);font-weight:400;font-size:14px;letter-spacing:.4px;text-shadow:var(--stroke)}
+.tl-mid small{font-size:9.5px;font-weight:800;letter-spacing:.3px;color:#c9d3f0}
+.tl-mid .task-reward{justify-content:flex-start;align-items:center}
+.task-reward>.tl-item{display:flex;align-items:center;gap:4px;padding:1px 6px 1px 1px;background:linear-gradient(#b48cff,#6a35ef);border:2px solid var(--ink)}
+.tl-item small{font-family:var(--title);font-size:10px;letter-spacing:.4px}
+.tl-check{flex:none;width:18px;text-align:center;font-family:var(--title);font-size:16px;color:#7ef08f;text-shadow:var(--stroke)}
 .tier-skin{font-family:var(--title);font-size:11px;padding:1px 6px 2px;background:linear-gradient(#b48cff,#6a35ef);border:2px solid var(--ink);border-radius:7px;text-shadow:var(--stroke)}
 .season-reward{background:linear-gradient(#b48cff,#6a35ef)}
 .reward-banner .emblem{order:-1}
