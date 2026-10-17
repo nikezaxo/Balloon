@@ -348,7 +348,8 @@ Legend avatar (STAR LEGEND IV) and Star Legend frame (STAR LEGEND V, the top 100
 the season it was first won in as an animated S1 / S2 ... badge: on the avatar (a gleaming pill under the face) and on
 the frame (the pill at the bottom of the ring). The look carries it in the id ('fox~1', 'sDiamond~1'), so other
 players see it too; the first season is kept per item in cos.sn ('a:fox': 1) and merges across devices (earliest
-wins). The older Bronze/Silver/Gold/Titanium Season frames, Golden Eagle and Mech Pilot are retired: they can no longer
+wins). In PROFILE a season item you haven't won yet shows this season's number (cosShow), so it looks exactly as in
+the season REWARDS list and as it will once won. The older Bronze/Silver/Gold/Titanium Season frames, Golden Eagle and Mech Pilot are retired: they can no longer
 be won and only show for players who already have them.
 Tap any gem item (or the gold name) to try it on: your big avatar shows it animated with a
 PREVIEW badge and a BUY button, before you spend anything.
