@@ -655,7 +655,7 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .game-shell:not(.tutorial) .hud-alt>small,.game-shell:not(.tutorial) .hud-alt>strong,.game-shell:not(.tutorial) .zone,.game-shell:not(.tutorial) #speed{display:none}
 .game-shell:not(.tutorial) .hud-alt .score-line{margin-top:0}
 .game-shell:not(.tutorial) .hud-alt .score-line b{font-size:20px}
-.game-shell:not(.tutorial) #weather:not(.gust){display:none}
+.game-shell:not(.tutorial) #weather{display:none}
 .game-shell:not(.tutorial) #boss-timer:not(.soon){display:none}
 .game-shell:not(.tutorial) .mult-pill:not(.active){display:none}
 .game-shell:not(.tutorial) .hint>span,.game-shell:not(.tutorial) .hint .best-chip,.game-shell:not(.tutorial) .hint-stage{display:none}
@@ -690,6 +690,7 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .ask h2{font-size:28px;line-height:1.05}
 /* Rainbow star: the x2 timer chip and a rainbow glow on the score while it lasts */
 .chip.rainbow{background:linear-gradient(90deg,#ff4d5e,#ff9a1a,#ffd23f,#4fd36b,#44d9ff,#a273ff);background-size:200% 100%;animation:goldShine 1.6s linear infinite}
+.chip#chip-x2 i{display:none}
 .hud-alt.x2{box-shadow:0 0 0 3px #ff9ae6,0 0 18px #ff7ad9aa}
 .hud-alt.x2 .score-line b{color:#ffe0f6;text-shadow:var(--stroke),0 0 10px #ff7ad9}
 /* Bottom bar with six buttons */
@@ -760,8 +761,40 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .bo-bar{display:block;height:8px;background:#1b1240aa;border:2px solid var(--ink);border-radius:5px;overflow:hidden}
 .bo-bar s{display:block;height:100%;background:linear-gradient(#fff6b0,#ffd23f)}
 .card-chip.own .bo-bar s{background:linear-gradient(#8ff09c,#2fbf4f)}
-.card-prog{height:12px;margin:6px 0 0;background:#1b1240aa;border:3px solid var(--ink);border-radius:8px;overflow:hidden}
+.card-prog{align-self:stretch;height:12px;margin:6px 0 0;background:#1b1240aa;border:3px solid var(--ink);border-radius:8px;overflow:hidden}
 .card-prog s{display:block;height:100%;background:linear-gradient(#fff6b0,#ffb300)}
+.buy.big.gem-unlock{font-size:17px}
+/* Card skin badges (like boss ranks): I shiny gold, II shiny diamond, III rainbow. */
+.feat-card.tier1,.mini-card.tier1{background:radial-gradient(circle at 50% 42%,#ffffffdd 0,#ffffff00 46%),repeating-conic-gradient(from 0deg at 50% 42%,#ffffff40 0 10deg,#ffffff00 10deg 20deg),linear-gradient(#fff3b0,#ffc83d 50%,#c98300)}
+.feat-card.tier2,.mini-card.tier2{background:radial-gradient(circle at 50% 42%,#ffffffee 0,#ffffff00 46%),repeating-conic-gradient(from 0deg at 50% 42%,#ffffff55 0 10deg,#ffffff00 10deg 20deg),linear-gradient(#ffffff,#c4f4ff 45%,#58b6ee)}
+.feat-card.tier3,.mini-card.tier3{background:radial-gradient(circle at 50% 42%,#ffffffcc 0,#ffffff00 46%),repeating-conic-gradient(from 0deg at 50% 42%,#ffffff33 0 10deg,#ffffff00 10deg 20deg),linear-gradient(160deg,#ff5e7a,#ffb347 20%,#fff15e 40%,#5fe36b 60%,#44d9ff 80%,#a273ff)}
+.feat-card.tier1,.mini-card.tier1{border-color:#7a4a00;box-shadow:inset 0 0 0 3px #ffe27a,inset 0 -8px 0 #0002,0 5px 0 var(--ink),0 0 14px #ffc93caa}
+.feat-card.tier2,.mini-card.tier2{border-color:#1d4f7a;box-shadow:inset 0 0 0 3px #e6fbff,inset 0 -8px 0 #0002,0 5px 0 var(--ink),0 0 16px #8fe8ffcc}
+.feat-card.tier3,.mini-card.tier3{box-shadow:inset 0 0 0 3px #ffffffaa,inset 0 -8px 0 #0002,0 5px 0 var(--ink),-6px 0 14px #ff4d6dbb,6px 0 14px #4dc3ffbb,0 -6px 14px #fff15ebb}
+.mini-card.picked.tier1,.mini-card.picked.tier2,.mini-card.picked.tier3{box-shadow:inset 0 0 0 3px #ffffff99,0 5px 0 var(--ink),0 0 0 3px var(--yellow),0 0 18px #ffd23f}
+.feat-card.tier1::before,.feat-card.tier2::before,.feat-card.tier3::before,.mini-card.tier1::before,.mini-card.tier2::before,.mini-card.tier3::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit}
+.feat-card.tier1::before,.mini-card.tier1::before{background:linear-gradient(160deg,#ffffff55,#fff0 35%,#fff0 65%,#ffffff33)}
+.feat-card.tier2::before,.mini-card.tier2::before{background:linear-gradient(160deg,#ffffff66,#9be9ff33 40%,#5ab8ff33 70%,#ffffff44)}
+.feat-card.tier3::before,.mini-card.tier3::before{background:linear-gradient(135deg,#ff4d6d66,#ffb34766 10%,#fff15e66 20%,#5cf08a66 30%,#4dc3ff66 40%,#b06cff66 50%,#ff4d6d66 60%,#ffb34766 70%,#fff15e66 80%,#5cf08a66 90%,#4dc3ff66);background-size:200% 200%;animation:tierSlide 3s linear infinite}
+.feat-card.tier1::after,.feat-card.tier2::after,.feat-card.tier3::after,.mini-card.tier1::after,.mini-card.tier2::after,.mini-card.tier3::after{content:'';position:absolute;top:-20%;bottom:-20%;left:-60%;width:40%;z-index:0;pointer-events:none;background:linear-gradient(100deg,#fff0,#ffffffaa,#fff0);transform:skewX(-18deg);animation:tierShine 2.6s ease-in-out infinite}
+.mini-card.tier1::after,.mini-card.tier2::after,.mini-card.tier3::after{animation-duration:3.4s}
+.feat-card>*,.mini-card>*{position:relative;z-index:1}
+.feat-card>.rarity-tag,.feat-card>.in-use,.mini-card>.mini-badge,.skin-tier{position:absolute}
+@keyframes tierShine{0%,55%{left:-60%}100%{left:130%}}
+.skin-tier{z-index:2;bottom:44px;left:7px;min-width:30px;display:flex;align-items:center;justify-content:center;gap:2px;font-family:var(--title);font-size:15px;letter-spacing:1px;padding:2px 7px 3px;border:2px solid var(--ink);border-radius:9px 9px 13px 13px;text-shadow:var(--stroke);box-shadow:inset 0 2px 0 #ffffff99,inset 0 -3px 0 #0003,0 2px 0 var(--ink)}
+.skin-tier::before{content:'\2605';font-size:12px}
+.skin-tier.t1{color:#fff;background:linear-gradient(#fff3b0,#ffc83d 45%,#c98300)}
+.skin-tier.t2{color:#fff;background:linear-gradient(#ffffff,#b8f2ff 40%,#4fb4f2)}
+.skin-tier.t3{color:#fff;background:linear-gradient(90deg,#ff4d6d,#ffb347,#fff15e,#5cf08a,#4dc3ff,#b06cff);background-size:200% 100%;animation:tierSlide 2s linear infinite}
+@keyframes tierSlide{to{background-position:200% 0}}
+.skin-tier.mini{bottom:auto;top:3px;left:3px;min-width:0;font-size:10px;padding:0 4px 1px;border-width:2px;border-radius:7px}
+.skin-tier.mini::before{font-size:8px}
+.card-prog.t2 s{background:linear-gradient(#fff6b0,#ffc83d)}
+.card-prog.t3 s{background:linear-gradient(#ffffff,#8fe8ff)}
+.card-prog.t4 s{background:linear-gradient(90deg,#ff4d6d,#ffb347,#fff15e,#5cf08a,#4dc3ff,#b06cff)}
+.card-chip.tier1{background:linear-gradient(120deg,#fff3b0,#ffc83d 50%,#c98300);box-shadow:inset 0 0 0 2px #ffe27a,inset 0 -4px 0 #0003,0 3px 0 var(--ink),0 0 10px #ffc93caa}
+.card-chip.tier2{background:linear-gradient(120deg,#ffffff,#c4f4ff 45%,#58b6ee);box-shadow:inset 0 0 0 2px #e6fbff,inset 0 -4px 0 #0003,0 3px 0 var(--ink),0 0 12px #8fe8ffcc}
+.card-chip.tier3{background:linear-gradient(120deg,#ff4d6d,#ffb347,#fff15e,#5cf08a,#4dc3ff,#b06cff);background-size:200% 100%;animation:tierSlide 3s linear infinite}
 .buy.cards{background:linear-gradient(#c79cff,#7a3cf0);box-shadow:inset 0 -3px 0 #4a1fa8,0 3px 0 var(--ink)}
 .mini-badge .ico[data-icon="card"],.buy .ico{vertical-align:middle}
 /* Box tasks */
