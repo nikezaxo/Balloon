@@ -157,12 +157,12 @@ let boxRun=null;
 const easeBack=k=>{const s=1.7;k--;return k*k*((s+1)*k+s)+1};
 function boxLayout(){const cv=$('#box-cv'),W=cv.clientWidth||360,H=cv.clientHeight||640,s=clamp(Math.min(W/380,H/680),.6,1.4),cw=clamp(Math.min(W*.52,H*.3),140,230);return {W,H,s,cx:W/2,gy:H*.8,cardY:H*.4,cw,ch:cw*1.36}}
 function startBoxShow(kind,items){const ov=$('#box-open'),cv=$('#box-cv');ov.hidden=false;$('#bo-sum').hidden=true;$('#bo-btns').hidden=true;$('#bo-skip').hidden=false;$('#bo-name').textContent=BOXES[kind].name;
- const dpr=Math.min(2,devicePixelRatio||1);cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr);const L=boxLayout();
+ const dpr=Math.min(2,gfxRes());cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr);const L=boxLayout();
  boxRun={kind,items,phase:'enter',t:0,age:0,y:-(L.gy+150),vy:0,sq:0,sqv:0,shake:0,flash:0,flashCol:'#fff',lid:null,idx:-1,card:null,leave:null,parts:[],dpr,last:performance.now(),banner:null};
  gameSound.effect('whoosh');requestAnimationFrame(boxFrame)}
 function boxFrame(now){const R=boxRun;if(!R)return;const dt=Math.min(.04,(now-R.last)/1000||0);R.last=now;R.t+=dt;R.age+=dt;try{boxUpdate(R,dt,now/1000);boxDraw(R,now/1000)}catch(e){console.error(e)}requestAnimationFrame(boxFrame)}
 function bxPart(R,o){R.parts.push({life:0,max:1,g:0,drag:.6,rot:rand(0,TAU),vr:rand(-6,6),size:5,type:'spark',...o})}
-function bxBurst(R,x,y,n,cols,{speed=[150,520],up=0,size=[4,9],types=['star','confetti','spark'],g=500}={}){for(let i=0;i<n;i++){const a=rand(0,TAU),v=rand(...speed);bxPart(R,{x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-up,g,max:rand(.7,1.4),size:rand(...size),color:pick(cols),type:pick(types)})}}
+function bxBurst(R,x,y,n,cols,{speed=[150,520],up=0,size=[4,9],types=['star','confetti','spark'],g=500}={}){for(let i=0,m=Math.round(n*Math.max(.5,GFX.fx));i<m;i++){const a=rand(0,TAU),v=rand(...speed);bxPart(R,{x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-up,g,max:rand(.7,1.4),size:rand(...size),color:pick(cols),type:pick(types)})}}
 const RANK_COLS=[['#ffd23f','#fff3a0','#ffffff'],['#c79cff','#8a4cff','#ffffff'],['#ffd23f','#ff9a1a','#ffffff'],['#ff5e7a','#ffd23f','#5fe36b','#44d9ff','#a273ff','#ffffff']];
 const itemRank=it=>it.type==='card'?CARD_RANK[it.rar]:it.type==='ticket'?(it.mult===4?3:2):it.type==='gems'?1:0;
 // How long a face-down card shakes before it flips: the rarer, the longer.

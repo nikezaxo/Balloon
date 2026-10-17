@@ -687,6 +687,11 @@ button:focus-visible,#game:focus-visible{outline:3px solid var(--yellow);outline
 .set-acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .rank-foot .set-acts{margin:2px 0}
 .set-row.guest{flex-wrap:wrap}.set-row.guest .set-acts{width:100%}
+.set-row.wide{flex-wrap:wrap}
+.set-seg{width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.seg-btn{min-height:38px;padding:3px 2px 5px;font-family:var(--title);font-size:12px;line-height:1.05;letter-spacing:.3px;color:#fff;text-shadow:var(--stroke);background:linear-gradient(#5a66a8,#38407a);border:2px solid var(--ink);border-radius:9px;box-shadow:0 3px 0 var(--ink)}
+.seg-btn.on{background:linear-gradient(#7ef08f,#2fbf4f)}
+.seg-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
 .ask h2{font-size:28px;line-height:1.05}
 /* Rainbow star: the x2 timer chip and a rainbow glow on the score while it lasts */
 .chip.rainbow{background:linear-gradient(90deg,#ff4d5e,#ff9a1a,#ffd23f,#4fd36b,#44d9ff,#a273ff);background-size:200% 100%;animation:goldShine 1.6s linear infinite}

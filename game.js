@@ -45,8 +45,23 @@ const ROW_SIZE=10,COIN_STEP=42,COIN_BREAK=1000,RUSH_STEP=30;let rushCursor=0,rus
 // Free movement: drag anywhere and the balloon follows the finger's movement (relative drag).
 const DRAG=1.25;let lift=0,vy=0,liftTarget=null,drag=null;
 const keys=new Set(),radius=29,worldScale=.65,hudCache={};
+// Graphics quality, picked in Settings and kept on this device (not in the save). res caps the canvas sharpness in
+// pixels per screen point, fx scales how many particles, trails and speed lines are made and parts caps the particles
+// alive at once. VERY SMOOTH and SMOOTH draw far fewer pixels and effects so slower phones keep a steady frame rate;
+// BETTER uses the screen's full sharpness (up to 3x) with extra effects.
+const GFX_LEVELS={
+ vsmooth:{name:'VERY SMOOTH',res:1,fx:.3,parts:120,vignette:false,note:'Fastest: the fewest effects and a softer picture. Best for older phones.'},
+ smooth:{name:'SMOOTH',res:1.5,fx:.6,parts:260,vignette:true,note:'Fewer effects and pixels for a steadier frame rate.'},
+ normal:{name:'NORMAL',res:2,fx:1,parts:700,vignette:true,note:'Balanced picture and effects.'},
+ better:{name:'BETTER',res:3,fx:1.35,parts:1100,vignette:true,note:'The sharpest picture and the most effects. Needs a fast phone.'}};
+const GFX_ORDER=['vsmooth','smooth','normal','better'];
+let gfxLevel=(()=>{try{return localStorage.getItem('flyup-gfx')}catch(e){return null}})();if(!GFX_LEVELS[gfxLevel])gfxLevel='normal';let GFX=GFX_LEVELS[gfxLevel];
+const gfxRes=()=>Math.min(devicePixelRatio||1,GFX.res);
+// An effect count scaled by the graphics level, rounded at random so small counts still average out right.
+const fxN=n=>{const v=n*GFX.fx;return Math.floor(v)+(Math.random()<v%1?1:0)};
+function setGfx(k){if(!GFX_LEVELS[k])return;gfxLevel=k;GFX=GFX_LEVELS[k];try{localStorage.setItem('flyup-gfx',k)}catch(e){}resize();if(particles.length>GFX.parts)particles.splice(0,particles.length-GFX.parts)}
 // The canvas fills the screen; gameplay happens in a centred column at most 0.6× the screen height wide.
-function resize(){const r=canvas.getBoundingClientRect();SW=r.width;H=r.height;W=Math.round(Math.min(SW,Math.max(360,H*.6)));OX=(SW-W)/2;dpr=Math.min(devicePixelRatio||1,2);canvas.width=SW*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);shell.style.setProperty('--pw',W+'px')}
+function resize(){const r=canvas.getBoundingClientRect();SW=r.width;H=r.height;W=Math.round(Math.min(SW,Math.max(360,H*.6)));OX=(SW-W)/2;dpr=gfxRes();canvas.width=SW*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.imageSmoothingQuality=gfxLevel==='better'?'high':'low';shell.style.setProperty('--pw',W+'px')}
 new ResizeObserver(resize).observe(canvas);
 // Modes: CAMPAIGN plays one stage at a time; reaching a stage's GOAL altitude clears it and unlocks the next, and
 // every goal is higher than the one before. FREE RUN is one endless run that moves on to the next stage after
@@ -206,8 +221,8 @@ $('#pause').onclick=pause;$('#primary').onclick=()=>state==='paused'?pause():res
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&(state==='flying'||state==='ready'))pause()});
 
 // ---- Effects helpers ----
-function burst(px,py,n,{type='spark',colors=['#fff'],speed=[60,200],size=[2,5],life=[.4,.8],gravity=0,drag=2,world=false}={}){for(let i=0;i<n;i++){const a=Math.random()*TAU,s=rand(...speed);particles.push({type,x:px,y:py,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:0,max:rand(...life),size:rand(...size),color:pick(colors),gravity,drag,world,rot:rand(0,TAU),vr:rand(-8,8)})}}
-function confetti(n){for(let i=0;i<n;i++)particles.push({type:'confetti',x:rand(0,W),y:rand(-90,-10),vx:rand(-40,40),vy:rand(60,170),gravity:80,drag:.4,life:0,max:rand(2,3),size:rand(7,11),color:pick(PARTY),rot:rand(0,TAU),vr:rand(-7,7)})}
+function burst(px,py,n,{type='spark',colors=['#fff'],speed=[60,200],size=[2,5],life=[.4,.8],gravity=0,drag=2,world=false}={}){for(let i=0,m=fxN(n);i<m;i++){const a=Math.random()*TAU,s=rand(...speed);particles.push({type,x:px,y:py,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:0,max:rand(...life),size:rand(...size),color:pick(colors),gravity,drag,world,rot:rand(0,TAU),vr:rand(-8,8)})}}
+function confetti(n){for(let i=0,m=fxN(n);i<m;i++)particles.push({type:'confetti',x:rand(0,W),y:rand(-90,-10),vx:rand(-40,40),vy:rand(60,170),gravity:80,drag:.4,life:0,max:rand(2,3),size:rand(7,11),color:pick(PARTY),rot:rand(0,TAU),vr:rand(-7,7)})}
 function popup(px,py,text,color,size=24){for(const q of popups)if(q.life<.35&&Math.abs(q.y-py)<size*1.1)py=q.y-size*1.15;popups.push({x:clamp(px,80,W-80),y:py,text,color,size,life:0,max:1,vy:-80,rot:rand(-.12,.12)})}
 function bump(node){node.classList.remove('bump');void node.offsetWidth;node.classList.add('bump')}
 function announce(text,sub,kind,ic,tone){const layer=$('#announce');layer.replaceChildren();const node=el('div',`announce ${kind}`);if(ic&&kind==='stage'){const big=el('span','big-ico');big.innerHTML=icon(ic,tone);node.append(big)}if(sub)node.append(el('small','',sub));const strong=el('strong','',text);if(ic&&kind!=='stage')strong.insertAdjacentHTML('afterbegin',iconHTML(ic,tone));node.append(strong);node.addEventListener('animationend',e=>{if(e.target===node)node.remove()});layer.append(node)}
@@ -563,7 +578,7 @@ function draw(){ctx.save();const amount=calm?shake*.3:shake;if(amount>.4)ctx.tra
  drawBossLayer();drawParticles(true);drawBalloon();drawAuras();drawBossFx();
  ctx.save();ctx.translate(-OX,0);drawLeaves();ctx.restore();drawChevrons();drawCritterWarnings();drawParticles(false);drawRewardCoins();drawRings();if(showcase)drawShowcase();drawPopups();
  ctx.restore();drawSides();ctx.restore();
- drawFlyers();drawStarFlyers();drawVignette();if(transition)drawIris();if(swapFx>0){ctx.globalAlpha=swapFx*.55;ctx.fillStyle=stage.top;ctx.fillRect(0,0,SW,H);ctx.globalAlpha=1}if(flash>0){ctx.globalAlpha=Math.min(1,flash);ctx.fillStyle=flashColor;ctx.fillRect(0,0,SW,H);ctx.globalAlpha=1}}
+ drawFlyers();drawStarFlyers();if(GFX.vignette)drawVignette();if(transition)drawIris();if(swapFx>0){ctx.globalAlpha=swapFx*.55;ctx.fillStyle=stage.top;ctx.fillRect(0,0,SW,H);ctx.globalAlpha=1}if(flash>0){ctx.globalAlpha=Math.min(1,flash);ctx.fillStyle=flashColor;ctx.fillRect(0,0,SW,H);ctx.globalAlpha=1}}
 function update(dt){t+=dt;spin+=dt*(.65+Math.abs(wind)*3+Math.abs(vx));if(state!=='flying')return;
  flightTime+=dt;if(flightTime>=nextRainbow&&!boss){nextRainbow+=RAINBOW_EVERY;spawnRainbow()}if(skyBoxAt<0)skyBoxAt=typeof skyBoxRoll==='function'?skyBoxRoll():0;if(skyBoxAt>0&&flightTime>=skyBoxAt&&!boss){skyBoxAt=0;spawnSkyBox()}{const base=Math.floor(alt)*10+bonus;if(scoreMult>1)scoreExtra+=Math.max(0,base-lastBase)*(scoreMult-1);lastBase=base}if(typeof chatter==='function')chatter(dt);if(typeof tutorialTick==='function')tutorialTick(dt);generateCourse();coinRush();updateWeather(dt);updateCritters(dt);if(boss&&boss.wind)wind+=boss.wind.dir*.32;if(!boss&&flightTime>=nextBossTime)startBoss();
  const direction=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0);let desired=direction*.75;if(target!==null)desired=clamp((target-x)*10,-1.8,1.8);vx+=(desired+wind-vx)*Math.min(1,dt*(target!==null?9:4));x+=vx*dt;x=clamp(x,(radius+5)/W,1-(radius+5)/W);
@@ -593,15 +608,15 @@ function updateEffects(dt,real){shake*=Math.exp(-8*real);flash=Math.max(0,flash-
  if(state==='dead'&&deathTimer>0&&(deathTimer-=real)<=0)showResult();
  if(conquerTimer>0&&(conquerTimer-=real)<=0&&state==='flying'){state='dead';release();showResult()}
  const scroll=state==='flying'&&!showcase&&!frozen?flightSpeed(alt)*speedMult*worldScale*bossPace():0;
- if(state==='flying'&&!showcase){const tilt=tiltOf(),fire=engineOn(),every=fire?.018:.03;trailClock+=dt;
+ if(state==='flying'&&!showcase){const tilt=tiltOf(),fire=engineOn(),every=(fire?.018:.03)/GFX.fx;trailClock+=dt;
   while(trailClock>every){trailClock-=every;const bx=x*W-Math.sin(tilt)*(fire?56:36),by=balloonY()+(fire?56:36);
    if(fire)particles.push({type:'puff',back:true,world:true,x:bx+rand(-4,4),y:by,vx:rand(-20,20),vy:rand(60,140),life:0,max:rand(.35,.6),size:rand(5,9),color:pick(['#ffd23f','#ff8a2a','#ff4d5e','#fff6b0']),gravity:0,drag:1,rot:0,vr:0});
    else emitTrail(save.skin,bx,by)}
-  const speed=flightSpeed(alt)*speedMult;streakClock+=dt*((calm?4:9)+Math.min(22,(speed-130)*.2))*speedMult*bossPace();while(streakClock>1){streakClock--;streaks.push({x:rand(0,SW),y:-60,vx:0,vy:speed*worldScale*rand(2.2,3.4),len:rand(30,80)*speedMult,alpha:rand(.12,.3)*(fire?1.6:1),width:rand(1.5,3),color:fire&&Math.random()<.4?'#ffd23f':null})}
-  if(weatherNow&&weatherNow.active&&Math.random()<dt*25)streaks.push({x:weatherNow.dir>0?-60:SW+60,y:rand(0,H),vx:weatherNow.dir*rand(500,800),vy:scroll*.5,len:rand(40,90),alpha:rand(.25,.45),width:rand(2,3.5)});
+  const speed=flightSpeed(alt)*speedMult;streakClock+=dt*((calm?4:9)+Math.min(22,(speed-130)*.2))*speedMult*bossPace()*Math.max(.5,GFX.fx);while(streakClock>1){streakClock--;streaks.push({x:rand(0,SW),y:-60,vx:0,vy:speed*worldScale*rand(2.2,3.4),len:rand(30,80)*speedMult,alpha:rand(.12,.3)*(fire?1.6:1),width:rand(1.5,3),color:fire&&Math.random()<.4?'#ffd23f':null})}
+  if(weatherNow&&weatherNow.active&&Math.random()<dt*25*Math.max(.5,GFX.fx))streaks.push({x:weatherNow.dir>0?-60:SW+60,y:rand(0,H),vx:weatherNow.dir*rand(500,800),vy:scroll*.5,len:rand(40,90),alpha:rand(.25,.45),width:rand(2,3.5)});
   if(fire)shake=Math.max(shake,1.5)}
  for(const s of streaks){s.x+=s.vx*dt;s.y+=s.vy*dt}streaks=streaks.filter(s=>s.y<H+100&&s.x>-120&&s.x<SW+120);
- for(const p of particles){p.life+=pdt;const d=Math.max(0,1-p.drag*pdt);p.vx*=d;p.vy*=d;p.vy+=p.gravity*pdt;p.x+=p.vx*pdt;p.y+=p.vy*pdt+(p.world?scroll*dt:0);p.rot+=p.vr*pdt}particles=particles.filter(p=>p.life<p.max);
+ for(const p of particles){p.life+=pdt;const d=Math.max(0,1-p.drag*pdt);p.vx*=d;p.vy*=d;p.vy+=p.gravity*pdt;p.x+=p.vx*pdt;p.y+=p.vy*pdt+(p.world?scroll*dt:0);p.rot+=p.vr*pdt}particles=particles.filter(p=>p.life<p.max);if(particles.length>GFX.parts)particles.splice(0,particles.length-GFX.parts);
  for(const r of rings)r.life+=pdt;rings=rings.filter(r=>r.life<r.dur);
  for(const p of popups){p.life+=pdt;p.y+=p.vy*pdt;p.vy*=Math.exp(-3*pdt)}popups=popups.filter(p=>p.life<p.max);
  for(const f of flyers){f.age+=real;if(f.age>=.55){f.done=true;shownCoins+=f.value||1;bump($('#coin-pill'))}}flyers=flyers.filter(f=>!f.done);

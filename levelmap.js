@@ -91,7 +91,7 @@ function lvlLayout(S){const w=S.w,H=S.height,r=lvlRand(1016),rng=(a,b)=>a+r()*(b
 function lvlSceneDraw(S){const {cv,map,list}=S,w=map.clientWidth;if(!w)return;if(w!==S.w){S.w=w;lvlLayout(S)}
  const vh=Math.min(list.clientHeight,S.height),view=list.getBoundingClientRect().top+list.clientTop-map.getBoundingClientRect().top-map.clientTop;
  if(view>S.height||view+vh<0)return;
- const top=Math.round(Math.max(0,Math.min(S.height-vh,view))),d=Math.min(2,window.devicePixelRatio||1),cw=Math.round(w*d),ch=Math.round(vh*d);
+ const top=Math.round(Math.max(0,Math.min(S.height-vh,view))),d=Math.min(2,gfxRes()),cw=Math.round(w*d),ch=Math.round(vh*d);
  if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch;cv.style.width=w+'px';cv.style.height=vh+'px'}
  cv.style.top=top+'px';ctx=cv.getContext('2d');ctx.setTransform(d,0,0,d,0,-top*d);ctx.globalAlpha=1;ctx.lineCap='round';ctx.lineJoin='round';
  const now=matchMedia('(prefers-reduced-motion: reduce)').matches?0:performance.now()/1000,y0=top-30,y1=top+vh+30,vis=(y,r)=>y+r>=y0&&y-r<=y1;S.v0=y0;S.v1=y1;
