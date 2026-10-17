@@ -97,6 +97,8 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
   // Lifetime metres (player level) keep the larger total.
   {const n=num(cloud.totalM,0,1e10);if(n!==null)save.totalM=Math.max(save.totalM||0,n)}
   for(const k of ['freeBest','freeAlt']){const n=num(cloud[k],0,1e9);if(n!==null)save[k]=Math.max(save[k]||0,n)}
+  // A cloud save from before the doubled stage goals keeps the stages its bests had already opened.
+  if(!(cloud.goalsV>=2)&&typeof keepOldClears==='function')keepOldClears(cloud.best);
   if(cloud.cleared&&typeof cloud.cleared==='object'){save.cleared=save.cleared||{};for(const id of Object.keys(cloud.cleared))if(STAGES.some(st=>st.id===id)&&cloud.cleared[id])save.cleared[id]=true}
   // Skin cards keep the most of each; unopened boxes come from the newer save, like coins.
   if(cloud.cards&&typeof cloud.cards==='object'){save.cards={...(save.cards||{})};for(const [id,v] of Object.entries(cloud.cards)){const n=num(v,0,1000);if(n!==null&&SKINS[id])save.cards[id]=Math.max(save.cards[id]||0,n)}}
