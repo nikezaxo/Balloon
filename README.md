@@ -343,8 +343,13 @@ Bear, Froggy, Bot, Balloon) and four frames (Classic, Wood, Cloud, Leafy) are fr
 ones cost a lot of gems, so they take a long time to save for: avatars Phoenix and Ghost (1,200), Alien (1,600),
 Dragon (2,000) and Lion King (2,500); frames Golden Laurel (1,500), Inferno and Rainbow (1,800), Thunder (2,200),
 Galaxy (2,700) and Diamond (3,500). A shimmering GOLD NAME costs 2,000 gems; the white name is free.
-Season frames (Bronze, Silver, Gold, Titanium and Diamond Season, Star Legend) and avatars
-(Golden Eagle, Mech Pilot, Crystal Fox, Star Legend) are only won at the end of a season.
+Season avatars and frames can't be bought: Crystal Fox avatar (DIAMOND IV), Diamond Season frame (DIAMOND V), Star
+Legend avatar (STAR LEGEND IV) and Star Legend frame (STAR LEGEND V, the top 100, paid after the season). Each one shows
+the season it was first won in as an animated S1 / S2 ... badge: on the avatar (a gleaming pill under the face) and on
+the frame (the pill at the bottom of the ring). The look carries it in the id ('fox~1', 'sDiamond~1'), so other
+players see it too; the first season is kept per item in cos.sn ('a:fox': 1) and merges across devices (earliest
+wins). The older Bronze/Silver/Gold/Titanium Season frames, Golden Eagle and Mech Pilot are retired: they can no longer
+be won and only show for players who already have them.
 Tap any gem item (or the gold name) to try it on: your big avatar shows it animated with a
 PREVIEW badge and a BUY button, before you spend anything.
 When you are signed in, your avatar, frame, gold name and clan tag show to everyone: on the
@@ -362,33 +367,46 @@ player has played this version and the updated firestore.rules are published.
 A season is one calendar month (UTC); Season 1 is October 2026. Every run earns SEASON
 POINTS (SP): 1 per 1,000 score (up to 150), 15 per star and 25 per boss defeated. Tasks add
 more. SP never go down during a season and start again from zero in the next one.
-- Ranks, lowest to highest: METAL, BRONZE, SILVER, GOLD, TITANIUM and DIAMOND, each with
-  classes V, IV, III, II and I (Metal V is the start, Diamond I needs 7,750 SP). Each class
-  needs more points the higher the tier (Metal 100 SP per class up to Diamond 500).
-- STAR LEGEND, the final rank, is only for the global top 1,000: past Diamond I (8,250 SP)
-  and in the season's top 1,000 players.
-- Reaching a new class pays coins right away (25 in Metal up to 160 in Diamond); reaching a
-  new tier also pays gems (3, 5, 8, 12 and 20), and becoming a Star Legend pays 500 coins and
-  30 gems.
-- END-OF-SEASON REWARDS go to everyone who scored that season, by the tier they finished in,
-  and include the special items of every tier below:
+- Seven tiers, lowest to highest: METAL, BRONZE, SILVER, GOLD, TITANIUM, DIAMOND and STAR LEGEND, each with five
+  levels I (lowest) to V (highest), like the boss ranks. METAL I is the start; each level needs more points the higher
+  the tier (100 SP per level in Metal up to 500 in Diamond and 600 in Star Legend): DIAMOND I 5,750 SP, DIAMOND IV
+  7,250, DIAMOND V 7,750, STAR LEGEND I 8,250, STAR LEGEND IV 10,050 and STAR LEGEND V 10,650 (TIERS, DIVISIONS and
+  tierOf in season.js).
+- STAR LEGEND V is the challenge level: it needs its points AND a place in the season's global top 100 (LEGEND_TOP,
+  checked online after each sync). Without the top 100 the climb stops at STAR LEGEND IV.
+- LEVEL REWARDS (LEVEL_REWARDS): every level pays its reward once a season, as soon as you reach it. Only DIAMOND and
+  STAR LEGEND give avatars and frames; the other tiers give coins and gems:
 
-  | Final rank | Coins | Gems | Special items |
+  | Tier | I | II | III | IV | V |
+  |---|---|---|---|---|---|
+  | Metal | start | 60 coins | 80 | 100 | 150 + 2 gems |
+  | Bronze | 200 + 2 gems | 220 | 250 | 280 | 350 + 4 gems |
+  | Silver | 400 + 4 gems | 450 + 1 | 500 + 1 | 550 + 1 | 650 + 6 gems |
+  | Gold | 750 + 6 gems | 800 + 2 | 900 + 2 | 1,000 + 2 | 1,200 + 10 gems |
+  | Titanium | 1,400 + 10 gems | 1,500 + 3 | 1,700 + 3 | 1,900 + 3 | 2,200 + 15 gems |
+  | Diamond | 2,500 + 15 gems | 2,800 + 5 | 3,200 + 5 | 3,600 + 5, Crystal Fox avatar | 4,000 + 8, Diamond Season frame |
+  | Star Legend | 5,000 + 25 gems | 6,000 + 10 | 7,000 + 10 | 8,000 + 15, Star Legend avatar | 12,000 + 60, Star Legend frame (after the season, top 100 only) |
+
+- END-OF-SEASON REWARDS (SEASON_REWARDS) go to everyone who scored that season, by the tier they finished in; the
+  season skins stack downwards (a Star Legend gets Prism too):
+
+  | Final tier | Coins | Gems | Skin |
   |---|---|---|---|
-  | Metal | 200 | 3 | |
-  | Bronze | 400 | 8 | Bronze Season frame |
-  | Silver | 700 | 15 | Silver Season frame |
-  | Gold | 1,000 | 25 | Gold Season frame, Golden Eagle avatar |
-  | Titanium | 1,500 | 40 | Titanium Season frame, Mech Pilot avatar |
-  | Diamond | 2,500 | 60 | Diamond Season frame, Crystal Fox avatar, PRISM balloon skin |
-  | Star Legend | 4,000 | 120 | Star Legend frame and avatar, STARLIGHT balloon skin |
+  | Metal | 300 | 3 | |
+  | Bronze | 600 | 8 | |
+  | Silver | 1,000 | 15 | |
+  | Gold | 1,500 | 25 | |
+  | Titanium | 2,500 | 40 | |
+  | Diamond | 4,000 | 60 | PRISM balloon skin |
+  | Star Legend | 6,000 | 120 | STARLIGHT balloon skin |
 
-  Season items can't be bought: they show a trophy in the profile and store, and you can
-  still try them on to see them.
+  Finishing as STAR LEGEND V also pays that level's reward and the Star Legend frame then.
+- The REWARDS tab lists the seven tiers (with their end-of-season reward and the avatars and frames they give); tap a
+  tier to open its five levels, each with its points, its reward and a tick once reached. It opens on your tier.
 - The SEASON screen shows your rank badge, points and progress, and a THIS SEASON / LAST
   SEASON toggle with the global ranking of either season (avatars, names and rank badges),
   plus the REWARDS list. After a season ends, the next time you open the game it shows your
-  final rank and pays the rewards (a Star Legend's final place is checked online).
+  final rank and pays the rewards (whether a Star Legend finished in the top 100 is checked online).
 - When signed in, your season points are saved to seasons/{S#}/players/{uid} in Firestore.
 
 ## Tasks
@@ -461,8 +479,9 @@ drops below 70, again just after it gets enraged, then every 16 seconds.
   - A TORNADO funnel crosses most of the screen and drags you a little towards it; it stops short of the far side,
     so fly to that edge.
   - A GUST blows you sideways (wind streaks show it) while leaves and branches fly across.
-  - Special CHAIN LIGHTNING: two storm orbs joined by a crackling arc sweep slowly down the screen (a second sweep
-    once enraged). The arc never spans more than about a third of the width, so there is always room beside it.
+  - Special CHAIN LIGHTNING (the storm skill): two storm orbs joined by a crackling arc sweep slowly down to the middle
+    of the screen, then fade away (CHAIN_STOP in bosses.js; a second sweep once enraged). Staying in the lower half is
+    always safe, and the arc never spans more than about a third of the width.
 - TIKI TITAN (Jungle Island):
   - A BOOMERANG axe loops out to where you were and comes back (two once enraged).
   - COCONUT BOMBS fall and burst high up into five slower splinters, leaving time to dodge.
@@ -543,7 +562,7 @@ boss; P or Escape pauses.
 ## Boxes and skin cards
 - A box holds coins, sometimes GEMS (rare) and SKIN CARD rewards (each one is several cards of one skin). EPIC, LEGENDARY and MYTHIC skins are not sold
   any more: collect enough cards of one to unlock it. The rarer the skin, the more cards it needs and the rarer its
-  cards are: EPIC 10 cards, LEGENDARY 20, MYTHIC 30 (CARD_NEED in boxes.js). Each card reward goes to a different locked skin
+  cards are: EPIC 25 cards, LEGENDARY 50, MYTHIC 80 (CARD_NEED in boxes.js). Each card reward goes to a different locked skin
   when it can (usually the one you are closest to). If you already have every skin of the rarity that was rolled,
   the reward comes from the nearest rarity that still has locked skins, so a box always gives the card rewards it
   lists. Cards beyond badge III (or once every card skin has badge III) come as coins (a SPARE CARDS reward). Skins you already owned stay yours.
@@ -551,7 +570,7 @@ boss; P or Escape pauses.
   LEGENDARY 5,000 and MYTHIC 10,000 (GEM_UNLOCK in boxes.js). Its store page shows both buttons.
 - CARD SKIN BADGES (like boss ranks): once a card skin is yours, boxes keep giving its cards and they upgrade it.
   At twice the cards it needs it gets BADGE I (a shiny gold card), at four times BADGE II (shiny diamond) and at
-  eight times BADGE III (rainbow, the top), for example 20 / 40 / 80 cards for an EPIC skin (CARD_TIERS in
+  eight times BADGE III (rainbow, the top), for example 50 / 100 / 200 cards for an EPIC skin (CARD_TIERS in
   boxes.js). Skins bought with gems start at 0 cards and upgrade the same way. The badge shows on the skin's store
   card, its small card and in the CARD COLLECTION, the store page shows the bar towards the next badge, and a box
   that gets a skin to a new badge shows BADGE I · SHINY GOLD! (or SHINY DIAMOND / RAINBOW) with a burst in its colours.
@@ -559,9 +578,9 @@ boss; P or Escape pauses.
 
   | Box | Price | Coins | Gems | Card rewards | Each reward: epic / legendary / mythic | Level ticket x2 / x4 |
   |---|---|---|---|---|---|---|
-  | SKY BOX | 1,500 coins | 60-140 | 3% chance, 1-2 | 2 | 76% / 20% / 4% | 1.5% / 0.3% |
-  | STORM BOX | 5,000 coins | 180-360 | 8% chance, 2-4 | 3 | 55% / 35% / 10% | 4% / 1% |
-  | LEGEND BOX | 150 gems | 400-800 | 12% chance, 3-6 | 4 (the first always legendary or mythic) | 30% / 45% / 25% | 10% / 3% |
+  | SKY BOX | 5,000 coins | 60-140 | 3% chance, 1-2 | 2 | 76% / 20% / 4% | 1.5% / 0.3% |
+  | STORM BOX | 15,000 coins | 180-360 | 8% chance, 2-4 | 3 | 55% / 35% / 10% | 4% / 1% |
+  | LEGEND BOX | 400 gems | 400-800 | 12% chance, 3-6 | 4 (the first always legendary or mythic) | 30% / 45% / 25% | 10% / 3% |
 
 - Free boxes: BOX TASKS (Tuesday, Thursday and Saturday, see Tasks), the first clear of each campaign stage's goal,
   and MYSTERY BOXES that float through the sky in about a third of runs (at most two a day): grab one to keep it.
@@ -571,7 +590,7 @@ boss; P or Escape pauses.
   from the lid, then blasts open (the lid flies off) with a light beam in the colour of the best reward inside.
   The rewards fly out one by one, face down; the rarer the reward, the longer the card shakes before it flips
   (mythic cards shimmer in rainbow colours). Coins and gems count up, a skin card fills its bar (for example
-  6 / 10), and completing a set shows NEW SKIN UNLOCKED! while the skin plays its pose and speaks (a new badge shows
+  6 / 25), and completing a set shows NEW SKIN UNLOCKED! while the skin plays its pose and speaks (a new badge shows
   BADGE I · SHINY GOLD! and so on). A badge on the
   box counts the rewards left; SKIP jumps to the end. The last screen lists everything with OPEN NEXT (when more
   boxes are waiting) and OK.
@@ -599,7 +618,7 @@ boss; P or Escape pauses.
   (Monster, Ninja, Chick Trio, Sly Fox), LEGENDARY skins (Galaxy, Golden King, Grumpy Wolf) and MYTHIC skins
   (Fire Dragon: Dragon Fire pose, Dragon Breath fatality; Rainbow Unicorn: Rainbow Dash, Rainbow Blast; Diamond:
   Crystal Shine, Diamond Storm) are unlocked with skin cards from boxes; their store button shows the cards
-  collected (for example 4 / 10 CARDS) and opens the BOXES tab, and a second button buys them with gems (1,500 / 5,000 /
+  collected (for example 4 / 25 CARDS) and opens the BOXES tab, and a second button buys them with gems (1,500 / 5,000 /
   10,000).
 - Four TALKING CHARACTERS, original characters each with 35 voice lines: Sleepy Dog
   (rare, 1,000,000 coins: floppy ears, eye patch and nightcap; trails Zzz, bones and puffs; Sleepy Slam fatality),
@@ -626,7 +645,7 @@ boss; P or Escape pauses.
   glitter, Fire Dragon flames and embers, Rainbow Unicorn a rainbow ribbon with sparkles, and
   Diamond crystal shards with glints (SKIN_TRAILS in skins.js).
 - Extra lives: after a pop, tap REVIVE to re-inflate where you were and keep
-  climbing. You can hold up to 9 lives; you start with 1.
+  climbing. You can hold up to 3 lives (MAX_LIVES; older saves with more are cut to 3); you start with 1.
 Coins, skins, cards, boxes, lives, bests, high scores and stars are saved in the browser (localStorage).
 
 ## Gameplay details
