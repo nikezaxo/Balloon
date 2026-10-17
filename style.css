@@ -786,6 +786,8 @@ button.tier-row:active{transform:translateY(2px)}
 .card-prog{align-self:stretch;height:12px;margin:6px 0 0;background:#1b1240aa;border:3px solid var(--ink);border-radius:8px;overflow:hidden}
 .card-prog s{display:block;height:100%;background:linear-gradient(#fff6b0,#ffb300)}
 .buy.big.gem-unlock{font-size:17px}
+.buy.big.upgrade{display:flex;align-items:center;gap:3px;font-size:16px;padding:5px 10px 7px;white-space:nowrap}
+.buy.big.upgrade small{flex:none;white-space:nowrap;font-size:10px;letter-spacing:.3px;margin-right:3px;padding:1px 5px;background:#1b124066;border-radius:6px}
 /* Card skin badges (like boss ranks): I shiny gold, II shiny diamond, III rainbow. */
 .feat-card.tier1,.mini-card.tier1{background:radial-gradient(circle at 50% 42%,#ffffffdd 0,#ffffff00 46%),repeating-conic-gradient(from 0deg at 50% 42%,#ffffff40 0 10deg,#ffffff00 10deg 20deg),linear-gradient(#fff3b0,#ffc83d 50%,#c98300)}
 .feat-card.tier2,.mini-card.tier2{background:radial-gradient(circle at 50% 42%,#ffffffee 0,#ffffff00 46%),repeating-conic-gradient(from 0deg at 50% 42%,#ffffff55 0 10deg,#ffffff00 10deg 20deg),linear-gradient(#ffffff,#c4f4ff 45%,#58b6ee)}

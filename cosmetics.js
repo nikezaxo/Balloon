@@ -17,7 +17,7 @@ const AVATARS={
  // longer won and only show for players who already have them.
  eagle:{name:'Golden Eagle',season:'gold',retired:true,anim:true,bg:['#fff3a0','#c98a00']},
  pilot:{name:'Mech Pilot',season:'titanium',retired:true,anim:true,bg:['#bff4ff','#1f5a6e']},
- fox:{name:'Crystal Fox',season:'diamond',rank:'DIAMOND IV',anim:true,bg:['#e8fbff','#2a7ad8']},
+ fox:{name:'Diamond Season',season:'diamond',rank:'DIAMOND IV',anim:true,bg:['#e8fbff','#2a7ad8']},
  legend:{name:'Star Legend',season:'legend',rank:'STAR LEGEND IV',anim:true,bg:['#c49aff','#2a0e5e']},
  // Level path reward: never sold, claimed at LEVEL 90 in TASKS > LEVEL.
  aurora:{name:'Aurora Spirit',level:90,anim:true,bg:['#2a1a7a','#05031a']}};
@@ -157,11 +157,8 @@ const AVATAR_ART={
   ctx.fillStyle='#5fb8c8';ctx.beginPath();ctx.arc(0,0,23,Math.PI*1.05,Math.PI*1.95);ctx.lineTo(23,14);ctx.quadraticCurveTo(0,26,-23,14);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#d8fbff';for(const s of [-1,1]){ctx.beginPath();ctx.roundRect(s*22-(s>0?0:6),-4,6,14,3);ctx.fill();ctx.stroke()}
   ctx.fillStyle='#14324a';ctx.beginPath();ctx.roundRect(-17,-10,34,15,7);ctx.fill();ctx.stroke();ctx.save();ctx.beginPath();ctx.roundRect(-17,-10,34,15,7);ctx.clip();const g=((t*.7)%1.6-.3)*50-25;ctx.fillStyle='rgba(160,240,255,.55)';ctx.beginPath();ctx.moveTo(g,-10);ctx.lineTo(g+8,-10);ctx.lineTo(g-2,5);ctx.lineTo(g-10,5);ctx.closePath();ctx.fill();ctx.restore();
   ctx.fillStyle='#5ff0ff';for(const s of [-1,1]){ctx.beginPath();ctx.arc(s*7,-3,2.6+Math.sin(t*4)*.5,0,TAU);ctx.fill()}ctx.fillStyle='#1f5a6e';ctx.fillRect(-8,12,16,3)},
- fox(t){for(const s of [-1,1]){ctx.fillStyle='#bff0ff';ctx.beginPath();ctx.moveTo(s*6,-14);ctx.lineTo(s*22,-30);ctx.lineTo(s*21,-6);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ffd6f5';ctx.beginPath();ctx.moveTo(s*10,-14);ctx.lineTo(s*19,-24);ctx.lineTo(s*18,-11);ctx.closePath();ctx.fill()}
-  ctx.fillStyle='#8adfff';ctx.beginPath();ctx.moveTo(-23,-8);ctx.quadraticCurveTo(-22,-20,0,-20);ctx.quadraticCurveTo(22,-20,23,-8);ctx.quadraticCurveTo(20,10,0,20);ctx.quadraticCurveTo(-20,10,-23,-8);ctx.closePath();ctx.fill();ctx.stroke();
-  ctx.fillStyle='#ffffff';ctx.beginPath();ctx.moveTo(-12,4);ctx.quadraticCurveTo(0,0,12,4);ctx.quadraticCurveTo(6,16,0,20);ctx.quadraticCurveTo(-6,16,-12,4);ctx.fill();ctx.strokeStyle='rgba(42,122,216,.5)';ctx.lineWidth=1.2;for(const [a,b,c,d] of [[-23,-8,-8,-2],[23,-8,8,-2],[0,-20,0,-8]]){ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(c,d);ctx.stroke()}ctx.strokeStyle=INK;ctx.lineWidth=2.5;
-  const blink=(t%3)<.12;for(const s of [-1,1]){ctx.fillStyle=INK;ctx.beginPath();ctx.ellipse(s*8,-5,3,blink?.8:4,s*.3,0,TAU);ctx.fill()}blob(0,12,2.6,INK);
-  const sp=Math.max(0,Math.sin(t*2.6));ctx.globalAlpha=sp;ctx.fillStyle='#fff';star(14,-16,6*sp,1.4,4);ctx.fill();ctx.globalAlpha=1},
+ // Diamond Season (DIAMOND IV): only the season number, in ice blue.
+ fox(t){seasonArt(t,['#ffffff','#e8fbff','#7fe0ff','#2a7ad8'])},
  // Aurora Spirit: a glowing spirit under waving aurora ribbons, with a crown of light that flickers.
  aurora(t){for(let k=0;k<3;k++){ctx.beginPath();for(let px=-38;px<=38;px+=4){const py=-20+k*8+Math.sin(px*.12+t*2.2+k*1.3)*5;px===-38?ctx.moveTo(px,py):ctx.lineTo(px,py)}ctx.strokeStyle=['rgba(120,255,200,.6)','rgba(110,200,255,.55)','rgba(210,140,255,.55)'][k];ctx.lineWidth=7;ctx.stroke()}
   ctx.fillStyle='#fff';for(let i=0;i<8;i++){const tw=.4+.6*Math.abs(Math.sin(t*3+i*1.7));ctx.globalAlpha=tw;ctx.beginPath();ctx.arc((hash(i*5.1)-.5)*62,(hash(i*2.7)-.5)*62,1.3,0,TAU);ctx.fill()}ctx.globalAlpha=1;ctx.strokeStyle=INK;ctx.lineWidth=2.5;
@@ -171,9 +168,15 @@ const AVATAR_ART={
   const blink=(t%3.4)<.12;for(const s of [-1,1]){ctx.save();ctx.translate(s*7,2);ctx.rotate(s*-.25);ctx.fillStyle='#2ad8e0';ctx.beginPath();ctx.ellipse(0,0,4.2,blink?.8:5.5,0,0,TAU);ctx.fill();if(!blink){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-1.2,-2,1.6,0,TAU);ctx.fill()}ctx.restore()}
   ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,11,3.5,.15*Math.PI,.85*Math.PI);ctx.stroke();cheeks(10,11);
   const sp=Math.max(0,Math.sin(t*2.4));ctx.globalAlpha=sp;ctx.fillStyle='#fff';star(15,-14,6*sp,1.4,4);ctx.fill();ctx.globalAlpha=1},
- legend(t){ctx.save();ctx.rotate(t*.4);for(let i=0;i<12;i++){ctx.rotate(TAU/12);ctx.fillStyle=i%2?'rgba(255,230,128,.5)':'rgba(255,255,255,.35)';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(40,-4);ctx.lineTo(40,4);ctx.closePath();ctx.fill()}ctx.restore();
-  const p=1+.06*Math.sin(t*3);ctx.save();ctx.scale(p,p);ctx.fillStyle='#ffe680';star(0,4,24,11,5);ctx.fill();ctx.stroke();ctx.restore();face(3,{gap:6,eye:3});cheeks(9,10);
-  ctx.save();ctx.translate(0,-21);ctx.fillStyle='#c46aff';ctx.beginPath();ctx.moveTo(-9,4);ctx.lineTo(-11,-6);ctx.lineTo(-4,-1);ctx.lineTo(0,-9);ctx.lineTo(4,-1);ctx.lineTo(11,-6);ctx.lineTo(9,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}};
+ // Star Legend (STAR LEGEND IV): only the season number, in gold and pink.
+ legend(t){seasonArt(t,['#ffffff','#fff3a0','#ffb3f0','#c46aff'])}};
+// Season avatars are just the big season number (S1, S2...) with a shine sweeping through it; cosPaintAn is the season
+// the item was won in (or this season's number in previews), set by paintAvatar.
+let cosPaintAn=0;
+function seasonArt(t,cols){const txt='S'+(cosPaintAn||1),fs=txt.length>2?30:40,p=1+.05*Math.sin(t*3);ctx.save();ctx.scale(p,p);ctx.font=`${fs}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
+ ctx.fillStyle='rgba(27,18,64,.45)';ctx.fillText(txt,0,4.5);ctx.lineWidth=6;ctx.strokeStyle=INK;ctx.strokeText(txt,0,2);
+ const k=((t*.45)%1.4)-.2,g=ctx.createLinearGradient(-26,-22,26,22);g.addColorStop(0,cols[1]);g.addColorStop(Math.max(0,Math.min(1,k-.12)),cols[2]);g.addColorStop(Math.max(0,Math.min(1,k)),cols[0]);g.addColorStop(Math.max(0,Math.min(1,k+.12)),cols[2]);g.addColorStop(1,cols[3]);
+ ctx.fillStyle=g;ctx.fillText(txt,0,2);ctx.restore()}
 // Frame art around the disc.
 const FRAME_ART={
  basic(){frameRing('#ffffff','#dfe6f5')},
@@ -220,7 +223,7 @@ function seasonBadge(a,b,starred=false){if(cosPaintSn)return seasonMark(cosPaint
 function frameGlow(color,alpha){ctx.save();ctx.globalAlpha=Math.max(0,alpha);ctx.strokeStyle=color;ctx.lineWidth=8;ctx.beginPath();ctx.arc(0,0,41.5,0,TAU);ctx.stroke();ctx.restore()}
 // Draw an avatar with its frame into a 2D context at the given pixel size.
 function paintAvatar(c,px,look,t){const [aid,an]=cosSplit(look.avatar),[fid,fn]=cosSplit(look.frame),main=ctx,a=AVATARS[aid]||AVATARS.sunny,f=FRAME_ART[fid]||FRAME_ART.basic,k=px/100;cosPaintT=t;ctx=c;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,px,px);c.setTransform(k,0,0,k,px/2,px/2);c.lineJoin='round';c.lineCap='round';
- const g=c.createRadialGradient(-10,-14,4,0,0,36);g.addColorStop(0,a.bg[0]);g.addColorStop(1,a.bg[1]);c.save();c.beginPath();c.arc(0,0,35.5,0,TAU);c.clip();c.fillStyle=g;c.fillRect(-36,-36,72,72);c.strokeStyle=INK;c.lineWidth=2.5;(AVATAR_ART[aid]||AVATAR_ART.sunny)(t);if(an&&(AVATARS[aid]||{}).season)seasonMark(an,0,24,.95,'#fff6c0','#ffa800');c.restore();
+ const g=c.createRadialGradient(-10,-14,4,0,0,36);g.addColorStop(0,a.bg[0]);g.addColorStop(1,a.bg[1]);c.save();c.beginPath();c.arc(0,0,35.5,0,TAU);c.clip();c.fillStyle=g;c.fillRect(-36,-36,72,72);c.strokeStyle=INK;c.lineWidth=2.5;cosPaintAn=an;(AVATAR_ART[aid]||AVATAR_ART.sunny)(t);cosPaintAn=0;c.restore();
  c.strokeStyle=INK;c.lineWidth=2.5;cosPaintSn=fn&&(FRAMES[fid]||{}).season?fn:0;f(t);cosPaintSn=0;if(look.level)levelBadge(c,Math.min(MAX_LEVEL,Math.max(1,Math.floor(look.level))),t);ctx=main}
 // Avatar canvases; animated ones are redrawn every frame while they are on screen.
 const liveAvatars=new Set();

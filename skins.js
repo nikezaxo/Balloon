@@ -16,7 +16,7 @@ const SKINS={
  chicks:{name:'Chick Trio',price:450,rarity:'epic',about:'Three noisy chicks sharing one balloon. Peep peep peep!',gores:[['#fff3a0','#ffd84a','#e0a800']],face:'chick',extras:['tuft','minichicks']},
  fox:{name:'Sly Fox',price:600,rarity:'epic',about:'A sneaky fox with big plans and an even bigger mouth.',gores:[['#ffb36b','#ff7a1f','#c24e0a']],face:'sly',patch:'fox',extras:['foxtail','foxears','snout','whiskers']},
  wolf:{name:'Grumpy Wolf',price:800,rarity:'legendary',about:'Huffs, puffs and grumbles about absolutely everything.',gores:[['#d4d9e4','#9aa2b6','#5f667c']],face:'grump',patch:'wolf',extras:['wolfears','snout']},
- // MYTHIC skins: unlocked with 80 cards from boxes, or bought with 10,000 gems (GEM_UNLOCK in boxes.js).
+ // MYTHIC skins: gem skins, bought for 10,000 gems and upgraded with gems (upgradeCost in boxes.js).
  dragon:{name:'Fire Dragon',gems:10000,rarity:'mythic',about:'Breathes fire and leaves glowing embers.',gores:[['#ff9a6a','#f0441c','#a3200c'],['#ffd36b','#ff9a1a','#c25a00']],dots:'scales',extras:['dragon']},
  unicorn:{name:'Rainbow Unicorn',gems:10000,rarity:'mythic',about:'A magic horn, a rainbow mane and sparkles.',gores:[['#ffc2d4','#ff6f9a','#d23e70'],['#fff3a6','#ffd23f','#d99a00'],['#c4ffd8','#4fd38a','#22945a'],['#c2e8ff','#4fb0ff','#2367c4'],['#e8d4ff','#a273ff','#6a35ef']],dots:'sparkle',extras:['mane','horn'],gloss:true},
  diamond:{name:'Diamond',gems:10000,rarity:'mythic',about:'Crystal facets that flash in the light.',gores:[['#ffffff','#c9f6ff','#79d6f5'],['#eefcff','#9fe6ff','#3aa8e0'],['#f6feff','#b6eeff','#5cc0ea']],dots:'sparkle',extras:['shine'],gloss:true},
