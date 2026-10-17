@@ -62,14 +62,15 @@ glowing spiral galaxy with a ringed planet.
 ## Modes: Campaign and Free Run
 The MAP button (the big middle button of the bottom bar), or a tap on the stage banner, opens the map.
 - CAMPAIGN: the six stages in order. Only Sunny Sky is open at first. Each stage has a GOAL altitude, and
-  every goal is higher than the one before: Sunny Sky 8,000 m, Jungle Island 15,000 m, Crystal Cave
-  25,000 m, Robo Factory 40,000 m, Outer Space 60,000 m and Deep Universe 90,000 m (STAGE_GOALS in game.js).
-  Runs start at 130 m a second and speed up, so Sunny Sky's goal means surviving about 45 seconds and Deep
-  Universe's about four minutes. Stages already cleared stay cleared.
+  every goal doubles the one before: Sunny Sky 10,000 m (opens Jungle Island), Jungle Island 20,000 m, Crystal
+  Cave 40,000 m, Robo Factory 80,000 m and Outer Space 160,000 m (opens Deep Universe); Deep Universe's own goal is
+  200,000 m, so it stays reachable before its level V boss ends the run (STAGE_GOALS in game.js). Runs start at
+  130 m a second and speed up, so Sunny Sky's goal means surviving about a minute. Stages already opened under the
+  previous goals stay open (keepOldClears in game.js, also applied to older cloud saves when logging in).
   Reaching a stage's goal CLEARS it and unlocks the next stage mid-flight ("STAGE CLEAR! JUNGLE ISLAND
   UNLOCKED"), and the first clear of each stage pays a box (Sky Box for the first two, Storm Box for the
   next three, Legend Box for Deep Universe). The menu banner shows the goal under the stage name and the map shows a goal bar for each stage. Locked stages
-  show a padlock on the map, the banner and the page dots with what opens them ("REACH 8,000 m IN SUNNY
+  show a padlock on the map, the banner and the page dots with what opens them ("REACH 10,000 m IN SUNNY
   SKY"); cutting the rope on a locked stage does nothing. Stages you had already played or cleared stay
   open. Campaign runs count for the stage's best, stars, and the weekly and all-time boards.
 - FREE RUN: one endless run through every stage. It starts at Sunny Sky; after each boss the run flies

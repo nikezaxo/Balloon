@@ -51,7 +51,13 @@ new ResizeObserver(resize).observe(canvas);
 // every goal is higher than the one before. FREE RUN is one endless run that moves on to the next stage after
 // every boss (after Deep Universe it starts again at Sunny Sky).
 let runMode='campaign',goalHit=false;
-const STAGE_GOALS={sky:8000,jungle:15000,cave:25000,factory:40000,space:60000,universe:90000};
+// Each stage's goal doubles the one before (Deep Universe's own goal stays reachable before its level V boss ends the run).
+const STAGE_GOALS={sky:10000,jungle:20000,cave:40000,factory:80000,space:160000,universe:200000};
+// Stages already opened under the previous goals stay open: once per save (and once per older cloud save, in
+// online.js), a best that met the previous goal marks the stage cleared. In memory only; saved with the next change.
+const LEGACY_GOALS={sky:8000,jungle:15000,cave:25000,factory:40000,space:60000,universe:90000};
+function keepOldClears(best){save.cleared=save.cleared||{};for(const [id,g] of Object.entries(LEGACY_GOALS))if((Number((best||{})[id])||0)>=g)save.cleared[id]=true}
+if(!(save.goalsV>=2)){keepOldClears(save.best);save.goalsV=2}
 const stageGoal=id=>STAGE_GOALS[id]||0;
 const stageCleared=id=>(save.best[id]||0)>=stageGoal(id)||!!(save.cleared||{})[id];
 const stageUnlocked=i=>i<=0||stageCleared(STAGES[i-1].id)||!!save.best[STAGES[i].id];
