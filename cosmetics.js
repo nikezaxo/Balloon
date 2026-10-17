@@ -50,6 +50,9 @@ const myCos=()=>{const c=save.cos||(save.cos={own:[],avatar:'sunny',frame:'basic
 // Season avatars and frames remember the first season they were won in (cos.sn, keyed 'a:fox' or 'f:sDiamond'). The
 // look carries it inside the id ('fox~1'), so every player sees the S1 badge on it.
 const cosId=(kind,id)=>{const n=(myCos().sn||{})[kind+':'+id];return n?id+'~'+n:id};
+// How a season item is shown in the profile: with the season it was won in, or (not won yet) with this season's
+// number, exactly as it will look once won (the same as the season REWARDS list).
+const cosShow=(kind,id)=>{const it=(kind==='a'?AVATARS:FRAMES)[id]||{},n=(myCos().sn||{})[kind+':'+id]||(it.season&&!it.retired&&typeof seasonOf==='function'?seasonOf().n:0);return n?id+'~'+n:id};
 const cosSplit=id=>{const [b,n]=String(id||'').split('~');return [b,Math.min(99,Math.max(0,Math.floor(+n)||0))]};
 const myLook=()=>{const c=myCos();return {avatar:cosId('a',AVATARS[c.avatar]?c.avatar:'sunny'),frame:cosId('f',FRAMES[c.frame]?c.frame:'basic'),gold:!!(c.gold&&c.goldOwned),level:playerLevel()}};
 // ---- Player level ----
@@ -251,8 +254,8 @@ function renderProfile(){const list=$('#panel-list'),c=myCos(),look=myLook(),scr
   list.append(box,el('p','rank-note','A gold name shines on the leaderboards, in your clan and on your profile. Tap it to try it on.'));list.scrollTop=scroll;return}
  const cat=profileTab==='avatars'?AVATARS:FRAMES,grid=el('div','cos-grid');
  for(const [id,item] of Object.entries(cat)){const owned=ownsCos(id);if(item.retired&&!owned)continue;const on=cosSplit(profileTab==='avatars'?look.avatar:look.frame)[0]===id&&!pv,trying=pv&&pv.id===id,card=el('button','cos-card'+(on?' on':'')+(owned?'':' locked')+(item.anim?' anim':'')+(item.season?' season':'')+(trying?' trying':''));
-  card.append(avatarEl(profileTab==='avatars'?{avatar:cosId('a',id),frame:look.frame}:{avatar:look.avatar,frame:cosId('f',id)},64),el('small','',item.name),priceTag(item.gems||0,owned,on,trying,item.season&&(item.rank||SEASON_NAMES[item.season]),item.level));
-  card.onclick=()=>{const isAvatar=profileTab==='avatars';if(!owned){cosPreview={id,name:item.name.toUpperCase(),price:item.gems,season:item.season&&SEASON_NAMES[item.season],goal:item.season&&cosGoal(item),lvl:item.level,look:isAvatar?{avatar:id}:{frame:id},apply(){c.own.push(id);if(isAvatar)c.avatar=id;else c.frame=id}};gameSound.effect('on');renderProfile();list.scrollTop=0;return}
+  card.append(avatarEl(profileTab==='avatars'?{avatar:cosShow('a',id),frame:look.frame}:{avatar:look.avatar,frame:cosShow('f',id)},64),el('small','',item.name),priceTag(item.gems||0,owned,on,trying,item.season&&(item.rank||SEASON_NAMES[item.season]),item.level));
+  card.onclick=()=>{const isAvatar=profileTab==='avatars';if(!owned){cosPreview={id,name:item.name.toUpperCase(),price:item.gems,season:item.season&&SEASON_NAMES[item.season],goal:item.season&&cosGoal(item),lvl:item.level,look:isAvatar?{avatar:cosShow('a',id)}:{frame:cosShow('f',id)},apply(){c.own.push(id);if(isAvatar)c.avatar=id;else c.frame=id}};gameSound.effect('on');renderProfile();list.scrollTop=0;return}
    cosPreview=null;gameSound.effect('on');if(isAvatar)c.avatar=id;else c.frame=id;cosChanged()};grid.append(card)}
  list.append(grid,el('p','rank-note','Tap any gem item to try it on. Gems come from the weekly top 10, tasks and seasons. Trophy items are season rewards: reach that season level to win them, marked with the season number.'));list.scrollTop=scroll}
 function priceTag(gems,owned,on,trying,season,level){const s=el('span','cos-price'+(on?' on':owned?' own':'')+(trying?' trying':'')+((season||level)&&!owned?' season':''));if(on)s.textContent='IN USE';else if(owned)s.textContent=gems||season||level?'OWNED':'FREE';else if(trying)s.textContent='TRYING ON';else if(level)s.innerHTML=iconHTML('crown')+`LEVEL ${level}`;else if(season)s.innerHTML=iconHTML('trophy')+season;else s.innerHTML=iconHTML('gem')+gems.toLocaleString();return s}
