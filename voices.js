@@ -76,9 +76,10 @@ const clipUrl=(who,ev,i)=>`audio/voices/${who}/${ev}${i}.mp3?v=${VOICE_VERSION}`
 function clipFor(who,ev,i){const url=clipUrl(who,ev,i);if(!clipCache.has(url)){const p=gameSound.loadClip(url);if(!p)return null;clipCache.set(url,null);p.then(b=>{if(b)clipCache.set(url,b);else clipCache.delete(url)})}return clipCache.get(url)}
 function preloadVoices(){for(const [ev,texts] of Object.entries(VOICE_LINES[save.skin]||{}))texts.forEach((_,i)=>clipFor(save.skin,ev,i));for(const id of Object.keys(VOICE_LINES))if(VOICE_LINES[id].select)clipFor(id,'select',0);for(const ev of Object.keys(VOICE_LINES.announcer))clipFor('announcer',ev,0);const bk='boss-'+stage.id;for(const ev of Object.keys(VOICE_LINES[bk]||{}))clipFor(bk,ev,0)}
 // Plays a clip if it is ready; returns its length, or 0 so the caller can fall back to the synthesised voice.
+// The spoken words show as a bubble only in the tutorial.
 function playLine(who,ev,{force=false,delay=0,bubble=true,volume=1}={}){const texts=(VOICE_LINES[who]||{})[ev];if(!texts||!sound)return 0;const i=Math.floor(Math.random()*texts.length),buf=clipFor(who,ev,i);if(!buf)return 0;
  const now=performance.now()/1000;if(!force&&now+delay<voiceBusy)return -1;const d=gameSound.playClip(buf,{delay,volume});if(!d)return 0;voiceBusy=now+d;
- if(bubble&&state==='flying'&&typeof popup==='function'){const show=()=>{if(state==='flying')popup(x*W,balloonY()-104,texts[i].toUpperCase(),MOODS[ev]==='angry'?'#ffd23f':'#ffffff',18)};delay?setTimeout(show,delay*1000):show()}return d}
+ if(bubble&&state==='flying'&&typeof popup==='function'&&typeof tipsOn==='function'&&tipsOn()){const show=()=>{if(state==='flying')popup(x*W,balloonY()-104,texts[i].toUpperCase(),MOODS[ev]==='angry'?'#ffd23f':'#ffffff',18)};delay?setTimeout(show,delay*1000):show()}return d}
 // Talkative skins (those with chat lines) say something now and then while flying, but not during a boss fight.
 let chatClock=12;
 function chatter(dt){const lines=(VOICE_LINES[save.skin]||{}).chat;if(!lines||!sound||state!=='flying'||(typeof boss!=='undefined'&&boss&&boss.phase!=='done'))return;if((chatClock-=dt)>0)return;chatClock=rand(13,22);if(playLine(save.skin,'chat')<=0)chatClock=2}

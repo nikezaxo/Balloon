@@ -6,11 +6,21 @@
 // clearing a stage goal the first time and sometimes found floating in the sky. Won and found boxes wait in the
 // store until opened; opening one plays a full-screen show that reveals the rewards one by one.
 const CARD_NEED={epic:10,legendary:20,mythic:30};
-// Spare cards (for a skin that is already unlocked, or more than it needs) turn into coins.
+// Spare cards (beyond badge III, or when every card skin is at badge III) turn into coins.
 const CARD_DUP={epic:15,legendary:40,mythic:80};
 const CARD_RANK={epic:1,legendary:2,mythic:3};
 const isCardSkin=id=>!!SKINS[id]&&!!CARD_NEED[SKINS[id].rarity];
 const cardsOf=id=>(save.cards||{})[id]||0;
+// Card skins can also be bought outright with gems. Once unlocked, more cards upgrade a card skin: badge I (shiny gold)
+// at twice the cards it needs, badge II (shiny diamond) at four times and badge III (rainbow) at eight times.
+const GEM_UNLOCK={epic:1500,legendary:5000,mythic:10000},CARD_TIERS=[2,4,8],TIER_NAMES=['','I','II','III'];
+const TIER_LOOK=[null,{name:'SHINY GOLD',banner:['#fff3b0','#ffc83d','#c98300'],burst:['#ffd23f','#fff3a0','#ffb300','#ffffff']},{name:'SHINY DIAMOND',banner:['#ffffff','#c4f4ff','#58b6ee'],burst:['#ffffff','#c4f4ff','#8fe8ff','#58b6ee']},{name:'RAINBOW',banner:['#ff5e7a','#ffb347','#fff15e','#5fe36b','#44d9ff','#a273ff'],burst:['#ff5e7a','#ffd23f','#5fe36b','#44d9ff','#a273ff','#ffffff']}];
+const cardMax=id=>CARD_NEED[SKINS[id].rarity]*CARD_TIERS[CARD_TIERS.length-1];
+function skinTier(id){if(!isCardSkin(id)||!save.skins.includes(id))return 0;const c=cardsOf(id),n=CARD_NEED[SKINS[id].rarity];let t=0;CARD_TIERS.forEach((m,i)=>{if(c>=n*m)t=i+1});return t}
+// The next card goal: unlocking, then each badge (0 once badge III is reached).
+function cardGoal(id){const n=CARD_NEED[SKINS[id].rarity];if(!save.skins.includes(id))return n;const t=skinTier(id);return t<CARD_TIERS.length?n*CARD_TIERS[t]:0}
+// The goal a card reward was working towards when it arrived (for its progress bar).
+function cardStep(it){const n=CARD_NEED[it.rar],steps=it.unlock||!save.skins.includes(it.id)?[n]:CARD_TIERS.map(m=>n*m);return steps.find(g=>it.from<g)||steps[steps.length-1]}
 // coins: range; gems: [chance, min, max]; stacks: card stacks per box with the odds of each rarity and how many
 // cards a stack holds; sure: the Legend Box's first stack is always legendary or better (this chance of mythic);
 // tickets: the (very rare) chance of a x2 and of a x4 LEVEL TICKET.
@@ -29,19 +39,19 @@ function refreshBoxUi(){const d=$('#store-dot'),n=boxTotal();if(!d)return;d.hidd
 // ---- Rolling ----
 const rint=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
 function pickOdds(o){let r=Math.random();for(const k in o){r-=o[k];if(r<0)return k}return Object.keys(o)[0]}
-// Cards go to a locked skin of the rolled rarity, a different one for each card reward when it can: usually the
-// one closest to unlocking, sometimes any of them.
-function cardTarget(rar,extra){const left=id=>CARD_NEED[rar]-cardsOf(id)-(extra[id]||0);let open=SKIN_ORDER.filter(id=>SKINS[id].rarity===rar&&!save.skins.includes(id)&&left(id)>0);
+// Cards go to a skin of the rolled rarity that is still locked or not yet at badge III, a different one for each
+// card reward when it can: usually the one closest to its next goal (unlock or badge), sometimes any of them.
+function cardTarget(rar,extra){const left=id=>cardMax(id)-cardsOf(id)-(extra[id]||0),toGoal=id=>Math.max(1,(cardGoal(id)||cardMax(id))-cardsOf(id)-(extra[id]||0));let open=SKIN_ORDER.filter(id=>SKINS[id].rarity===rar&&left(id)>0);
  if(!open.length)return null;const fresh=open.filter(id=>!extra[id]);if(fresh.length)open=fresh;
- if(Math.random()<.6){const most=Math.min(...open.map(left));return pick(open.filter(id=>left(id)===most))}return pick(open)}
+ if(Math.random()<.6){const most=Math.min(...open.map(toGoal));return pick(open.filter(id=>toGoal(id)===most))}return pick(open)}
 // When every skin of the rolled rarity is unlocked, the card reward comes from the nearest rarity that still has
-// locked skins, so a box always gives the card rewards it promises until every card skin is unlocked.
+// skins still short of badge III, so a box always gives the card rewards it promises until every card skin is at badge III.
 const CARD_FALLBACK={epic:['legendary','mythic'],legendary:['epic','mythic'],mythic:['legendary','epic']};
 function rollBox(kind){const B=BOXES[kind],items=[{type:'coins',n:rint(...B.coins)}],extra={},cards=[];let spare=0;
  if(Math.random()<B.gems[0])items.push({type:'gems',n:rint(B.gems[1],B.gems[2])});
  for(let k=0;k<B.stacks;k++){let rar=k===0&&B.sure?(Math.random()<B.sure?'mythic':'legendary'):pickOdds(B.odds),id=null;
   for(const r of [rar,...CARD_FALLBACK[rar]]){id=cardTarget(r,extra);if(id){rar=r;break}}let n=rint(...B.amt[rar]);
-  if(!id){spare+=n*CARD_DUP[rar];continue}const room=CARD_NEED[rar]-cardsOf(id)-(extra[id]||0);if(n>room){spare+=(n-room)*CARD_DUP[rar];n=room}
+  if(!id){spare+=n*CARD_DUP[rar];continue}const room=cardMax(id)-cardsOf(id)-(extra[id]||0);if(n>room){spare+=(n-room)*CARD_DUP[rar];n=room}
   extra[id]=(extra[id]||0)+n;cards.push({type:'card',id,rar,n})}
  // Cards beyond what a skin needs (or for a collection that is complete) come as coins, revealed on their own.
  if(spare)items.push({type:'coins',n:spare,spare:true});
@@ -53,7 +63,7 @@ function rollBox(kind){const B=BOXES[kind],items=[{type:'coins',n:rint(...B.coin
 function applyBox(items){save.cards={...(save.cards||{})};
  for(const it of items){if(it.type==='coins')save.coins+=it.n;else if(it.type==='gems')save.gems=(save.gems||0)+it.n;
   else if(it.type==='ticket'){const k='x'+it.mult;save.tickets={...(save.tickets||{}),[k]:((save.tickets||{})[k]||0)+1}}
-  else{it.from=cardsOf(it.id);it.to=it.from+it.n;save.cards[it.id]=it.to;if(it.to>=CARD_NEED[it.rar]&&!save.skins.includes(it.id)){save.skins.push(it.id);it.unlock=true}}}
+  else{const t0=skinTier(it.id);it.from=cardsOf(it.id);it.to=it.from+it.n;save.cards[it.id]=it.to;if(it.to>=CARD_NEED[it.rar]&&!save.skins.includes(it.id)){save.skins.push(it.id);it.unlock=true}const t1=skinTier(it.id);if(!it.unlock&&t1>t0)it.tierUp=t1}}
  save.boxesOpened=(save.boxesOpened||0)+1;persist();if(typeof checkMedals==='function')checkMedals();refreshMeta()}
 // src: 'stock' (a box you have), 'buy' (pay for it now) or 'gift' (a reward opened straight away).
 function openBox(kind,src='stock'){const B=BOXES[kind];if(boxRun||!B)return false;
@@ -172,6 +182,8 @@ function boxUpdate(R,dt,now){const L=boxLayout(),{s,gy,cx}=L;
   if(C.t>FLY&&C.t<flipAt&&rk>=2&&Math.random()<.6){const a=rand(0,TAU);bxPart(R,{x:cx+Math.cos(a)*L.cw*.8,y:L.cardY+Math.sin(a)*L.ch*.6,tx:cx,ty:L.cardY,type:'in',max:1.5,size:rand(3,6),color:pick(RANK_COLS[rk])})}
   if(!C.revealed&&C.t>=flipAt+.14){C.revealed=true;C.revealT=C.t;R.flash=[.35,.55,.75,.95][rk];R.flashCol=itemCol(C.it,now)[0];R.shake=[4,8,12,18][rk];gameSound.effect('reveal',rk);bxBurst(R,cx,L.cardY,[24,40,60,90][rk],RANK_COLS[rk],{up:120})}
   if(C.revealed&&C.it.unlock&&!C.unlocked&&C.t>=C.revealT+.95){C.unlocked=true;C.unlockT=C.t;skinPop[C.it.id]=now;R.banner={t:0,text:'NEW SKIN UNLOCKED!'};gameSound.effect('unlock');sayVoice('select',{skin:C.it.id,force:true});R.flash=.8;R.flashCol='#ffffff';bxBurst(R,cx,L.cardY,90,RANK_COLS[3],{up:200,speed:[200,700]})}
+  // A card skin reaching a new badge gets its own banner in the badge's colours.
+  if(C.revealed&&C.it.tierUp&&!C.unlocked&&C.t>=C.revealT+.95){const T=TIER_LOOK[C.it.tierUp];C.unlocked=true;C.unlockT=C.t;skinPop[C.it.id]=now;R.banner={t:0,text:`BADGE ${TIER_NAMES[C.it.tierUp]} · ${T.name}!`,cols:T.banner};gameSound.effect('unlock');R.flash=.8;R.flashCol='#ffffff';bxBurst(R,cx,L.cardY,90,T.burst,{up:200,speed:[200,700]})}
   C.ready=C.revealed&&C.t>=C.revealT+(C.it.unlock?2.2:.8)}
  if(R.leave){R.leave.t+=dt;if(R.leave.t>.35)R.leave=null}
  if(R.banner)R.banner.t+=dt}
@@ -182,7 +194,7 @@ function nextReward(R){if(R.card)R.leave={card:R.card,t:0};R.idx++;R.banner=null
  const it=R.items[R.idx];R.card={it,t:0,tease:TEASE[itemRank(it)]};R.phase='item';R.t=0;gameSound.effect('whoosh')}
 function boxTap(){const R=boxRun;if(!R)return;
  if(R.phase==='idle'){R.phase='charge';R.t=0;gameSound.effect('charge');return}
- if(R.phase==='item'){const C=R.card;if(!C.revealed){C.t=Math.max(C.t,.42+C.tease+.15);return}if(C.it.unlock&&!C.unlocked){C.t=C.revealT+.95;return}if(!C.ready&&C.t<C.revealT+.3)return;nextReward(R)}}
+ if(R.phase==='item'){const C=R.card;if(!C.revealed){C.t=Math.max(C.t,.42+C.tease+.15);return}if((C.it.unlock||C.it.tierUp)&&!C.unlocked){C.t=C.revealT+.95;return}if(!C.ready&&C.t<C.revealT+.3)return;nextReward(R)}}
 function boxSkip(){const R=boxRun;if(!R||R.phase==='summary')return;if(R.phase==='enter'||R.phase==='idle'||R.phase==='charge'){boxBurstOpen(R,boxLayout())}R.card=null;R.leave=null;R.banner=null;R.idx=R.items.length;
  const un=R.items.find(it=>it.unlock);if(un){sayVoice('select',{skin:un.id,force:true});gameSound.effect('unlock')}boxSummary(R)}
 function boxDraw(R,now){const cv=$('#box-cv'),c=cv.getContext('2d'),L=boxLayout(),{W,H,s,cx,gy,cardY,cw,ch}=L,B=BOXES[R.kind];
@@ -215,11 +227,11 @@ function boxDraw(R,now){const cv=$('#box-cv'),c=cv.getContext('2d'),L=boxLayout(
   c.save();c.translate(px,py);c.rotate(rot);c.scale(sc*Math.max(.03,Math.abs(cosA)),sc);c.lineJoin='round';
   if(face){const since=C.revealed?C.t-C.revealT:0,pose=C.unlocked?Math.min(1,(now-skinPop[C.it.id])/POSE_TIME):1;drawCardFront(c,C.it,cw,ch,now,{count:Math.round(C.it.n*Math.min(1,since/.45)),pose})}else drawCardBack(c,C.it,cw,ch,now);c.restore();
   // The card's progress bar fills under it.
-  if(C.revealed&&C.it.type==='card'){const need=CARD_NEED[C.it.rar],q=clamp((C.t-C.revealT-.25)/.6,0,1),have=C.it.from+(Math.min(C.it.to,need)-C.it.from)*q,bw=cw*1.05,bh=22*s,bx=cx-bw/2,by=cardY+ch/2+18*s,full=have>=need;
+  if(C.revealed&&C.it.type==='card'){const need=cardStep(C.it),q=clamp((C.t-C.revealT-.25)/.6,0,1),have=C.it.from+(Math.min(C.it.to,need)-C.it.from)*q,bw=cw*1.05,bh=22*s,bx=cx-bw/2,by=cardY+ch/2+18*s,full=have>=need;
    rrect(c,bx,by,bw,bh,bh/2);c.fillStyle='rgba(0,0,0,.45)';c.fill();c.lineWidth=4;c.strokeStyle=BX_INK;c.stroke();if(have>0){rrect(c,bx+3,by+3,Math.max(bh-6,(bw-6)*Math.min(1,have/need)),bh-6,(bh-6)/2);c.fillStyle=full?'#5fe36b':glowC;c.fill()}
-   bxText(c,full?'UNLOCKED!':`${Math.floor(have)} / ${need}`,cx,by+bh/2+1,15*s,'#fff')}}
+   bxText(c,full?(C.it.unlock?'UNLOCKED!':C.it.tierUp?`BADGE ${TIER_NAMES[C.it.tierUp]}!`:'FULL!'):`${Math.floor(have)} / ${need}`,cx,by+bh/2+1,15*s,'#fff')}}
  for(const p of R.parts)if(p.type!=='dust'&&p.type!=='in')drawBxPart(c,p);
- if(R.banner){const k=Math.min(1,R.banner.t/.35),e=easeBack(k);c.save();c.translate(cx,cardY-ch/2-34*s);c.scale(e,e);c.rotate(Math.sin(now*3)*.03);const bw=Math.min(W*.86,330*s),bh=46*s;rrect(c,-bw/2,-bh/2,bw,bh,12*s);c.fillStyle=vgrad(c,-bh/2,bh/2,['#ffe46b','#ff9a1a']);c.fill();c.lineWidth=4;c.strokeStyle=BX_INK;c.stroke();bxText(c,R.banner.text,0,1,Math.min(26*s,bw/12),'#fff');c.restore()}
+ if(R.banner){const k=Math.min(1,R.banner.t/.35),e=easeBack(k);c.save();c.translate(cx,cardY-ch/2-34*s);c.scale(e,e);c.rotate(Math.sin(now*3)*.03);const bw=Math.min(W*.86,330*s),bh=46*s;rrect(c,-bw/2,-bh/2,bw,bh,12*s);c.fillStyle=vgrad(c,-bh/2,bh/2,R.banner.cols||['#ffe46b','#ff9a1a']);c.fill();c.lineWidth=4;c.strokeStyle=BX_INK;c.stroke();bxText(c,R.banner.text,0,1,Math.min(26*s,bw*1.5/R.banner.text.length),'#fff');c.restore()}
  c.restore();
  if(R.flash>0){c.fillStyle=hexA(R.flashCol.length===7?R.flashCol:'#ffffff',Math.min(1,R.flash));c.fillRect(0,0,W,H)}
  // Prompts.
@@ -238,7 +250,7 @@ function boxSummary(R){R.phase='summary';R.t=0;$('#bo-skip').hidden=true;const s
   else if(it.type==='ticket'){const cv=document.createElement('canvas');cv.width=120;cv.height=120;const c=cv.getContext('2d');c.translate(60,62);drawTicket(c,it.mult,.68,performance.now()/1000);tile.append(cv)}
   else{const i=el('span','bo-ico');i.innerHTML=icon(it.type==='gems'?'gem':'coin');tile.append(i)}
   tile.append(el('b','',it.type==='ticket'?`x${it.mult}`:`+${it.n.toLocaleString()}`),el('small','',it.type==='card'?SKINS[it.id].name:it.type==='ticket'?`LEVEL TICKET · ${TICKET_RUNS} RUNS`:it.type==='gems'?'GEMS':it.spare?'COINS FOR SPARE CARDS':'COINS'));
-  if(it.type==='card'){const need=CARD_NEED[it.rar],bar=el('i','bo-bar'),f=el('s');f.style.width=Math.min(100,it.to/need*100)+'%';bar.append(f);tile.append(bar,el('small','bo-prog',it.unlock?'UNLOCKED!':`${Math.min(it.to,need)} / ${need}`))}
+  if(it.type==='card'){const need=cardStep(it),bar=el('i','bo-bar'),f=el('s');f.style.width=Math.min(100,it.to/need*100)+'%';bar.append(f);tile.append(bar,el('small','bo-prog',it.unlock?'UNLOCKED!':it.tierUp?`BADGE ${TIER_NAMES[it.tierUp]}!`:`${Math.min(it.to,need)} / ${need}`))}
   if(it.unlock)tile.append(el('span','bo-new','NEW!'));grid.append(tile)});
  sum.hidden=false;const btns=$('#bo-btns');btns.replaceChildren();const more=BOX_ORDER.find(k=>k===R.kind&&boxCount(k)>0)||BOX_ORDER.find(k=>boxCount(k)>0);
  if(more){const b=el('button','btn green',`OPEN ${BOXES[more].name} (${boxCount(more)})`);b.onclick=()=>{closeBoxShow();openBox(more)};btns.append(b)}
@@ -272,6 +284,6 @@ function renderBoxShop(list){boxTiles=[];
  const info=el('div','box-info');info.append(el('p','',"Every box has coins, sometimes GEMS (rare) and SKIN CARD rewards (each one is several cards of one skin). Collect enough cards of an EPIC, LEGENDARY or MYTHIC skin to unlock it. Very rarely a box holds a LEVEL TICKET: use it here for x2 or x4 level metres for your next 3 runs. Win free boxes from BOX TASKS (Tuesday, Thursday and Saturday), by clearing a stage's goal for the first time, and from mystery boxes floating in the sky."));
  for(const k of BOX_ORDER){const B=BOXES[k];info.append(el('small','',`${B.name}: ${B.coins[0]}-${B.coins[1]} coins · gems ${Math.round(B.gems[0]*100)}% · each card reward ${oddsText(B)}${B.sure?' (the first is always legendary or mythic)':''} · x2 ticket ${+(B.tickets[0]*100).toFixed(1)}% · x4 ticket ${+(B.tickets[1]*100).toFixed(1)}%`))}list.append(info);
  list.append(el('h4','box-head','CARD COLLECTION'));const col=el('div','card-col');
- for(const id of SKIN_ORDER){if(!isCardSkin(id))continue;const sk=SKINS[id],r=RARITY[sk.rarity],own=save.skins.includes(id),need=CARD_NEED[sk.rarity],have=Math.min(need,cardsOf(id)),chip=el('button','card-chip'+(own?' own':''));chip.style.setProperty('--ca',r.a);chip.style.setProperty('--cb',r.b);
-  const bar=el('i','bo-bar'),f=el('s');f.style.width=(own?100:have/need*100)+'%';bar.append(f);chip.append(el('b','',sk.name),bar,el('small','',own?'UNLOCKED ✓':`${have} / ${need} CARDS`));chip.onclick=()=>{storeTab='skins';storePick=id;skinPop[id]=performance.now()/1000;renderStore()};col.append(chip)}
+ for(const id of SKIN_ORDER){if(!isCardSkin(id))continue;const sk=SKINS[id],r=RARITY[sk.rarity],own=save.skins.includes(id),tier=skinTier(id),goal=cardGoal(id),need=own?(goal||cardMax(id)):CARD_NEED[sk.rarity],have=Math.min(need,cardsOf(id)),chip=el('button','card-chip'+(own?' own':'')+(tier?' tier'+tier:''));chip.style.setProperty('--ca',r.a);chip.style.setProperty('--cb',r.b);
+  const bar=el('i','bo-bar'),f=el('s');f.style.width=(have/need*100)+'%';bar.append(f);chip.append(el('b','',sk.name),bar,el('small','',!own?`${have} / ${need} CARDS`:goal?`BADGE ${TIER_NAMES[tier+1]}: ${have} / ${need}`:'BADGE III · MAX'));chip.onclick=()=>{storeTab='skins';storePick=id;skinPop[id]=performance.now()/1000;renderStore()};col.append(chip)}
  list.append(col)}

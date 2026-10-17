@@ -99,16 +99,19 @@ and Settings can replay it or turn it off (tutorial.js).
 ## In-game display
 Kept clean so the sky stays clear: the score with its three stars and the bar towards the next star
 at the top left, coins and pause at the top right, power-up timers under them and the BOOST button at
-the bottom. A rainbow x2 timer shows while the rainbow star's double score lasts, the boss
+the bottom. A rainbow chip shows your score multiplier (x2 up to x16) once you have grabbed a rainbow star, the boss
 timer only in the last 20 seconds before a boss, and the wind only when a gust is coming or blowing.
 Your altitude pops up as a big banner only every 100,000 metres (MILESTONE in game.js). During the tutorial the HUD also
 shows the altitude, stage name, wind, speed and the boss timer all the time.
-Messages are kept to what matters (boss warnings and special skills, rewards, stars, medals, records, stage clear,
-revives). Tips and "something appeared" notices show only while the tutorial is on (tipsOn in game.js): the stage
-banner at the start, MYSTERY BOX / RAINBOW STAR appearing, BOOST READY, ENGINE BOOST, COIN RUSH, energy counts,
-SHIELD OFF, DOUBLE COINS OVER, space events (astronaut, UFO and so on), ENRAGED, LIGHTS OUT, ESCAPE THE BEAM, GET
-LOW and task notices in flight (the results screen still reports finished tasks). A mystery box you grab shows a
-small "+1 BOX".
+Messages in a normal run are only rewards and results: coins, the score multiplier, stars, medals, new records, stage
+clear, BOSS DEFEATED, CONQUERED, the next stage, revives and POP when you burst. Everything else shows only while the
+tutorial is on (tipsOn in game.js): GO!, the stage banner at the start, MYSTERY BOX / RAINBOW STAR appearing, power-up
+names, TURBO, SHIELD SAVED YOU, PERFECT ROW, CLOSE CALL, BOOP, smash words, BOOST READY, ENGINE BOOST, COIN RUSH, energy
+counts, SHIELD OFF, DOUBLE COINS OVER, space events (astronaut, UFO and so on), the wind gust warning, boss WARNING /
+BOSS INCOMING, FIGHT!, special skill names, GUST, ENRAGED, LIGHTS OUT, ESCAPE THE BEAM, TIRED / TAP FATALITY, the
+fatality name and its comic words (fxWord in bosses.js), the +50,000 and JACKPOT boss popups, the speech bubbles of
+voice lines (voices still play) and task notices in flight (the results screen still reports finished tasks). A
+mystery box you grab shows a small "+1 BOX".
 
 ## Stages
 Every stage is endless, with its own best altitude and medals
@@ -501,10 +504,11 @@ boss; P or Escape pauses.
   turbo fires, a wavy river of coins pours in and the balloon pulls nearby coins in.
 - Coin rows: collecting every coin of a row pays a 500 point PERFECT ROW bonus (and counts for
   the row tasks). Coins you collect are added to your wallet for the store.
-- RAINBOW STAR: after every 5 minutes of flying (once any boss fight is over) a big spinning rainbow
-  star marked x2 appears in the middle of the course, in a gap between ledges. Grab it for 30 seconds
-  of DOUBLE SCORE: every metre climbed and every bonus counts twice. A rainbow x2 timer shows under the
-  coins and the score glows pink while it lasts. (It replaces the old coin-row multiplier.)
+- RAINBOW STAR (SCORE MULTIPLIER): every 3 minutes of flying (RAINBOW_EVERY in game.js, once any boss fight is
+  over) a big spinning rainbow star appears in the middle of the course, in a gap between ledges. Like Subway
+  Surfers, what it gives lasts for the WHOLE RUN, revives included: the 1st star makes every metre and bonus from
+  then on count x2, the 2nd x4, the 3rd x8, the 4th x12 and the 5th x16, the top (MULT_STEPS in game.js). A rainbow
+  chip under the coins shows the multiplier and the score glows pink. A new run starts back at x1.
 - Energy cells (in every second gap between coin rows, roughly one engine boost every
   13,000 m): collect 5, then tap ⚡ BOOST. This is the only
   power with a cinematic intro — the action freezes, rays spin and the balloon
@@ -529,7 +533,15 @@ boss; P or Escape pauses.
   cards are: EPIC 10 cards, LEGENDARY 20, MYTHIC 30 (CARD_NEED in boxes.js). Each card reward goes to a different locked skin
   when it can (usually the one you are closest to). If you already have every skin of the rarity that was rolled,
   the reward comes from the nearest rarity that still has locked skins, so a box always gives the card rewards it
-  lists. Cards beyond what a skin needs, or once every card skin is unlocked, come as coins (a SPARE CARDS reward). Skins you already owned stay yours.
+  lists. Cards beyond badge III (or once every card skin has badge III) come as coins (a SPARE CARDS reward). Skins you already owned stay yours.
+- BUY WITH GEMS: instead of collecting the cards you can buy a card skin straight away with gems: EPIC 1,500 gems,
+  LEGENDARY 5,000 and MYTHIC 10,000 (GEM_UNLOCK in boxes.js). Its store page shows both buttons.
+- CARD SKIN BADGES (like boss ranks): once a card skin is yours, boxes keep giving its cards and they upgrade it.
+  At twice the cards it needs it gets BADGE I (a shiny gold card), at four times BADGE II (shiny diamond) and at
+  eight times BADGE III (rainbow, the top), for example 20 / 40 / 80 cards for an EPIC skin (CARD_TIERS in
+  boxes.js). Skins bought with gems start at 0 cards and upgrade the same way. The badge shows on the skin's store
+  card, its small card and in the CARD COLLECTION, the store page shows the bar towards the next badge, and a box
+  that gets a skin to a new badge shows BADGE I · SHINY GOLD! (or SHINY DIAMOND / RAINBOW) with a burst in its colours.
 - Boxes (BOXES in boxes.js; the store lists these odds too):
 
   | Box | Price | Coins | Gems | Card rewards | Each reward: epic / legendary / mythic | Level ticket x2 / x4 |
@@ -546,7 +558,8 @@ boss; P or Escape pauses.
   from the lid, then blasts open (the lid flies off) with a light beam in the colour of the best reward inside.
   The rewards fly out one by one, face down; the rarer the reward, the longer the card shakes before it flips
   (mythic cards shimmer in rainbow colours). Coins and gems count up, a skin card fills its bar (for example
-  6 / 10), and completing a set shows NEW SKIN UNLOCKED! while the skin plays its pose and speaks. A badge on the
+  6 / 10), and completing a set shows NEW SKIN UNLOCKED! while the skin plays its pose and speaks (a new badge shows
+  BADGE I · SHINY GOLD! and so on). A badge on the
   box counts the rewards left; SKIP jumps to the end. The last screen lists everything with OPEN NEXT (when more
   boxes are waiting) and OK.
 - The store's BOXES tab has your boxes, the three boxes to buy, what is inside each and your CARD COLLECTION
@@ -568,13 +581,15 @@ boss; P or Escape pauses.
   Robot Dance with laser eyes, Watermelon – Melon Twister, Monster – Monster Roar,
   Ninja – Shadow Clones, Galaxy – Cosmic Warp, Golden King – King's Treasure, Sleepy Dog –
   Nap Time, Chick Trio – Chick Parade, Sly Fox – Sneaky Scheme, Grumpy Wolf – Huff and Puff.
-- Skins: Classic (free), and Gumball (3,000 coins), Funny Clown (4,500), Toy Robot (6,000) and Watermelon (7,500). The EPIC skins
+- Skins: Classic (free), and Gumball (150,000 coins), Funny Clown (250,000), Toy Robot (400,000), Watermelon (500,000)
+  and Sleepy Dog (1,000,000). The small store cards show these as 150K ... 1M. The EPIC skins
   (Monster, Ninja, Chick Trio, Sly Fox), LEGENDARY skins (Galaxy, Golden King, Grumpy Wolf) and MYTHIC skins
   (Fire Dragon: Dragon Fire pose, Dragon Breath fatality; Rainbow Unicorn: Rainbow Dash, Rainbow Blast; Diamond:
   Crystal Shine, Diamond Storm) are unlocked with skin cards from boxes; their store button shows the cards
-  collected (for example 4 / 10 CARDS) and opens the BOXES tab.
+  collected (for example 4 / 10 CARDS) and opens the BOXES tab, and a second button buys them with gems (1,500 / 5,000 /
+  10,000).
 - Four TALKING CHARACTERS, original characters each with 35 voice lines: Sleepy Dog
-  (rare, 9,000 coins: floppy ears, eye patch and nightcap; trails Zzz, bones and puffs; Sleepy Slam fatality),
+  (rare, 1,000,000 coins: floppy ears, eye patch and nightcap; trails Zzz, bones and puffs; Sleepy Slam fatality),
   Chick Trio (epic, cards: a chick balloon with two baby chicks flying beside it; feathers, music notes
   and seeds; Peck Peck Peck), Sly Fox (epic, cards: pointy ears, white muzzle, whiskers and a bushy tail;
   feathers; Feather Frenzy) and Grumpy Wolf (legendary, cards: ragged ears, heavy brows and fangs; wind puffs
