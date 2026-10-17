@@ -5,29 +5,35 @@
 // cards are. Boxes are bought in the store (BOXES tab), won from BOX TASKS (three days a week, season.js), paid for
 // clearing a stage goal the first time and sometimes found floating in the sky. Won and found boxes wait in the
 // store until opened; opening one plays a full-screen show that reveals the rewards one by one.
-const CARD_NEED={epic:25,legendary:50,mythic:80};
+const CARD_NEED={epic:25,legendary:50};
 // Spare cards (beyond badge III, or when every card skin is at badge III) turn into coins.
-const CARD_DUP={epic:15,legendary:40,mythic:80};
+const CARD_DUP={epic:15,legendary:40};
 const CARD_RANK={epic:1,legendary:2,mythic:3};
 const isCardSkin=id=>!!SKINS[id]&&!!CARD_NEED[SKINS[id].rarity];
 const cardsOf=id=>(save.cards||{})[id]||0;
-// Card skins can also be bought outright with gems. Once unlocked, more cards upgrade a card skin: badge I (shiny gold)
-// at twice the cards it needs, badge II (shiny diamond) at four times and badge III (rainbow) at eight times.
-const GEM_UNLOCK={epic:1500,legendary:5000,mythic:10000},CARD_TIERS=[2,4,8],TIER_NAMES=['','I','II','III'];
+// Card skins (EPIC and LEGENDARY) can also be bought outright with gems. Once unlocked, more cards upgrade a card skin:
+// badge I (shiny gold) at twice the cards it needs, badge II (shiny diamond) at four times and badge III (rainbow) at
+// eight times. MYTHIC skins are gem skins: bought and upgraded with gems, like coin skins with coins (upgradeCost).
+const GEM_UNLOCK={epic:1500,legendary:5000},CARD_TIERS=[2,4,8],TIER_NAMES=['','I','II','III'];
 const TIER_LOOK=[null,{name:'SHINY GOLD',banner:['#fff3b0','#ffc83d','#c98300'],burst:['#ffd23f','#fff3a0','#ffb300','#ffffff']},{name:'SHINY DIAMOND',banner:['#ffffff','#c4f4ff','#58b6ee'],burst:['#ffffff','#c4f4ff','#8fe8ff','#58b6ee']},{name:'RAINBOW',banner:['#ff5e7a','#ffb347','#fff15e','#5fe36b','#44d9ff','#a273ff'],burst:['#ff5e7a','#ffd23f','#5fe36b','#44d9ff','#a273ff','#ffffff']}];
 const cardMax=id=>CARD_NEED[SKINS[id].rarity]*CARD_TIERS[CARD_TIERS.length-1];
-function skinTier(id){if(!isCardSkin(id)||!save.skins.includes(id))return 0;const c=cardsOf(id),n=CARD_NEED[SKINS[id].rarity];let t=0;CARD_TIERS.forEach((m,i)=>{if(c>=n*m)t=i+1});return t}
+function skinTier(id){if(!save.skins.includes(id))return 0;if(!isCardSkin(id))return upgradable(id)?Math.min(CARD_TIERS.length,Math.max(0,Math.floor((save.skinLv||{})[id]||0))):0;const c=cardsOf(id),n=CARD_NEED[SKINS[id].rarity];let t=0;CARD_TIERS.forEach((m,i)=>{if(c>=n*m)t=i+1});return t}
 // The next card goal: unlocking, then each badge (0 once badge III is reached).
 function cardGoal(id){const n=CARD_NEED[SKINS[id].rarity];if(!save.skins.includes(id))return n;const t=skinTier(id);return t<CARD_TIERS.length?n*CARD_TIERS[t]:0}
+// Coin and gem skins level up with what they cost (save.skinLv): badge I for their price again, badge II for twice it
+// and badge III for four times it, in coins or gems.
+const UPGRADE_X=[1,2,4];
+const upgradable=id=>{const sk=SKINS[id];return !!sk&&!isCardSkin(id)&&!sk.season&&(sk.gems>0||sk.price>0)};
+function upgradeCost(id){if(!upgradable(id)||!save.skins.includes(id))return null;const t=skinTier(id),sk=SKINS[id];if(t>=CARD_TIERS.length)return null;return sk.gems?{gems:sk.gems*UPGRADE_X[t]}:{coins:sk.price*UPGRADE_X[t]}}
 // The goal a card reward was working towards when it arrived (for its progress bar).
 function cardStep(it){const n=CARD_NEED[it.rar],steps=it.unlock||!save.skins.includes(it.id)?[n]:CARD_TIERS.map(m=>n*m);return steps.find(g=>it.from<g)||steps[steps.length-1]}
 // coins: range; gems: [chance, min, max]; stacks: card stacks per box with the odds of each rarity and how many
 // cards a stack holds; sure: the Legend Box's first stack is always legendary or better (this chance of mythic);
 // tickets: the (very rare) chance of a x2 and of a x4 LEVEL TICKET.
 const BOXES={
- sky:{tickets:[.015,.003],name:'SKY BOX',price:{coins:5000},coins:[60,140],gems:[.03,1,2],stacks:2,odds:{epic:.76,legendary:.2,mythic:.04},amt:{epic:[2,4],legendary:[1,3],mythic:[1,2]},body:['#a6e4ff','#3d9bff','#1f4fb0'],trim:['#fff3a0','#ffc21a','#b87400'],glow:'#7cd0ff',emblem:'cloud'},
- storm:{tickets:[.04,.01],name:'STORM BOX',price:{coins:15000},coins:[180,360],gems:[.08,2,4],stacks:3,odds:{epic:.55,legendary:.35,mythic:.1},amt:{epic:[3,6],legendary:[2,4],mythic:[1,3]},body:['#dcc0ff','#8a4cff','#3c1890'],trim:['#ffffff','#c9d3ec','#6f7a9c'],glow:'#b98cff',emblem:'bolt'},
- legend:{tickets:[.1,.03],name:'LEGEND BOX',price:{gems:400},coins:[400,800],gems:[.12,3,6],stacks:4,sure:.25,odds:{epic:.3,legendary:.45,mythic:.25},amt:{epic:[5,8],legendary:[3,6],mythic:[2,4]},body:['#ffa898','#e8402a','#8a1410'],trim:['#fff6b8','#ffd23f','#c98a00'],glow:'#ffcf4a',emblem:'crown'}};
+ sky:{tickets:[.015,.003],name:'SKY BOX',price:{coins:5000},coins:[60,140],gems:[.03,1,2],stacks:2,odds:{epic:.78,legendary:.22},amt:{epic:[2,4],legendary:[1,3]},body:['#a6e4ff','#3d9bff','#1f4fb0'],trim:['#fff3a0','#ffc21a','#b87400'],glow:'#7cd0ff',emblem:'cloud'},
+ storm:{tickets:[.04,.01],name:'STORM BOX',price:{coins:15000},coins:[180,360],gems:[.08,2,4],stacks:3,odds:{epic:.6,legendary:.4},amt:{epic:[3,6],legendary:[2,4]},body:['#dcc0ff','#8a4cff','#3c1890'],trim:['#ffffff','#c9d3ec','#6f7a9c'],glow:'#b98cff',emblem:'bolt'},
+ legend:{tickets:[.1,.03],name:'LEGEND BOX',price:{gems:400},coins:[400,800],gems:[.12,3,6],stacks:4,sure:true,odds:{epic:.4,legendary:.6},amt:{epic:[5,8],legendary:[3,6]},body:['#ffa898','#e8402a','#8a1410'],trim:['#fff6b8','#ffd23f','#c98a00'],glow:'#ffcf4a',emblem:'crown'}};
 const BOX_ORDER=['sky','storm','legend'];
 // The box for clearing each stage's goal the first time.
 const GOAL_BOX={sky:'sky',jungle:'sky',cave:'storm',factory:'storm',space:'storm',universe:'legend'};
@@ -46,10 +52,10 @@ function cardTarget(rar,extra){const left=id=>cardMax(id)-cardsOf(id)-(extra[id]
  if(Math.random()<.6){const most=Math.min(...open.map(toGoal));return pick(open.filter(id=>toGoal(id)===most))}return pick(open)}
 // When every skin of the rolled rarity is unlocked, the card reward comes from the nearest rarity that still has
 // skins still short of badge III, so a box always gives the card rewards it promises until every card skin is at badge III.
-const CARD_FALLBACK={epic:['legendary','mythic'],legendary:['epic','mythic'],mythic:['legendary','epic']};
+const CARD_FALLBACK={epic:['legendary'],legendary:['epic']};
 function rollBox(kind){const B=BOXES[kind],items=[{type:'coins',n:rint(...B.coins)}],extra={},cards=[];let spare=0;
  if(Math.random()<B.gems[0])items.push({type:'gems',n:rint(B.gems[1],B.gems[2])});
- for(let k=0;k<B.stacks;k++){let rar=k===0&&B.sure?(Math.random()<B.sure?'mythic':'legendary'):pickOdds(B.odds),id=null;
+ for(let k=0;k<B.stacks;k++){let rar=k===0&&B.sure?'legendary':pickOdds(B.odds),id=null;
   for(const r of [rar,...CARD_FALLBACK[rar]]){id=cardTarget(r,extra);if(id){rar=r;break}}let n=rint(...B.amt[rar]);
   if(!id){spare+=n*CARD_DUP[rar];continue}const room=cardMax(id)-cardsOf(id)-(extra[id]||0);if(n>room){spare+=(n-room)*CARD_DUP[rar];n=room}
   extra[id]=(extra[id]||0)+n;cards.push({type:'card',id,rar,n})}
@@ -281,8 +287,8 @@ function renderBoxShop(list){boxTiles=[];
  for(const k of BOX_ORDER){const B=BOXES[k],t=el('div','box-card');t.style.setProperty('--glow',B.glow);t.append(boxTile(k),el('b','',B.name),el('small','',`COINS + ${B.stacks} CARD REWARDS${B.sure?' · 1 LEGENDARY+':''}`));
   const b=el('button','buy'+(B.price.gems?' gem':''));b.innerHTML=B.price.gems?iconHTML('gem')+B.price.gems.toLocaleString():iconHTML('coin')+B.price.coins.toLocaleString();b.onclick=()=>{const need=B.price.gems||B.price.coins,have=B.price.gems?(save.gems||0):save.coins;if(have<need)return notEnough(b,need,!!B.price.gems);openBox(k,'buy')};t.append(b);shop.append(t)}
  list.append(shop);
- const info=el('div','box-info');info.append(el('p','',"Every box has coins, sometimes GEMS (rare) and SKIN CARD rewards (each one is several cards of one skin). Collect enough cards of an EPIC, LEGENDARY or MYTHIC skin to unlock it. Very rarely a box holds a LEVEL TICKET: use it here for x2 or x4 level metres for your next 3 runs. Win free boxes from BOX TASKS (Tuesday, Thursday and Saturday), by clearing a stage's goal for the first time, and from mystery boxes floating in the sky."));
- for(const k of BOX_ORDER){const B=BOXES[k];info.append(el('small','',`${B.name}: ${B.coins[0]}-${B.coins[1]} coins · gems ${Math.round(B.gems[0]*100)}% · each card reward ${oddsText(B)}${B.sure?' (the first is always legendary or mythic)':''} · x2 ticket ${+(B.tickets[0]*100).toFixed(1)}% · x4 ticket ${+(B.tickets[1]*100).toFixed(1)}%`))}list.append(info);
+ const info=el('div','box-info');info.append(el('p','',"Every box has coins, sometimes GEMS (rare) and SKIN CARD rewards (each one is several cards of one skin). Collect enough cards of an EPIC or LEGENDARY skin to unlock it, and more to upgrade it. Very rarely a box holds a LEVEL TICKET: use it here for x2 or x4 level metres for your next 3 runs. Win free boxes from BOX TASKS (Tuesday, Thursday and Saturday), by clearing a stage's goal for the first time, and from mystery boxes floating in the sky."));
+ for(const k of BOX_ORDER){const B=BOXES[k];info.append(el('small','',`${B.name}: ${B.coins[0]}-${B.coins[1]} coins · gems ${Math.round(B.gems[0]*100)}% · each card reward ${oddsText(B)}${B.sure?' (the first is always legendary)':''} · x2 ticket ${+(B.tickets[0]*100).toFixed(1)}% · x4 ticket ${+(B.tickets[1]*100).toFixed(1)}%`))}list.append(info);
  list.append(el('h4','box-head','CARD COLLECTION'));const col=el('div','card-col');
  for(const id of SKIN_ORDER){if(!isCardSkin(id))continue;const sk=SKINS[id],r=RARITY[sk.rarity],own=save.skins.includes(id),tier=skinTier(id),goal=cardGoal(id),need=own?(goal||cardMax(id)):CARD_NEED[sk.rarity],have=Math.min(need,cardsOf(id)),chip=el('button','card-chip'+(own?' own':'')+(tier?' tier'+tier:''));chip.style.setProperty('--ca',r.a);chip.style.setProperty('--cb',r.b);
   const bar=el('i','bo-bar'),f=el('s');f.style.width=(have/need*100)+'%';bar.append(f);chip.append(el('b','',sk.name),bar,el('small','',!own?`${have} / ${need} CARDS`:goal?`BADGE ${TIER_NAMES[tier+1]}: ${have} / ${need}`:'BADGE III · MAX'));chip.onclick=()=>{storeTab='skins';storePick=id;skinPop[id]=performance.now()/1000;renderStore()};col.append(chip)}

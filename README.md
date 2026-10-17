@@ -343,10 +343,11 @@ Bear, Froggy, Bot, Balloon) and four frames (Classic, Wood, Cloud, Leafy) are fr
 ones cost a lot of gems, so they take a long time to save for: avatars Phoenix and Ghost (1,200), Alien (1,600),
 Dragon (2,000) and Lion King (2,500); frames Golden Laurel (1,500), Inferno and Rainbow (1,800), Thunder (2,200),
 Galaxy (2,700) and Diamond (3,500). A shimmering GOLD NAME costs 2,000 gems; the white name is free.
-Season avatars and frames can't be bought: Crystal Fox avatar (DIAMOND IV), Diamond Season frame (DIAMOND V), Star
+Season avatars and frames can't be bought: Diamond Season avatar (DIAMOND IV), Diamond Season frame (DIAMOND V), Star
 Legend avatar (STAR LEGEND IV) and Star Legend frame (STAR LEGEND V, the top 100, paid after the season). Each one shows
-the season it was first won in as an animated S1 / S2 ... badge: on the avatar (a gleaming pill under the face) and on
-the frame (the pill at the bottom of the ring). The look carries it in the id ('fox~1', 'sDiamond~1'), so other
+the season it was first won in: the season avatars are nothing but a big animated S1 / S2 ... in the middle (ice blue
+for Diamond, gold and pink for Star Legend, with a shine sweeping through it; seasonArt in cosmetics.js), and the frames
+carry it as a pill at the bottom of the ring. The look carries it in the id ('fox~1', 'sDiamond~1'), so other
 players see it too; the first season is kept per item in cos.sn ('a:fox': 1) and merges across devices (earliest
 wins). In PROFILE a season item you haven't won yet shows this season's number (cosShow), so it looks exactly as in
 the season REWARDS list and as it will once won. The older Bronze/Silver/Gold/Titanium Season frames, Golden Eagle and Mech Pilot are retired: they can no longer
@@ -385,7 +386,7 @@ more. SP never go down during a season and start again from zero in the next one
   | Silver | 400 + 4 gems | 450 + 1 | 500 + 1 | 550 + 1 | 650 + 6 gems |
   | Gold | 750 + 6 gems | 800 + 2 | 900 + 2 | 1,000 + 2 | 1,200 + 10 gems |
   | Titanium | 1,400 + 10 gems | 1,500 + 3 | 1,700 + 3 | 1,900 + 3 | 2,200 + 15 gems |
-  | Diamond | 2,500 + 15 gems | 2,800 + 5 | 3,200 + 5 | 3,600 + 5, Crystal Fox avatar | 4,000 + 8, Diamond Season frame |
+  | Diamond | 2,500 + 15 gems | 2,800 + 5 | 3,200 + 5 | 3,600 + 5, Diamond Season avatar | 4,000 + 8, Diamond Season frame |
   | Star Legend | 5,000 + 25 gems | 6,000 + 10 | 7,000 + 10 | 8,000 + 15, Star Legend avatar | 12,000 + 60, Star Legend frame (after the season, top 100 only) |
 
 - END-OF-SEASON REWARDS (SEASON_REWARDS) go to everyone who scored that season, by the tier they finished in; the
@@ -561,14 +562,21 @@ boss; P or Escape pauses.
   10,000 m, half as many at 25,000 m and a quarter as many from 37,500 m up (critterKeep in game.js).
 
 ## Boxes and skin cards
-- A box holds coins, sometimes GEMS (rare) and SKIN CARD rewards (each one is several cards of one skin). EPIC, LEGENDARY and MYTHIC skins are not sold
-  any more: collect enough cards of one to unlock it. The rarer the skin, the more cards it needs and the rarer its
-  cards are: EPIC 25 cards, LEGENDARY 50, MYTHIC 80 (CARD_NEED in boxes.js). Each card reward goes to a different locked skin
+- A box holds coins, sometimes GEMS (rare) and SKIN CARD rewards (each one is several cards of one skin). EPIC and LEGENDARY skins are not sold for
+  coins: collect enough cards of one to unlock it. The rarer the skin, the more cards it needs and the rarer its
+  cards are: EPIC 25 cards and LEGENDARY 50 (CARD_NEED in boxes.js). MYTHIC skins are gem skins and are not in boxes. Each card reward goes to a different locked skin
   when it can (usually the one you are closest to). If you already have every skin of the rarity that was rolled,
   the reward comes from the nearest rarity that still has locked skins, so a box always gives the card rewards it
   lists. Cards beyond badge III (or once every card skin has badge III) come as coins (a SPARE CARDS reward). Skins you already owned stay yours.
-- BUY WITH GEMS: instead of collecting the cards you can buy a card skin straight away with gems: EPIC 1,500 gems,
-  LEGENDARY 5,000 and MYTHIC 10,000 (GEM_UNLOCK in boxes.js). Its store page shows both buttons.
+- BUY WITH GEMS: instead of collecting the cards you can buy an EPIC or LEGENDARY card skin straight away with gems:
+  EPIC 1,500 gems and LEGENDARY 5,000 (GEM_UNLOCK in boxes.js). Its store page shows both buttons.
+- GEM SKINS: the MYTHIC skins (Fire Dragon, Rainbow Unicorn, Diamond) are bought with 10,000 gems each.
+- COIN AND GEM SKIN BADGES: coin skins and gem skins get the same three badges, bought with what the skin costs
+  (upgradeCost and UPGRADE_X in boxes.js, saved in save.skinLv): BADGE I for the skin's price again, BADGE II for twice
+  it and BADGE III for four times it. Gumball: 150,000 / 300,000 / 600,000 coins; Sleepy Dog: 1,000,000 / 2,000,000 /
+  4,000,000 coins; each MYTHIC skin: 10,000 / 20,000 / 40,000 gems. The owned skin's store page has the UPGRADE button
+  (BADGE I and the price) and a bar of the badges so far. Card skins still upgrade with cards (below). Classic and the
+  season skins have no badges.
 - CARD SKIN BADGES (like boss ranks): once a card skin is yours, boxes keep giving its cards and they upgrade it.
   At twice the cards it needs it gets BADGE I (a shiny gold card), at four times BADGE II (shiny diamond) and at
   eight times BADGE III (rainbow, the top), for example 50 / 100 / 200 cards for an EPIC skin (CARD_TIERS in
@@ -577,11 +585,11 @@ boss; P or Escape pauses.
   that gets a skin to a new badge shows BADGE I · SHINY GOLD! (or SHINY DIAMOND / RAINBOW) with a burst in its colours.
 - Boxes (BOXES in boxes.js; the store lists these odds too):
 
-  | Box | Price | Coins | Gems | Card rewards | Each reward: epic / legendary / mythic | Level ticket x2 / x4 |
+  | Box | Price | Coins | Gems | Card rewards | Each reward: epic / legendary | Level ticket x2 / x4 |
   |---|---|---|---|---|---|---|
-  | SKY BOX | 5,000 coins | 60-140 | 3% chance, 1-2 | 2 | 76% / 20% / 4% | 1.5% / 0.3% |
-  | STORM BOX | 15,000 coins | 180-360 | 8% chance, 2-4 | 3 | 55% / 35% / 10% | 4% / 1% |
-  | LEGEND BOX | 400 gems | 400-800 | 12% chance, 3-6 | 4 (the first always legendary or mythic) | 30% / 45% / 25% | 10% / 3% |
+  | SKY BOX | 5,000 coins | 60-140 | 3% chance, 1-2 | 2 | 78% / 22% | 1.5% / 0.3% |
+  | STORM BOX | 15,000 coins | 180-360 | 8% chance, 2-4 | 3 | 60% / 40% | 4% / 1% |
+  | LEGEND BOX | 400 gems | 400-800 | 12% chance, 3-6 | 4 (the first always legendary) | 40% / 60% | 10% / 3% |
 
 - Free boxes: BOX TASKS (Tuesday, Thursday and Saturday, see Tasks), the first clear of each campaign stage's goal,
   and MYSTERY BOXES that float through the sky in about a third of runs (at most two a day): grab one to keep it.
@@ -590,7 +598,7 @@ boss; P or Escape pauses.
 - OPENING A BOX plays a full-screen show: the box drops in and bounces, TAP TO OPEN, it shakes while light leaks
   from the lid, then blasts open (the lid flies off) with a light beam in the colour of the best reward inside.
   The rewards fly out one by one, face down; the rarer the reward, the longer the card shakes before it flips
-  (mythic cards shimmer in rainbow colours). Coins and gems count up, a skin card fills its bar (for example
+  (legendary cards shake the longest). Coins and gems count up, a skin card fills its bar (for example
   6 / 25), and completing a set shows NEW SKIN UNLOCKED! while the skin plays its pose and speaks (a new badge shows
   BADGE I · SHINY GOLD! and so on). A badge on the
   box counts the rewards left; SKIP jumps to the end. The last screen lists everything with OPEN NEXT (when more
@@ -616,11 +624,11 @@ boss; P or Escape pauses.
   Nap Time, Chick Trio – Chick Parade, Sly Fox – Sneaky Scheme, Grumpy Wolf – Huff and Puff.
 - Skins: Classic (free), and Gumball (150,000 coins), Funny Clown (250,000), Toy Robot (400,000), Watermelon (500,000)
   and Sleepy Dog (1,000,000). The small store cards show these as 150K ... 1M. The EPIC skins
-  (Monster, Ninja, Chick Trio, Sly Fox), LEGENDARY skins (Galaxy, Golden King, Grumpy Wolf) and MYTHIC skins
-  (Fire Dragon: Dragon Fire pose, Dragon Breath fatality; Rainbow Unicorn: Rainbow Dash, Rainbow Blast; Diamond:
-  Crystal Shine, Diamond Storm) are unlocked with skin cards from boxes; their store button shows the cards
-  collected (for example 4 / 25 CARDS) and opens the BOXES tab, and a second button buys them with gems (1,500 / 5,000 /
-  10,000).
+  (Monster, Ninja, Chick Trio, Sly Fox) and LEGENDARY skins (Galaxy, Golden King, Grumpy Wolf) are unlocked with skin
+  cards from boxes; their store button shows the cards collected (for example 4 / 25 CARDS) and opens the BOXES tab, and
+  a second button buys them with gems (1,500 / 5,000). The MYTHIC skins (Fire Dragon: Dragon Fire pose, Dragon Breath
+  fatality; Rainbow Unicorn: Rainbow Dash, Rainbow Blast; Diamond: Crystal Shine, Diamond Storm) are gem skins at
+  10,000 gems each.
 - Four TALKING CHARACTERS, original characters each with 35 voice lines: Sleepy Dog
   (rare, 1,000,000 coins: floppy ears, eye patch and nightcap; trails Zzz, bones and puffs; Sleepy Slam fatality),
   Chick Trio (epic, cards: a chick balloon with two baby chicks flying beside it; feathers, music notes

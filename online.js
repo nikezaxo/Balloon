@@ -102,6 +102,8 @@ const entry=(score,stageId,skin)=>{const lk=myLook();return {name:displayName(),
   if(cloud.cleared&&typeof cloud.cleared==='object'){save.cleared=save.cleared||{};for(const id of Object.keys(cloud.cleared))if(STAGES.some(st=>st.id===id)&&cloud.cleared[id])save.cleared[id]=true}
   // Skin cards keep the most of each; unopened boxes come from the newer save, like coins.
   if(cloud.cards&&typeof cloud.cards==='object'){save.cards={...(save.cards||{})};for(const [id,v] of Object.entries(cloud.cards)){const n=num(v,0,1000);if(n!==null&&SKINS[id])save.cards[id]=Math.max(save.cards[id]||0,n)}}
+  // Coin and gem skin badges keep the highest of each.
+  if(cloud.skinLv&&typeof cloud.skinLv==='object'){save.skinLv={...(save.skinLv||{})};for(const [id,v] of Object.entries(cloud.skinLv)){const n=num(v,0,3);if(n!==null&&SKINS[id])save.skinLv[id]=Math.max(save.skinLv[id]||0,n)}}
   if(newer){const tk={};for(const k of ['x2','x4']){const n=num((cloud.tickets||{})[k],0,999);if(n)tk[k]=n}save.tickets=tk;const bo=cloud.boost,runs=bo&&num(bo.runs,0,10);save.boost=bo&&[2,4].includes(bo.mult)&&runs?{mult:bo.mult,runs}:null}
   if(newer&&cloud.boxes&&typeof cloud.boxes==='object'){const b={};for(const k of ['sky','storm','legend']){const n=num(cloud.boxes[k],0,999);if(n)b[k]=n}save.boxes=b}
   save.weeklyClaimed=[...new Set([...(save.weeklyClaimed||[]),...(Array.isArray(cloud.weeklyClaimed)?cloud.weeklyClaimed:[])])].slice(-12);if(!save.nick&&cloud.nick)save.nick=clean(cloud.nick);if(!save.nickKey&&typeof cloud.nickKey==='string'&&user&&cloud.nickUid===user.uid){save.nickKey=cloud.nickKey;save.nickUid=cloud.nickUid;save.nick=clean(cloud.nick)}
